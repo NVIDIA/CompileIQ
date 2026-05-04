@@ -1,0 +1,156 @@
+[tool.poetry]
+name = "compileiq"
+version = "1.0.0dev1"
+description = "Nvidia's Evolutionary Optimization Engine for tuning Nvidia compilers."
+authors = ["nvidia.com"]
+readme = "README.md"
+repository = "https://github.com/NVIDIA/CompileIQ"
+documentation = "https://github.com/NVIDIA/CompileIQ/blob/main/README.md"
+packages = [{ include = "compileiq", format = "wheel" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+pandas = "^2.2.3"
+pydantic = "^2.9.2"
+tqdm = "^4.67.0"
+numpy = "^2.1.3"
+ray = { extras = ["default"], version = "^2.53.0" }
+loguru = "^0.7.2"
+dill = "^0.4.0"
+msgpack = "^1.1.1"
+
+# Nspec vulnerabilities
+urllib3 = "^2.6.2" # ray, mlflow
+requests = "^2.32.5" #ray, mlflow
+aiohttp = "^3.13.3" # ray
+json5 = "^0.14.0"
+
+[tool.poetry.group.tracking]
+optional = true
+
+[tool.poetry.group.tracking.dependencies]
+mlflow = "^3.1.1"
+starlette = "^0.50.0" #mlflow
+fonttools = "^4.60.1" #mlflow
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+# We are locked out of sphinx 9.0 because of sphinx-multiversion issues.
+# Alternative: https://pypi.org/project/sphinx-multiversion-scylla/ or wait for sphinx-multiversion to be updated.
+sphinx = "8.2.3"
+nvidia-sphinx-theme = ">=0.0.8"
+myst-parser = ">=4.0.1"
+sphinx-copybutton = ">=0.5.2"
+sphinx-design = ">=0.6.1"
+sphinx-multiversion = "^0.2.4"
+autodoc-pydantic = "^2.2.0"
+sphinxcontrib-mermaid = ">=0.9.2"
+
+[tool.poetry.group.linter]
+optional = true
+
+[tool.poetry.group.linter.dependencies]
+ruff = "^0.7.3"
+
+[tool.poetry.group.unittest]
+optional = true
+
+[tool.poetry.group.unittest.dependencies]
+pytest = "^9.0.2"
+pytest-mock = "^3.14.0"
+hypothesis = "^6.119.3"
+pytest-ordering = "^0.6"
+pytest-order = "^1.3.0"
+pytest-cov = "^7.1.0"
+pytest-testmon = "^2.1.0"
+
+[tool.poetry.group.examples]
+optional = true
+
+[tool.poetry.group.examples.dependencies]
+scikit-learn = "^1.5.2"
+xgboost = "^2.1.2"
+triton = {version = "3.6.0", platform = "linux"}
+torch = "2.10.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = "tests/"
+addopts = "--ignore=tests/fuzz"
+markers = [
+    "requires_ray: test needs a running Ray cluster",
+    "requires_ipc: test needs real sockets or subprocesses (incomplete mocking)",
+    "requires_core: test runs the real core binary (not sandbox-compatible)",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["compileiq"]
+omit = [
+    "compileiq/core/executable/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ ==",
+    "raise NotImplementedError",
+]
+
+# Ruff Configuration
+[tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "evo-search/",
+]
+
+line-length = 100
+indent-width = 4
+target-version = "py311"
+
+
+[tool.ruff.lint]
+select = ["E", "F"]
+fixable = ["ALL"]
+unfixable = []
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$" # Allow unused variables when underscore-prefixed.
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+

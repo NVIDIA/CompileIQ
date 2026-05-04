@@ -1,0 +1,19 @@
+[
+  {%- set comma = joiner(",\n") -%}
+  {%- for item in versions.branches if item.name == "main" -%}
+  {{ comma() }}
+  {
+    "name": "dev",
+    "version": "{{ item.name }}",
+    "url": "{{ base_url }}/{{ item.name }}/"
+  }
+  {%- endfor -%}
+  {%- for item in versions.tags | reverse -%}
+  {{ comma() }}
+  {
+    "name": "{{ item.name }}",
+    "version": "{{ item.name }}",
+    "url": "{{ base_url }}/{{ item.name }}/"
+  }
+  {%- endfor -%}
+]

@@ -1,0 +1,333 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "pull-request/[0-9]+"
+      - main
+    tags: ["**"]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "LICENSE"
+      - ".gitignore"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  lint:
+    name: Linter Check
+    runs-on: ubuntu-latest
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - run: pip install poetry
+      - run: poetry install --only linter
+      - run: ruff check
+
+  unit-test:
+    # Matrix matches `pyproject.toml`'s `python = ">=3.11,<3.14"` and the
+    # platforms supported per the run-examples job (Linux x86_64, Windows).
+    # fail-fast: false so divergence between Python versions or OSes
+    # surfaces all at once rather than one-at-a-time.
+    name: Unit tests [py${{ matrix.python }} on ${{ matrix.os }}]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+        exclude:
+          # Ray (a hard dependency, see pyproject.toml) does not yet
+          # publish Windows wheels for Python 3.13 -- "Ray on Windows is
+          # currently in beta" per upstream, with wheel coverage lagging
+          # Linux by several months. Until that catches up, skip this
+          # specific cell. Linux + 3.13 is still exercised below.
+          - os: windows-latest
+            python: "3.13"
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+      GIT_PYTHON_REFRESH: "quiet"
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - run: pip install poetry
+      - run: poetry install --with unittest,tracking
+      - run: pytest tests/unit/ -vvv
+
+
+  # ── Test stage ───────────────────────────────────────────────────────────────
+
+  integration-test:
+    # Run the integration tests against every (OS, Python version)
+    # combination this project claims to support: Linux x86_64 + Windows
+    # per the run-examples matrix, Python 3.11/3.12/3.13 per
+    # pyproject.toml's `python = ">=3.11,<3.14"`.
+    #
+    # An env-divergent regression in any one cell is caught at PR time
+    # rather than after the fact downstream. fail-fast: false so all
+    # cells report regardless of any single failure.
+    name: Integration tests (with coverage) [py${{ matrix.python }} on ${{ matrix.os }}]
+    runs-on: ${{ matrix.os }}
+    needs: [lint, unit-test]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+        include:
+          # Known broken: test_single_objective_min flakiness (gen-0
+          # dedup collision, ~24% rate on any Python; Python 3.13's RNG
+          # sequence happens to hit the collision more readily).
+          # Tracked: https://github.com/NVIDIA/CompileIQ/issues/17
+          # Remove this `include` entry + the matching `continue-on-error`
+          # gate when issue #17 closes.
+          - os: ubuntu-latest
+            python: "3.13"
+            known_broken: true
+        exclude:
+          # Ray (a hard dependency, see pyproject.toml) does not yet
+          # publish Windows wheels for Python 3.13 -- "Ray on Windows is
+          # currently in beta" per upstream, with wheel coverage lagging
+          # Linux by several months. Until that catches up, skip this
+          # specific cell. Linux + 3.13 is still exercised below.
+          - os: windows-latest
+            python: "3.13"
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+      GIT_PYTHON_REFRESH: "quiet"
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - run: pip install poetry
+      - run: poetry install --with unittest,tracking
+      - name: Run tests with coverage
+        continue-on-error: ${{ matrix.known_broken || false }}
+        run: |
+          pytest tests/unit/ -vvv --cov --durations=10
+          pytest tests/integration/ -vvv --cov --cov-append --durations=10
+          coverage report
+
+  fuzz-test:
+    # Fuzz tests run Linux-only on PR. The Windows fuzz cells were
+    # the dominant cost on the broadened matrix (~27 min each) and
+    # their failure modes are predominantly Hypothesis-driven
+    # algorithmic edge cases that surface identically on Linux. The
+    # full {Linux, Windows} matrix runs nightly with deeper
+    # exploration via .github/workflows/nightly.yml -- see AGENTS.md
+    # ("Default max_examples=20; set CIQ_FUZZ_EXAMPLES=100 for
+    # thorough runs (nightly CI does this)").
+    name: Fuzz tests [py${{ matrix.python }} on ${{ matrix.os }}]
+    runs-on: ${{ matrix.os }}
+    needs: [lint, unit-test]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.11", "3.12", "3.13"]
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+      GIT_PYTHON_REFRESH: "quiet"
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - run: pip install poetry
+      - run: poetry install --with unittest,tracking
+      - name: Run fuzz tests
+        run: pytest tests/fuzz/ -vvv --durations=10
+
+  run-examples:
+    name: Run examples (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    needs: [lint, unit-test]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux x86_64
+          - os: ubuntu-24.04-arm
+            name: Linux ARM64
+          - os: windows-latest
+            name: Windows
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - run: pip install poetry
+      - run: poetry install
+      - name: Run examples
+        working-directory: examples
+        shell: bash
+        run: |
+          for python_file in *.py; do
+            if [[ "${python_file}" != "ciq_xgboost.py" ]] && \
+               [[ "${python_file}" != "mlflow_tracker.py" ]]; then
+              echo "${python_file}"
+              python "${python_file}"
+            fi
+          done
+
+  validate-binary-ss:
+    name: Validate Binary Search Spaces
+    runs-on: ubuntu-latest
+    needs: [lint, unit-test]
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - run: pip install poetry
+      - run: poetry install
+      - name: Run Binary SS Validation
+        working-directory: tests/compiler_ss
+        run: python validate_binary.py
+
+  # This job is a work around to make sure that all the checks have passed before we mark the PR as ready for review.
+  # This is needed because GitHub does not allow us to set a condition on the PR to be marked as ready for review based on the status of the checks.
+  ci-pass:                                                                                                                                                                                                                                                                                                                                                                                                                        
+    name: CI Pass                                                                                                                                                                                                                                                                                                                                                                                                                 
+    runs-on: ubuntu-latest                                                     
+    needs: [fuzz-test, run-examples, validate-binary-ss]                                                                                                                                                                                                                                                                                                                                                  
+    steps:                                                                                                                                                                                                                                                                                                                                                                                                                        
+      - run: echo "All checks passed"
+
+  # ── Deploy stage ─────────────────────────────────────────────────────────────
+
+  deploy-pages:
+    name: Build and deploy docs
+    runs-on: ubuntu-latest
+    needs: [ci-pass]
+    if: |
+      github.ref == 'refs/heads/main' ||
+      startsWith(github.ref, 'refs/tags/')
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # sphinx-multiversion needs full history
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - run: sudo apt-get update && sudo apt-get install -y git
+      - run: pip install poetry
+      - run: poetry install --with docs
+      - run: sphinx-multiversion -Ea docs/ public/
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+      - id: deploy
+        uses: actions/deploy-pages@v5
+
+  build-wheel:
+    name: Build wheel (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    needs: [ci-pass]
+    if: |
+      startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux x86_64
+            platform_dir: linux/x86_64
+            wheel_platform: manylinux_2_35_x86_64
+          - os: ubuntu-24.04-arm
+            name: Linux aarch64
+            platform_dir: linux/aarch64
+            wheel_platform: manylinux_2_35_aarch64
+          - os: windows-latest
+            name: Windows amd64
+            platform_dir: win32/amd64
+            wheel_platform: win_amd64
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Remove other platform binaries
+        shell: bash
+        run: |
+          python -c "
+          import shutil, pathlib
+          target = pathlib.Path('compileiq/core/executable/${{ matrix.platform_dir }}').resolve()
+          for d in pathlib.Path('compileiq/core/executable').glob('*/*'):
+              if d.is_dir() and d.resolve() != target:
+                  print(f'Removing {d} as it is not the target platform')
+                  shutil.rmtree(d)
+          "
+      - run: pip install poetry wheel
+      - name: Set version from tag
+        shell: bash
+        run: poetry version ${GITHUB_REF#refs/tags/}
+      - run: poetry build -f wheel
+      - name: Retag wheel for platform
+        shell: bash
+        run: wheel tags --platform-tag ${{ matrix.wheel_platform }} --remove dist/*.whl
+      # Creates Draft release with all wheels attached
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: dist/*.whl
+          generate_release_notes: true
+          name: "CompileIQ v${{ github.ref_name }}"
+          draft: true
+

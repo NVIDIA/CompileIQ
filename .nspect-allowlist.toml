@@ -1,0 +1,43 @@
+version = "1.0.0"
+[oss]
+
+# if you are not adding excluded directories then remove [oss.excluded] and [[oss.excluded.directories]] both tag from file.
+[oss.excluded]
+
+[[oss.excluded.directories]]
+paths = [
+    'poetry/pytest/9.0.2',
+    'poetry/mlflow/3.10.1',
+    'poetry/torch/*',
+    'poetry/xgboost/*',
+    'poetry/triton/*',
+]
+comment = 'Excluding example or optional/test dependencies.'
+
+[[oss.allowlist]]
+cve-id = "CVE-2025-71176"
+package = "pytest"
+versions = ["*"]
+jira = "CIQ-3323"
+comment = "pytest is a dev/test-only dependency, not shipped in production. "
+
+[[oss.allowlist]]
+cve-id = "CVE-2025-71176"
+package = "mlflow"
+versions = ["*"]
+jira = "CIQ-3323"
+comment = "Issue is a non-factor to our package."
+
+[[oss.allowlist]]
+cve-id = "CVE-2025-15381"
+package = "mlflow"
+versions = ["*"]
+jira = "CIQ-3323"
+comment = "Issue is a non-factor to our package."
+
+[[oss.allowlist]]
+cve-id = "CVE-2025-15031"
+package = "mlflow"
+versions = ["*"]
+jira = "CIQ-3323"
+comment = "Issue is a non-factor to our package."
