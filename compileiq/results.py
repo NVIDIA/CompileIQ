@@ -32,7 +32,7 @@ class SearchResult:
     @property
     def score_columns(self) -> list:
         return self.df_results.columns[
-            self.df_results.columns.str.contains(pat=r"\bscore_\d+\b")
+            self.df_results.columns.str.contains(pat=r"score_\d+")
         ].to_list()
 
     @property
@@ -126,9 +126,11 @@ class SearchResult:
         """
         Initializes an SearchResult object with an empty dataframe.
         """
-        cols = ["metadata", "generation"] + [f"score_{i+1}" for i in range(num_scores)] + ["params"]
+        cols = (
+            ["metadata", "generation"] + [f"score_{i + 1}" for i in range(num_scores)] + ["params"]
+        )
         if norm_scores:
-            cols += [f"norm_score_{i+1}" for i in range(num_scores)]
+            cols += [f"norm_score_{i + 1}" for i in range(num_scores)]
         df = pd.DataFrame(columns=cols)
         result = SearchResult(
             df=df,
@@ -174,12 +176,17 @@ class SearchResult:
             norm_score_columns = self.df_results.columns[
                 self.df_results.columns.str.contains(pat=r"norm_score_\d+")
             ]
-            scores_df = self.df_results[norm_score_columns].copy()
+            scores_df = scores_df[norm_score_columns].copy()
 
         if scores_df.columns.size != self.num_scores:
             raise ValueError(
                 "Number of score columns does not match the initialized number of scores. "
                 "If using normalized scores make sure your baseline measurements are present."
+            )
+
+        if scores_df.isna().all().all():
+            raise ValueError(
+                "All resulting scores are marked as invalid. Make sure your search ran correctly."
             )
 
         if self.num_scores == 1:
