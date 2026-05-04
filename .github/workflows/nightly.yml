@@ -1,0 +1,64 @@
+name: Nightly tests
+
+# Runs the long / cross-platform / deep-exploration test work that's
+# too expensive to gate every PR on. PR CI in `ci.yml` runs a Linux-only
+# fuzz subset; this workflow runs the full {Linux, Windows} fuzz matrix
+# with CIQ_FUZZ_EXAMPLES=100 for deeper Hypothesis sampling.
+#
+# Per AGENTS.md: "Default max_examples=20; set CIQ_FUZZ_EXAMPLES=100
+# for thorough runs (nightly CI does this)."
+
+on:
+  schedule:
+    # 06:00 UTC daily = ~01:00 Central, ~23:00 Pacific (previous day).
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+
+  fuzz-test-deep:
+    name: Fuzz tests (deep) [py${{ matrix.python }} on ${{ matrix.os }}]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+        include:
+          # Known broken: same root cause as PR-CI fuzz-test
+          # [py3.11 on ubuntu-latest]. Tracked:
+          # https://github.com/NVIDIA/CompileIQ/issues/15
+          # Remove this `include` entry + the matching step
+          # `continue-on-error` gate when issue #15 closes.
+          - os: ubuntu-latest
+            python: "3.11"
+            known_broken: true
+        exclude:
+          # Ray (a hard dependency, see pyproject.toml) does not yet
+          # publish Windows wheels for Python 3.13. Re-add when ray
+          # catches up. See ci.yml for the canonical comment.
+          - os: windows-latest
+            python: "3.13"
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+      GIT_PYTHON_REFRESH: "quiet"
+      PYTHONPATH: ${{ github.workspace }}
+      CIQ_FUZZ_EXAMPLES: "100"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - run: pip install poetry
+      - run: poetry install --with unittest,tracking
+      - name: Run fuzz tests (deep)
+        continue-on-error: ${{ matrix.known_broken || false }}
+        run: pytest tests/fuzz/ -vvv --durations=10

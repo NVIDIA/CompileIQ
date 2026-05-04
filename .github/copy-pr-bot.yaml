@@ -1,0 +1,9 @@
+enabled: true
+vetters_override:
+    # People who can approve PR CI runs with `/ok to test`
+    - vcruzer
+    - pnwamk
+    - nv-asrikanth
+    - nvptorru
+auto_sync_draft: true # Run CI on draft PRs
+auto_sync_ready: true # Run CI on draft PRs
