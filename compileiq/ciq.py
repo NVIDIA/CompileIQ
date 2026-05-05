@@ -488,7 +488,12 @@ class Search(BaseModel):
                     if self._search_config.num_objectives == 1 and self.current_generation > 0:
                         # We limit best score display to single objective because multi-objective is
                         # a pareto front and it's not straightforward to define a single "best"
-                        best_score = self._result.get_best_result()
+                        try:
+                            best_score = self._result.get_best_result()
+                        except Exception:
+                            # In case of error, keep previous best score or set to nan
+                            best_score = float("nan") if best_score is None else best_score
+
                         gen_from_best = int(best_score["generation"])
                         best_score = (
                             best_score["score_1"]

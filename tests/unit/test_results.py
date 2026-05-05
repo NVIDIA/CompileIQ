@@ -234,3 +234,22 @@ def test_invalid_results():
                 for b in best:
                     for col in result.score_columns:
                         assert INVALID_SCORE not in str(b[col]), f"{best} | {pt} | {scope}"
+
+
+def test_raise_on_all_failures():
+    dfs = [
+        _generate_results(num_scores=4),
+        _generate_results(num_scores=2),
+        _generate_results(num_scores=1),
+    ]
+    for df in dfs:
+        df[df.columns[df.columns.str.contains(pat=r"score_\d+")]] = INVALID_SCORE
+        num_scores = len([col for col in df.columns if "score" in col])
+        result = SearchResult(df=df, problem_type="min", num_scores=num_scores)
+
+        with pytest.raises(
+            ValueError,
+            match="All resulting scores are marked as invalid. "
+            "Make sure your search ran correctly.",
+        ):
+            result.get_best_result()
