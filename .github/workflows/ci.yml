@@ -22,6 +22,7 @@ jobs:
   lint:
     name: Linter Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       POETRY_VIRTUALENVS_CREATE: "false"
     steps:
@@ -42,6 +43,7 @@ jobs:
     # surfaces all at once rather than one-at-a-time.
     name: Unit tests [py${{ matrix.python }} on ${{ matrix.os }}]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -85,6 +87,7 @@ jobs:
     name: Integration tests (with coverage) [py${{ matrix.python }} on ${{ matrix.os }}]
     runs-on: ${{ matrix.os }}
     needs: [lint, unit-test]
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -142,6 +145,7 @@ jobs:
     name: Fuzz tests [py${{ matrix.python }} on ${{ matrix.os }}]
     runs-on: ${{ matrix.os }}
     needs: [lint, unit-test]
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -169,6 +173,7 @@ jobs:
     name: Run examples (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     needs: [lint, unit-test]
+    timeout-minutes: 20
     strategy:
       matrix:
         include:
@@ -208,6 +213,7 @@ jobs:
     name: Validate Binary Search Spaces
     runs-on: ubuntu-latest
     needs: [lint, unit-test]
+    timeout-minutes: 10
     env:
       POETRY_VIRTUALENVS_CREATE: "false"
       PYTHONPATH: ${{ github.workspace }}
@@ -241,6 +247,7 @@ jobs:
     name: Build and deploy docs
     runs-on: ubuntu-latest
     needs: [ci-pass]
+    timeout-minutes: 10
     if: |
       github.ref == 'refs/heads/main' ||
       startsWith(github.ref, 'refs/tags/')
@@ -275,6 +282,7 @@ jobs:
   build-wheel:
     name: Build wheel (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     needs: [ci-pass]
     if: |
       startsWith(github.ref, 'refs/tags/')
