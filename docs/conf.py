@@ -59,7 +59,7 @@ html_logo = "_static/nvidia-logo.png"
 html_baseurl = (
     os.environ.get(
         "CIQ_DOCS_BASE_URL",
-        "https://nvidia.github.io/CompileIQ/",
+        "https://miniature-adventure-5v8nrk3.pages.github.io/",
     ).rstrip("/")
     + "/"
 )
