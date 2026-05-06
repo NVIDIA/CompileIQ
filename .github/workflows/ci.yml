@@ -232,13 +232,121 @@ jobs:
         working-directory: tests/compiler_ss
         run: python validate_binary.py
 
+  smoke-test-wheel-matrix:
+    name: Select smoke test wheel matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - id: matrix
+        name: Choose platforms for this ref
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+
+          linux_x86 = {
+              "os": "ubuntu-latest",
+              "name": "Linux x86_64",
+              "platform_dir": "linux/x86_64",
+              "wheel_platform": "manylinux_2_35_x86_64",
+              "artifact_name": "compileiq-wheel-linux-x86_64",
+          }
+          release_platforms = [
+              linux_x86,
+              {
+                  "os": "ubuntu-24.04-arm",
+                  "name": "Linux aarch64",
+                  "platform_dir": "linux/aarch64",
+                  "wheel_platform": "manylinux_2_35_aarch64",
+                  "artifact_name": "compileiq-wheel-linux-aarch64",
+              },
+              {
+                  "os": "windows-latest",
+                  "name": "Windows amd64",
+                  "platform_dir": "win32/amd64",
+                  "wheel_platform": "win_amd64",
+                  "artifact_name": "compileiq-wheel-windows-amd64",
+              },
+          ]
+
+          ref = os.environ["GITHUB_REF"]
+          full_matrix = ref == "refs/heads/main" or ref.startswith("refs/tags/")
+          platforms = release_platforms if full_matrix else [linux_x86]
+
+          print("Selected smoke test wheel platforms:")
+          for platform in platforms:
+              print(f"- {platform['name']} ({platform['wheel_platform']})")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"matrix={json.dumps({'include': platforms})}\n")
+          PY
+
+  build-and-smoke-test-wheel:
+    name: Build and smoke test wheel (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    needs: [lint, unit-test, smoke-test-wheel-matrix]
+    permissions:
+      contents: read
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+      GIT_PYTHON_REFRESH: "quiet"
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.smoke-test-wheel-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+      - name: Remove other platform binaries
+        shell: bash
+        run: |
+          python -c "
+          import shutil, pathlib
+          target = pathlib.Path('compileiq/core/executable/${{ matrix.platform_dir }}').resolve()
+          for d in pathlib.Path('compileiq/core/executable').glob('*/*'):
+              if d.is_dir() and d.resolve() != target:
+                  print(f'Removing {d} as it is not the target platform')
+                  shutil.rmtree(d)
+          "
+      - run: python -m pip install poetry wheel
+      - name: Set version from tag
+        if: |
+          startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: poetry version "${GITHUB_REF#refs/tags/}"
+      - run: poetry build -f wheel
+      - name: Retag wheel for platform
+        shell: bash
+        run: wheel tags --platform-tag ${{ matrix.wheel_platform }} --remove dist/*.whl
+      - name: Install built wheel
+        shell: bash
+        run: python -m pip install --force-reinstall dist/*.whl
+      - name: Smoke installed wheel
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          python "$GITHUB_WORKSPACE/.github/scripts/smoke_test_compileiq_wheel.py"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*.whl
+          if-no-files-found: error
+
   # This job is a work around to make sure that all the checks have passed before we mark the PR as ready for review.
   # This is needed because GitHub does not allow us to set a condition on the PR to be marked as ready for review based on the status of the checks.
-  ci-pass:                                                                                                                                                                                                                                                                                                                                                                                                                        
-    name: CI Pass                                                                                                                                                                                                                                                                                                                                                                                                                 
-    runs-on: ubuntu-latest                                                     
-    needs: [fuzz-test, run-examples, validate-binary-ss]                                                                                                                                                                                                                                                                                                                                                  
-    steps:                                                                                                                                                                                                                                                                                                                                                                                                                        
+  ci-pass:
+    name: CI Pass
+    runs-on: ubuntu-latest
+    needs: [integration-test, fuzz-test, run-examples, validate-binary-ss, build-and-smoke-test-wheel]
+    steps:
       - run: echo "All checks passed"
 
   # ── Deploy stage ─────────────────────────────────────────────────────────────
@@ -279,63 +387,26 @@ jobs:
       - id: deploy
         uses: actions/deploy-pages@v5
 
-  build-wheel:
-    name: Build wheel (${{ matrix.name }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    needs: [ci-pass]
+  upload-github-release-wheels:
+    name: Upload wheels to GitHub release
+    runs-on: ubuntu-latest
+    needs: [ci-pass, build-and-smoke-test-wheel]
     if: |
       startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
-    env:
-      POETRY_VIRTUALENVS_CREATE: "false"
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            name: Linux x86_64
-            platform_dir: linux/x86_64
-            wheel_platform: manylinux_2_35_x86_64
-          - os: ubuntu-24.04-arm
-            name: Linux aarch64
-            platform_dir: linux/aarch64
-            wheel_platform: manylinux_2_35_aarch64
-          - os: windows-latest
-            name: Windows amd64
-            platform_dir: win32/amd64
-            wheel_platform: win_amd64
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
         with:
-          lfs: true
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Remove other platform binaries
-        shell: bash
-        run: |
-          python -c "
-          import shutil, pathlib
-          target = pathlib.Path('compileiq/core/executable/${{ matrix.platform_dir }}').resolve()
-          for d in pathlib.Path('compileiq/core/executable').glob('*/*'):
-              if d.is_dir() and d.resolve() != target:
-                  print(f'Removing {d} as it is not the target platform')
-                  shutil.rmtree(d)
-          "
-      - run: pip install poetry wheel
-      - name: Set version from tag
-        shell: bash
-        run: poetry version ${GITHUB_REF#refs/tags/}
-      - run: poetry build -f wheel
-      - name: Retag wheel for platform
-        shell: bash
-        run: wheel tags --platform-tag ${{ matrix.wheel_platform }} --remove dist/*.whl
-      # Creates Draft release with all wheels attached
+          pattern: compileiq-wheel-*
+          path: dist
+          merge-multiple: true
+      - name: List release wheel assets
+        run: ls -l dist
+      # Uploads the smoke-tested wheel artifacts to the draft GitHub Release for this tag.
       - uses: softprops/action-gh-release@v3
         with:
           files: dist/*.whl
           generate_release_notes: true
           name: "CompileIQ v${{ github.ref_name }}"
           draft: true
-
