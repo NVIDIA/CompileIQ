@@ -2,8 +2,6 @@
 Public compiler search space providers.
 
 Each provider fetches a pre-built, search space from GitHub.
-For internal NVIDIA providers that query local compilers or GitLab, see
-the ``compileiq_nvidia.search_spaces`` package.
 """
 
 from __future__ import annotations

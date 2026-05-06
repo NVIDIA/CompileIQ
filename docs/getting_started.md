@@ -150,4 +150,4 @@ CompileIQ supports more advanced features:
   - Multi-objective optimization (`multi_objective.py`)
   - Distributed searches (`distributed.py`)
   - Checkpointing (`checkpointing.py`)
-  - XGBoost integration (`xgb_solar.py`)
+  - XGBoost integration (`ciq_xgboost.py`)

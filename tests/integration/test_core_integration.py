@@ -536,7 +536,7 @@ def objective_mixed(config):
 def test_mixed_types_with_real_core(cache_dir):
     """Kitchen-sink test: range (int and float), choice (numeric and string),
     literal (string with knockout), and log_sampling all in one search space.
-    Mirrors what real users do in examples/xgb_solar.py."""
+    Mirrors what real users do in examples/ciq_xgboost.py."""
     result = Search(
         objective_function=objective_mixed,
         search_space={

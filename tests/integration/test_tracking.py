@@ -28,7 +28,7 @@ def workers_to_test():
 
 
 @pytest.mark.requires_ipc
-def test_evosearch_default_tracker_type(
+def test_compileiq_default_tracker_type(
     mock_core_start,
     mock_send_to_core,
     mock_receive_from_core,

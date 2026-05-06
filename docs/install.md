@@ -35,6 +35,6 @@ Once Claude Code is installed, clone the repository and these commands will be a
 
 | Environment Variable | Default Value | Type | Description
 | ------ | ------ | ------ | ------ |
-| CIQ_SOCKET_TIMEOUT | 20 | int | Controls how long Solar waits for a core response. If you experience timeouts because your search space is too big, consider increasing this value.
+| CIQ_SOCKET_TIMEOUT | 20 | int | Controls how long CompileIQ waits for a core response. If you experience timeouts because your search space is too big, consider increasing this value.
 | CIQ_KEEP_CACHE | False | bool | If set to True, `.cache` files will not be deleted.
 | CIQ_PROCESS_MODE | "forkserver" | str | User can set this to "fork" to better separate processes and deal with threads. `IsoMultiProcessWorker` uses `spawn` as the default.

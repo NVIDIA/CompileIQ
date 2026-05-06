@@ -27,7 +27,7 @@ def main():
         "z": ss.literal("this is a constant", knockout_prob=0.5),
     }
 
-    # When `normalize` is set to `True`, Evo will normalize all output scores from your
+    # When `normalize` is set to `True`, CompileIQ will normalize all output scores from your
     # objective using a baseline. Your function needs to be prepared for accept `BASELINE_DNA`
     main_config = SearchConfiguration(
         normalize=True,

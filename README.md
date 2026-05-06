@@ -24,13 +24,13 @@ We provide curated search spaces under the `assets/` folder. These can be fed di
 
 | Environment Variable | Default Value | Type | Description
 | ------ | ------ | ------ | ------ |
-| CIQ_SOCKET_TIMEOUT | 20 | int | Controls how long Solar waits for a core response. If you experience timeouts because your search space is too big, consider increasing this value.
+| CIQ_SOCKET_TIMEOUT | 20 | int | Controls how long CompileIQ waits for a core response. If you experience timeouts because your search space is too big, consider increasing this value.
 | CIQ_KEEP_CACHE | False | bool | If set to True, `.cache` files will not be deleted.
 | CIQ_PROCESS_MODE | "forkserver" | str | Start method for process-based workers. Set to "fork" for tighter process separation when threads are involved. `IsoMultiProcessWorker` defaults to "fork" independently.
 
 ## Examples
 
-The `examples/` folder has simple examples for you to get started on using Solar.
+The `examples/` folder has simple examples for you to get started on using CompileIQ.
 
 If you are planning on running examples, you may need additional dependencies:
 
