@@ -109,7 +109,7 @@ def test_save():
     result = SearchResult(df=df, problem_type=ProblemType.MAX, num_scores=3)
 
     # Saving to a test file
-    test_filepath = "test_evo_results.csv"
+    test_filepath = "test_compileiq_results.csv"
     result.save(test_filepath)
 
     # Loading back the file to check contents

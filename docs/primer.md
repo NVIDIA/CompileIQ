@@ -28,7 +28,7 @@ During `mating`, two parents are selected at random (from the culled) and produc
 
 The offspring undergo `mutation` and are combined with DNA that live-on to create a new pool. In mutation, randomly selected offspring DNA will have some of the genes altered. Mutations are not bounded as opposed to Mating / Cross-over. Mutation helps avoid local minima / maxima and is also responsible for continuous exploration even during later stages of CompileIQ.
 
-However, too much mutation will degrade Evo’s ability to refine good solutions into better solutions. The whole process is repeated until the pool has dropped below a low limit for genetic diversity or a set number of generations.
+However, too much mutation will degrade CompileIQ's ability to refine good solutions into better solutions. The whole process is repeated until the pool has dropped below a low limit for genetic diversity or a set number of generations.
 
 `Diversity` is the percentage of uniqueness in the entire pool: At 100% all DNA are unique and at 0% all DNA are identical. The diversity decreases as better performing solutions are found. This is because the successful genes reproduce more often and increase in number in the pool. CompileIQ will change its behavior at various stages based on the current diversity. When the diversity drops below specified thresholds, CompileIQ will slow exploration and focus more on refining good solutions into better ones.
 

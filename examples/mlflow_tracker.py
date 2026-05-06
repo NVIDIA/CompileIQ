@@ -71,7 +71,7 @@ def main():
     # mlflow starts one locally.
     tracker_config = MLflowTrackerConfig(
         experiment_name="test",
-        description="Test run in Evo Solar",
+        description="Test run in CompileIQ",
     )
 
     main_config = SearchConfiguration(

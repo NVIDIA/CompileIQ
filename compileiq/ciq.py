@@ -598,7 +598,7 @@ class Search(BaseModel):
                 except Exception:
                     return param
 
-            # We only support nested for native solar format
+            # We only support nested for native CompileIQ format
             if not is_legacy and isinstance(param_set, dict):
                 # This if deals with the corner case the user is using legacy dna that
                 # is json-compatible

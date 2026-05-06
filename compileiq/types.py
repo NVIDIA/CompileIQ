@@ -450,7 +450,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
     )
     normalize: bool = Field(
         default=False,
-        description="Controls if the scores are normalized by Solar. "
+        description="Controls if the scores are normalized by CompileIQ. "
         "Mostly recommended if using multi-machine or multi-gpu setups.",
     )
     num_objectives: int = Field(
@@ -622,7 +622,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
             It will ignore all fields that are not available at SearchConfiguration
 
         Warning:
-            It will thrown Exceptions if using fields that are unsupported in Solar
+            It will throw Exceptions if using fields that are unsupported in CompileIQ
         """
         if legacy.endswith(".config") and pathlib.Path(legacy).exists():
             with open(legacy, "r") as f:
@@ -657,7 +657,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
 class InternalSearchConfiguration(SearchConfiguration):
     """
     Used internally to construct a legacy dna.config
-    These are fields Solar overwrites and the user should not set by themselves.
+    These are fields CompileIQ overwrites and the user should not set by themselves.
     """
 
     dna_config: str | List[str] = ""

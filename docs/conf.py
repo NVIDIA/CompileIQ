@@ -59,7 +59,7 @@ html_logo = "_static/nvidia-logo.png"
 html_baseurl = (
     os.environ.get(
         "CIQ_DOCS_BASE_URL",
-        "https://compilermachinelearning.gitlab-master-pages.nvidia.com/evo-solar-external/",
+        "https://nvidia.github.io/CompileIQ/",
     ).rstrip("/")
     + "/"
 )

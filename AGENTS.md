@@ -101,4 +101,4 @@ Key modules:
 
 ## CI/CD
 
-GitLab CI with stages: validation → test → deploy. Linting and unit tests run in validation stage. Integration tests, example runs, fuzz tests, and binary/internal validation run in test stage. Fuzz tests run last (gated on integration tests passing). Deploy stage handles SonarQube, wheel publishing to Artifactory (on tags), and docs (GitLab Pages).
+GitHub Actions workflows cover validation, testing, and deploy-related tasks. Linting and unit tests run in validation jobs. Integration tests, example runs, fuzz tests, and binary/internal validation run in test jobs. Fuzz tests run last after integration tests pass.

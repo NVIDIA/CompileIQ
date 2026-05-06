@@ -1,6 +1,6 @@
 # Fine-tune a XGBoost ML Model
 
-Make sure you followed the [Installation Guide](install.md). You can find the source code for [this example here](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/xgb_solar.py).
+Make sure you followed the [Installation Guide](install.md). You can find the source code for [this example here](https://github.com/NVIDIA/CompileIQ/blob/main/examples/ciq_xgboost.py).
 
 ## Overview
 

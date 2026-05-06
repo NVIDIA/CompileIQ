@@ -134,7 +134,6 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    "evo-search/",
 ]
 
 line-length = 100
@@ -153,4 +152,3 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
-
