@@ -5,5 +5,5 @@ vetters_override:
     - pnwamk
     - nv-asrikanth
     - nvptorru
-auto_sync_draft: true # Run CI on draft PRs
-auto_sync_ready: true # Run CI on ready PRs
+auto_sync_draft: true 
+auto_sync_ready: true
