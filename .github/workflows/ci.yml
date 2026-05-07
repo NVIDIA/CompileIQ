@@ -1,7 +1,14 @@
 name: CI
 
 on:
-  create:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "LICENSE"
+      - ".gitignore"
   push:
     branches:
       - "pull-request/[0-9]+"
@@ -22,9 +29,6 @@ jobs:
 
   lint:
     name: Linter Check
-    # copy-pr-bot creates pull-request/N refs before it pushes later updates.
-    # Include that create event, but do not run CI for ordinary branch creation.
-    if: github.event_name != 'create' || startsWith(github.ref, 'refs/heads/pull-request/')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -46,7 +50,6 @@ jobs:
     # fail-fast: false so divergence between Python versions or OSes
     # surfaces all at once rather than one-at-a-time.
     name: Unit tests [py${{ matrix.python }} on ${{ matrix.os }}]
-    if: github.event_name != 'create' || startsWith(github.ref, 'refs/heads/pull-request/')
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
