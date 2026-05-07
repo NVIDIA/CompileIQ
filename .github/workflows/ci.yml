@@ -334,7 +334,8 @@ jobs:
         run: |
           cd "$RUNNER_TEMP"
           python "$GITHUB_WORKSPACE/.github/scripts/smoke_test_compileiq_wheel.py"
-      - uses: actions/upload-artifact@v6
+      - name: Upload smoke-tested wheel artifact
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.artifact_name }}
           path: dist/*.whl
@@ -396,7 +397,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v6
+      - name: Download smoke-tested wheel artifacts
+        uses: actions/download-artifact@v6
         with:
           pattern: compileiq-wheel-*
           path: dist
