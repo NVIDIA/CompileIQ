@@ -1,14 +1,6 @@
 name: CI
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
-      - "LICENSE"
-      - ".gitignore"
   push:
     branches:
       - "pull-request/[0-9]+"
