@@ -6,11 +6,11 @@ on:
       - "pull-request/[0-9]+"
       - main
     tags: ["**"]
-    # paths-ignore:
-    #   - "**/*.md"
-    #   - "docs/**"
-    #   - "LICENSE"
-    #   - ".gitignore"
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "LICENSE"
+      - ".gitignore"
   workflow_dispatch:
 
 concurrency:
