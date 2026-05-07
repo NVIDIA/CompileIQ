@@ -11,6 +11,7 @@ on:
       - "docs/**"
       - "LICENSE"
       - ".gitignore"
+      - "dev/**"
   workflow_dispatch:
 
 concurrency:
