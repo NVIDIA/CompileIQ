@@ -21,7 +21,6 @@ from typing import (
     Callable,
     Dict,
     List,
-    Literal,
     Optional,
     TypeAlias,
     cast,
@@ -33,11 +32,7 @@ from compileiq.tracker import (
 from compileiq.config.const import _CACHE_DIR, KEEP_CACHE_FILES
 from compileiq.types import (
     BaseTracker,
-    AsyncMultiObjectiveFunction,
-    AsyncSingleObjectiveFunction,
-    MultiObjectiveFunction,
     ParamArg,
-    SingleObjectiveFunction,
     TrackerTypes,
     Worker,
     WorkerTypes,
@@ -189,107 +184,6 @@ class Search(BaseModel):
 
     # Pydantic config
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
-
-    @classmethod
-    def single_objective(
-        cls,
-        *,
-        objective_function: SingleObjectiveFunction | AsyncSingleObjectiveFunction,
-        search_space: SearchSpaceInput,
-        search_config: SearchConfigInput,
-        **kwargs: Any,
-    ) -> "Search":
-        """
-        Create a search whose objective returns one scalar score.
-
-        This is equivalent to passing ``num_objectives=1`` in the search configuration,
-        but it keeps that intent next to the objective function.
-        """
-        return cls(
-            objective_function=objective_function,
-            search_space=search_space,
-            search_config=cls._search_config_with_num_objectives(search_config, 1),
-            **kwargs,
-        )
-
-    @classmethod
-    def multi_objective(
-        cls,
-        *,
-        objective_function: MultiObjectiveFunction | AsyncMultiObjectiveFunction,
-        search_space: SearchSpaceInput,
-        search_config: SearchConfigInput,
-        num_objectives: int,
-        **kwargs: Any,
-    ) -> "Search":
-        """
-        Create a search whose objective returns multiple scalar scores.
-
-        ``num_objectives`` must match the length of the sequence returned by the
-        objective function. Runtime score validation still checks the exact length.
-        """
-        if num_objectives <= 1:
-            raise ValueError("multi_objective searches require num_objectives greater than 1.")
-
-        return cls(
-            objective_function=objective_function,
-            search_space=search_space,
-            search_config=cls._search_config_with_num_objectives(search_config, num_objectives),
-            **kwargs,
-        )
-
-    @staticmethod
-    def _search_config_with_num_objectives(
-        search_config: SearchConfigInput, num_objectives: int
-    ) -> SearchConfigInput:
-        if isinstance(search_config, pathlib.Path):
-            return search_config
-
-        if isinstance(search_config, SearchConfiguration):
-            if (
-                "num_objectives" in search_config.model_fields_set
-                and search_config.num_objectives != num_objectives
-            ):
-                raise ValueError(
-                    "SearchConfiguration.num_objectives does not match the objective "
-                    f"constructor: got {search_config.num_objectives}, expected {num_objectives}."
-                )
-            config_data = search_config.model_dump(include=search_config.model_fields_set)
-            if search_config.num_objectives != num_objectives:
-                if Search._uses_derived_pool_size(search_config):
-                    config_data["pool_size"] = None
-                if Search._uses_derived_cull_size(search_config):
-                    config_data["cull_size"] = None
-            config_data["num_objectives"] = num_objectives
-            return SearchConfiguration(**config_data)
-
-        declared_objectives = search_config.get("num_objectives")
-        if declared_objectives is not None and declared_objectives != num_objectives:
-            raise ValueError(
-                "search_config['num_objectives'] does not match the objective constructor: "
-                f"got {declared_objectives}, expected {num_objectives}."
-            )
-        return SearchConfiguration(**{**search_config, "num_objectives": num_objectives})
-
-    @staticmethod
-    def _uses_derived_pool_size(search_config: SearchConfiguration) -> bool:
-        config_data = search_config.model_dump()
-        config_data["pool_size"] = None
-        config_data["cull_size"] = None
-        derived_config = SearchConfiguration(**config_data)
-        return search_config.pool_size == derived_config.pool_size
-
-    @staticmethod
-    def _uses_derived_cull_size(search_config: SearchConfiguration) -> bool:
-        config_data = search_config.model_dump()
-        config_data["cull_size"] = None
-        derived_config = SearchConfiguration(**config_data)
-        return search_config.cull_size == derived_config.cull_size
-
-    @property
-    def objective_mode(self) -> Literal["single", "multi"]:
-        """Whether this search is configured for one objective or several."""
-        return "single" if self._search_config.num_objectives == 1 else "multi"
 
     @field_validator("search_space", mode="after")
     def validate_windows(cls, value):

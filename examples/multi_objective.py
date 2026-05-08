@@ -22,13 +22,13 @@ def main():
         generations=3,
         mutate_rate=0.5,
         problem_type="min",
+        num_objectives=2,
     )
 
-    tuner = Search.multi_objective(
+    tuner = Search(
         objective_function=multiobjective,
         search_space=dna_config,
         search_config=main_config,
-        num_objectives=2,
     )
 
     results = tuner.start(num_workers=2)

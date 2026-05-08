@@ -9,7 +9,6 @@ from abc import ABC, abstractmethod
 from importlib.metadata import version
 from pydantic import BaseModel, Field, model_validator, field_validator, SkipValidation
 from typing import (
-    Awaitable,
     Callable,
     Optional,
     List,
@@ -30,16 +29,6 @@ from compileiq.utils.validation import (  # noqa: F401 (re-exported)
 
 
 ParamArg: TypeAlias = dict | str | list[dict | str]
-SingleObjectiveFunction: TypeAlias = Callable[[ParamArg], SingleScore]
-MultiObjectiveFunction: TypeAlias = Callable[[ParamArg], MultiScore]
-AsyncSingleObjectiveFunction: TypeAlias = Callable[[ParamArg], Awaitable[SingleScore]]
-AsyncMultiObjectiveFunction: TypeAlias = Callable[[ParamArg], Awaitable[MultiScore]]
-ObjectiveFunction: TypeAlias = (
-    SingleObjectiveFunction
-    | MultiObjectiveFunction
-    | AsyncSingleObjectiveFunction
-    | AsyncMultiObjectiveFunction
-)
 
 
 class ProblemType(StrEnum):

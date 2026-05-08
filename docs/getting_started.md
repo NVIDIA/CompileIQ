@@ -35,10 +35,11 @@ main_config = SearchConfiguration(
     generations=3,      # Number of iterations
     mutate_rate=0.5,   # Mutation probability
     problem_type="min", # Minimize objective
+    num_objectives=1,   # Single objective
 )
 
 # Create and run the search
-tuner = Search.single_objective(
+tuner = Search(
     objective_function=objective,
     search_space=dna_config,
     search_config=main_config,
@@ -65,6 +66,7 @@ print(f"Best Result: {results.get_best_result()}")
     - `generations`: Number of iterations
     - `mutate_rate`: Probability of mutation
     - `problem_type`: "min" or "max"
+    - `num_objectives`: Number of objectives to optimize
 
 4. **Running the Search**
     - Create a `Search` instance with your configurations
@@ -97,20 +99,20 @@ main_config = SearchConfiguration(
     generations=3,
     mutate_rate=0.5,
     problem_type="min",
+    num_objectives=2, # Updating num of objectives
 )
 
-tuner = Search.multi_objective(
+tuner = Search(
     objective_function=multiobjective,
     search_space=dna_config,
     search_config=main_config,
-    num_objectives=2,
 )
 
 results = tuner.start()
 print(results.pareto_front())
 ```
 
-The two important differences are calling `Search.multi_objective(...)` with `num_objectives=2` and returning two values from the objective function.
+The two important differences are setting `num_objectives=2` and returning two values from the objective function.
 
 The return value of `results.pareto_front()` is a list with the Pareto-efficient rows.
 
@@ -120,7 +122,7 @@ You can use `Search.sample` to retrieve randomly generated samples from your sea
 
 ```python
 # Create and run the search
-tuner = Search.single_objective(
+tuner = Search(
     objective_function=objective,
     search_space=dna_config,
     search_config=main_config,
