@@ -1,0 +1,30 @@
+{
+    "include": ["compileiq", "tests"],
+    "exclude": [
+        "compileiq/core/executable",
+        "**/__pycache__",
+        ".venv"
+    ],
+    "pythonVersion": "3.11",
+    "pythonPlatform": "All",
+    "typeCheckingMode": "standard",
+    "reportMissingTypeStubs": "none",
+    "reportUnnecessaryCast": "warning",
+    "reportUnnecessaryTypeIgnoreComment": "warning",
+    "executionEnvironments": [
+        {
+            "root": "tests/integration",
+            "reportAttributeAccessIssue": "none",
+            "reportArgumentType": "none"
+        },
+        {
+            "root": "tests/fuzz",
+            "reportAttributeAccessIssue": "none",
+            "reportArgumentType": "none"
+        },
+        {
+            "root": "tests",
+            "reportAttributeAccessIssue": "none"
+        }
+    ]
+}

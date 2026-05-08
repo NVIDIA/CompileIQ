@@ -168,7 +168,7 @@ class TestLiteral:
 
     def test_invalid_const_value_raises(self):
         with pytest.raises(ValueError, match="`const_value` must be a str, int, or float"):
-            ss.literal(const_value=lambda x: print("Oops, I am not a valid literal"))
+            ss.literal(const_value=lambda x: print("Oops, I am not a valid literal"))  # type: ignore[arg-type]
 
     def test_int_value(self):
         result = ss.literal(const_value=5)

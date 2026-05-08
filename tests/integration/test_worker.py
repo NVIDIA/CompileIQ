@@ -226,6 +226,7 @@ def test_baseline(worker_class, tmp_path):
         num_workers=2,
         num_function_returns=1,
     )
+    baseline = None
     for score in scores:
         if score.is_baseline:
             baseline = [score.score] if score.num_objectives == 1 else score.score

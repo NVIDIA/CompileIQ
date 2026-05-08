@@ -14,7 +14,10 @@ def ctk_supports_compileiq() -> bool:
     version_output = subprocess.run(
         ["ptxas", "--version"], capture_output=True, text=True, check=True
     ).stdout
-    cuda_version = re.search(r"release (\d+\.\d+),", version_output).group(1)
+    match = re.search(r"release (\d+\.\d+),", version_output)
+    if match is None:
+        return False
+    cuda_version = match.group(1)
     return float(cuda_version) >= 13.3
 
 

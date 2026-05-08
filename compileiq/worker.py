@@ -1,8 +1,11 @@
-from typing import Callable, List, Dict, Optional
+from __future__ import annotations
+
+from typing import Any, Callable, List, Dict, Optional, Sequence
 import inspect
 import multiprocessing
 from multiprocessing.connection import Connection, wait as mp_wait
 from multiprocessing.synchronize import Event
+import queue
 import traceback
 import warnings
 import asyncio
@@ -19,8 +22,8 @@ from ray.util.scheduling_strategies import (
     PlacementGroupSchedulingStrategy,
 )
 import sys
-from compileiq.utils.validation import SingleScore, MultiScore, Score
-from compileiq.types import INVALID_SCORE, BASELINE_DNA, Worker, BaseTracker
+from compileiq.utils.validation import Score
+from compileiq.types import INVALID_SCORE, BASELINE_DNA, ParamArg, Worker, BaseTracker
 
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     # This makes sure when using pyinstaller nothing breaks and the executable works properly
@@ -50,7 +53,12 @@ class MultiProcessWorker(Worker):
     Does not have distributed machine support, only local parallelism
     """
 
-    def __init__(self, cache_folder: str, normalize: bool = False, tracker: BaseTracker = None):
+    def __init__(
+        self,
+        cache_folder: str | os.PathLike,
+        normalize: bool = False,
+        tracker: BaseTracker | None = None,
+    ):
         super().__init__(
             cache_folder=cache_folder,
             normalize=normalize,
@@ -68,7 +76,12 @@ class MultiProcessWorker(Worker):
             ) from e
 
     @classmethod
-    def create(cls, cache_folder, normalize, tracker):
+    def create(
+        cls,
+        cache_folder: str | os.PathLike,
+        normalize: bool,
+        tracker: BaseTracker | None,
+    ) -> "MultiProcessWorker":
         return cls(cache_folder=cache_folder, normalize=normalize, tracker=tracker)
 
     def __del__(self):
@@ -79,8 +92,8 @@ class MultiProcessWorker(Worker):
         self,
         *,
         function: Callable,
-        params_pool: List[Dict | str],
-        params_ids: List[int],
+        params_pool: Sequence[ParamArg],
+        params_ids: Sequence[int],
         num_function_returns: int = 1,
         num_workers: int = 1,
         task_timeout: Optional[int | float] = None,
@@ -190,19 +203,16 @@ class MultiProcessWorker(Worker):
         if self.normalize:
             for score in resulting_scores:
                 if score.failed:
-                    score.norm_score = (
-                        INVALID_SCORE
-                        if num_function_returns == 1
-                        else [INVALID_SCORE] * num_function_returns
-                    )
+                    score.norm_score = Worker.invalidate_score(num_function_returns)
                 else:
+                    assert self.baseline_score is not None
                     score.norm_score = self.normalize_scores(score.score, self.baseline_score.score)
 
         return resulting_scores
 
     @staticmethod
     def execute_objective(
-        obj_func_args: Dict | str,
+        obj_func_args: ParamArg,
         param_id: int | str,
         num_objectives: int,
         objective_func: Callable,
@@ -212,10 +222,9 @@ class MultiProcessWorker(Worker):
         """
         Executes the user objective function, but handles exceptions, score validation.
         """
+        task_id = str(uuid4().hex)
         try:
-            task_id = str(uuid4().hex)
-            if tracker is not None:
-                tracker.pre_objective(obj_func_args, task_id=task_id)
+            tracker.pre_objective(obj_func_args, task_id=task_id)
             scores = objective_func(obj_func_args)
         except Exception:
             print(traceback.format_exc(), file=sys.stderr)
@@ -235,9 +244,7 @@ class MultiProcessWorker(Worker):
             is_baseline=(param_id == "baseline"),
         )
 
-        if tracker is not None:
-            tracker.post_objective(score.model_dump_json(), task_id=task_id)
-
+        tracker.post_objective(score.model_dump_json(), task_id=task_id)
         # Baseline is not allowed to fail
         if norm_enabled and score.is_baseline and score.failed:
             raise RuntimeError(
@@ -250,13 +257,13 @@ class MultiProcessWorker(Worker):
 
     @staticmethod
     def _function_wrapper(
-        job_queue: multiprocessing.Queue,
-        results_queue: multiprocessing.Queue,
+        job_queue: multiprocessing.Queue | queue.Queue,
+        results_queue: multiprocessing.Queue | queue.Queue,
         num_objectives: int,
         objective_func: Callable,
         tracker: BaseTracker,
         norm_enabled: bool = False,
-        error_queue: Optional[multiprocessing.Queue] = None,
+        error_queue: multiprocessing.Queue | queue.Queue | None = None,
         task_timeout: Optional[int | float] = None,
     ) -> None:
         """
@@ -317,7 +324,12 @@ class IsoMultiProcessWorker(Worker):
     needing to be killed (through timeout or other mechanisms).
     """
 
-    def __init__(self, cache_folder: str, normalize: bool = False, tracker: BaseTracker = None):
+    def __init__(
+        self,
+        cache_folder: str | os.PathLike,
+        normalize: bool = False,
+        tracker: BaseTracker | None = None,
+    ):
         super().__init__(
             cache_folder=cache_folder,
             normalize=normalize,
@@ -327,15 +339,20 @@ class IsoMultiProcessWorker(Worker):
         )
 
     @classmethod
-    def create(cls, cache_folder, normalize, tracker):
+    def create(
+        cls,
+        cache_folder: str | os.PathLike,
+        normalize: bool,
+        tracker: BaseTracker | None,
+    ) -> "IsoMultiProcessWorker":
         return cls(cache_folder=cache_folder, normalize=normalize, tracker=tracker)
 
     def run(
         self,
         *,
         function: Callable,
-        params_pool: List[Dict | str],
-        params_ids: List[int],
+        params_pool: Sequence[ParamArg],
+        params_ids: Sequence[int],
         num_function_returns: int = 1,
         num_workers: int = 1,
         task_timeout: Optional[int | float] = None,
@@ -363,7 +380,7 @@ class IsoMultiProcessWorker(Worker):
         Returns:
             A list of `Score`. There will be a return for each param in `params_pool`.
         """
-        tasks = []
+        tasks: list[tuple[int | str, ParamArg]] = []
         if self.normalize and self.baseline_score is None:
             tasks.append(("baseline", BASELINE_DNA))
         for i, param in enumerate(params_pool):
@@ -382,20 +399,21 @@ class IsoMultiProcessWorker(Worker):
                 if score.failed:
                     score.norm_score = Worker.invalidate_score(num_function_returns)
                 else:
+                    assert self.baseline_score is not None
                     score.norm_score = self.normalize_scores(score.score, self.baseline_score.score)
 
         return resulting_scores
 
     @staticmethod
     def execute_objective(
-        obj_func_args: Dict | str,
+        obj_func_args: ParamArg,
         param_id: int | str,
         num_objectives: int,
         objective_func: Callable,
         tracker: BaseTracker,
         norm_enabled: bool,
-        result_pipe: Connection,
-        done_event: Event,
+        result_pipe: Connection | None,
+        done_event: Event | None,
     ) -> None:
         """
         Executes the user objective function, but handles exceptions, score validation,
@@ -419,9 +437,9 @@ class IsoMultiProcessWorker(Worker):
 
     def handle_isolation(
         self,
-        tasks: list[tuple[int | str, Dict | str]],
+        tasks: list[tuple[int | str, ParamArg]],
         num_workers: int,
-        function: callable,
+        function: Callable,
         num_function_returns: int,
         task_timeout: Optional[int | float] = None,
     ) -> List[Score]:
@@ -430,16 +448,14 @@ class IsoMultiProcessWorker(Worker):
         """
 
         # (process, recv_conn, param_id, param, start_time, done_event)
-        active: list[
-            tuple[multiprocessing.Process, Connection, int | str, Dict | str, float, Event]
-        ] = []
+        active: list[tuple[Any, Any, int | str, ParamArg, float, Any]] = []
         resulting_scores: List[Score] = []
         task_index = 0
 
         # Default to 'fork' mode for this worker otherwise things will be super slow
         # User env var still takes precedence if set.
         mode = os.environ.get("CIQ_PROCESS_MODE", "fork")
-        iso_ctx = multiprocessing.get_context(mode if sys.platform != "win32" else "spawn")
+        iso_ctx: Any = multiprocessing.get_context(mode if sys.platform != "win32" else "spawn")
 
         # This loops handles timeouts and keeping the number of workers under the defined limit
         # A simpler implementation with Threading will cause issues with mode `fork` and Pool/map
@@ -573,7 +589,12 @@ class IsoMultiProcessWorker(Worker):
 
 
 class RayWorker(Worker):
-    def __init__(self, cache_folder: str, normalize: bool = False, tracker: BaseTracker = None):
+    def __init__(
+        self,
+        cache_folder: str | os.PathLike,
+        normalize: bool = False,
+        tracker: BaseTracker | None = None,
+    ):
         super().__init__(
             cache_folder=cache_folder,
             normalize=normalize,
@@ -586,15 +607,20 @@ class RayWorker(Worker):
         )
 
     @classmethod
-    def create(cls, cache_folder, normalize, tracker):
+    def create(
+        cls,
+        cache_folder: str | os.PathLike,
+        normalize: bool,
+        tracker: BaseTracker | None,
+    ) -> "RayWorker":
         return cls(cache_folder=cache_folder, normalize=normalize, tracker=tracker)
 
     def run(
         self,
         *,
         function: Callable,
-        params_pool: List[Dict | str],
-        params_ids: List[int],
+        params_pool: Sequence[ParamArg],
+        params_ids: Sequence[int],
         num_function_returns: int = 1,
         **ray_resources,
     ) -> List[Score]:
@@ -629,7 +655,7 @@ class RayWorker(Worker):
 
         # Execute baseline measurements on all ray nodes (if needed)``
         # This measurement is done once per node per GPU
-        measured_baselines = None
+        measured_baselines: List[Score] | None = None
         if self.normalize:
             measured_baselines = self.handle_baseline(
                 ray_resources.copy(), function, num_function_returns
@@ -642,8 +668,8 @@ class RayWorker(Worker):
                 params,
                 params_ids[i],
                 num_function_returns,
-                baseline_scores=self.baseline_score,
-                tracker=self.tracker,
+                baseline_scores=self.baseline_score,  # pyright: ignore[reportCallIssue]
+                tracker=self.tracker,  # pyright: ignore[reportCallIssue]
             )
             for i, params in enumerate(params_pool)
         ]
@@ -692,7 +718,7 @@ class RayWorker(Worker):
         cluster_data = ray.nodes()
         requested_gpus = user_ray_resources.get("num_gpus", 0)
         futures, placement_groups = [], []
-        measured_baselines = None
+        measured_baselines: List[Score] | None = None
 
         if requested_gpus > 1:
             raise ValueError(
@@ -749,7 +775,7 @@ class RayWorker(Worker):
                             BASELINE_DNA,
                             "baseline",
                             num_function_returns,
-                            tracker=self.tracker,
+                            tracker=self.tracker,  # pyright: ignore[reportCallIssue]
                         )
                         futures.append(future)
 
@@ -772,13 +798,13 @@ class RayWorker(Worker):
                         BASELINE_DNA,
                         "baseline",
                         num_function_returns,
-                        tracker=self.tracker,
+                        tracker=self.tracker,  # pyright: ignore[reportCallIssue]
                     )
                     futures.append(future)
 
         if len(futures) > 0:
             # Retrieving baseline scores
-            measured_baselines: List[Score] = ray.get(futures)
+            measured_baselines = ray.get(futures)
             for baseline_score in measured_baselines:
                 metadata = json.loads(baseline_score.metadata)
                 nid, gpu_id = metadata["node_id"], metadata["gpu_id"]
@@ -796,32 +822,35 @@ class RayWorker(Worker):
         # We are only returning the baselines measured this round
         return measured_baselines
 
-    @staticmethod
+    @staticmethod  # pyright: ignore[reportArgumentType]
     @ray.remote
     def _function_wrapper(
         objective_func: Callable,
-        obj_func_args: Dict | str,
+        obj_func_args: ParamArg,
         param_id: int | str,
         num_objectives: int,
         baseline_scores: Optional[Dict[str, Dict[str, Score] | Score]] = None,
-        tracker: BaseTracker = None,
+        tracker: BaseTracker | None = None,
     ) -> Score:
         """
         Executes the user objective function, but handles exceptions and score validation.
         This function returns its score normalized if baseline_scores are not None
         """
 
+        from compileiq.tracker import DisabledTracker
+
+        if tracker is None:
+            tracker = DisabledTracker()
+
         ray_context = ray.get_runtime_context()
         task_id, node_id = ray_context.get_task_id(), ray_context.get_node_id()
         gpu_ids = os.environ.get("CUDA_VISIBLE_DEVICES", "")
         metadata = {"gpu_id": gpu_ids, "task_id": task_id, "node_id": node_id}
         # Reinitialize tracker in because we are now in a different process/machine
-        if tracker is not None:
-            tracker.setup()
+        tracker.setup()
 
         try:
-            if tracker is not None:
-                tracker.pre_objective(obj_func_args, **metadata)
+            tracker.pre_objective(obj_func_args, **metadata)
 
             scores = objective_func(obj_func_args)
 
@@ -852,10 +881,12 @@ class RayWorker(Worker):
             should_normalize = baseline_scores is not None
             if should_normalize and not scores.failed:
                 # This is the node executing this function
-                baseline_score: Score | Dict = baseline_scores.get(node_id, None)
-                if isinstance(baseline_score, dict):
-                    baseline_score: Score = baseline_score.get(gpu_ids, None)
-                if baseline_score is None or baseline_score.failed:
+                baseline_lookup = baseline_scores.get(node_id, None)
+                if isinstance(baseline_lookup, dict):
+                    node_baseline = baseline_lookup.get(gpu_ids, None)
+                else:
+                    node_baseline = baseline_lookup
+                if node_baseline is None or node_baseline.failed:
                     # Because ray is dynamic we can have nodes come in and out at any time
                     # this works as a failsafe to still normalize in case we are at one of
                     # the nodes that joined after we did the initial baseline measurements
@@ -882,7 +913,7 @@ class RayWorker(Worker):
                 else:
                     # This should be the most common case, we pre-calculated the baseline
                     # and are just querying it here
-                    scores.norm_score = Worker.normalize_scores(scores.score, baseline_score.score)
+                    scores.norm_score = Worker.normalize_scores(scores.score, node_baseline.score)
             elif should_normalize and scores.failed:
                 scores.norm_score = scores.score
         except Exception as e:
@@ -894,14 +925,18 @@ class RayWorker(Worker):
             )
             scores.norm_score = Worker.invalidate_score(num_objectives)
 
-        if tracker is not None:
-            tracker.post_objective(scores.model_dump_json())
+        tracker.post_objective(scores.model_dump_json())
 
         return scores
 
 
 class AsyncWorker(Worker):
-    def __init__(self, cache_folder: str, normalize: bool = False, tracker: BaseTracker = None):
+    def __init__(
+        self,
+        cache_folder: str | os.PathLike,
+        normalize: bool = False,
+        tracker: BaseTracker | None = None,
+    ):
         super().__init__(
             cache_folder=cache_folder,
             normalize=normalize,
@@ -911,19 +946,24 @@ class AsyncWorker(Worker):
         )
 
     @classmethod
-    def create(cls, cache_folder, normalize, tracker):
+    def create(
+        cls,
+        cache_folder: str | os.PathLike,
+        normalize: bool,
+        tracker: BaseTracker | None,
+    ) -> "AsyncWorker":
         return cls(cache_folder=cache_folder, normalize=normalize, tracker=tracker)
 
     def run(
         self,
         *,
         function: Callable,
-        params_pool: List[Dict | str],
-        params_ids: List[int],
+        params_pool: Sequence[ParamArg],
+        params_ids: Sequence[int],
         num_function_returns: int = 1,
         task_timeout: Optional[int | float] = None,
         **kwargs,
-    ) -> List[SingleScore | MultiScore]:
+    ) -> List[Score]:
         """
         Leverages Python Async execution to improve concurrency from objective function.
         Args:
@@ -959,19 +999,20 @@ class AsyncWorker(Worker):
     async def arun(
         self,
         function: Callable,
-        params_pool: List[Dict | str],
-        params_ids: List[int],
+        params_pool: Sequence[ParamArg],
+        params_ids: Sequence[int],
         num_function_returns: int,
         task_timeout: Optional[int | float] = None,
         **kwargs,
-    ) -> List[SingleScore | MultiScore]:
+    ) -> List[Score]:
         # Adding baseline measurement at the beggining
+        params_to_run = list(params_pool)
         if self.normalize and self.baseline_score is None:
-            params_pool = [BASELINE_DNA] + params_pool
+            params_to_run = [BASELINE_DNA] + params_to_run
 
         futures = []
         async with asyncio.TaskGroup() as tg:
-            for params in params_pool:
+            for params in params_to_run:
                 task = tg.create_task(
                     self._function_wrapper(
                         obj_func_args=params,
@@ -1002,13 +1043,10 @@ class AsyncWorker(Worker):
 
             if self.normalize:
                 if score.failed:
-                    score.norm_score = (
-                        INVALID_SCORE
-                        if num_function_returns == 1
-                        else [INVALID_SCORE] * num_function_returns
-                    )
+                    score.norm_score = Worker.invalidate_score(num_function_returns)
                 else:
                     # This works because the first score will always be the baseline
+                    assert self.baseline_score is not None
                     score.norm_score = self.normalize_scores(score.score, self.baseline_score.score)
 
             results.append(score)
@@ -1017,7 +1055,7 @@ class AsyncWorker(Worker):
 
     @staticmethod
     async def _function_wrapper(
-        obj_func_args: Dict[str, any] | str,
+        obj_func_args: ParamArg,
         objective_func: Callable,
         num_objectives: int,
         tracker: BaseTracker,
@@ -1033,8 +1071,7 @@ class AsyncWorker(Worker):
         """
 
         task_id = str(uuid4().hex)
-        if tracker is not None:
-            tracker.pre_objective(obj_func_args, task_id=task_id)
+        tracker.pre_objective(obj_func_args, task_id=task_id)
 
         invalid_score = Worker.invalidate_score(num_objectives)
         try:
@@ -1065,8 +1102,7 @@ class AsyncWorker(Worker):
             param_id="",  # this will be filled out externally
             num_objectives=num_objectives,
         )
-        if tracker is not None:
-            tracker.post_objective(scores.model_dump_json(), task_id=task_id)
+        tracker.post_objective(scores.model_dump_json(), task_id=task_id)
 
         # Baseline is not allowed to fail
         if norm_enabled and scores.is_baseline and scores.failed:

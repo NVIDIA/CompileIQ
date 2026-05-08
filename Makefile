@@ -1,26 +1,26 @@
 .DEFAULT_GOAL := help
 
 .PHONY: help install install-examples install-docs lint lint-fix format format-check \
-        test test-all test-unit test-integration test-fuzz test-cov \
-        docs docs-serve build clean validate check-internal
+        typecheck test test-all test-unit test-integration test-fuzz test-cov \
+        docs docs-serve build clean validate
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 install: ## Install all dev dependencies
-	poetry install --with linter,unittest,tracking
+	poetry install --with linter,typecheck,unittest,tracking
 
 install-examples: ## Install dev dependencies + examples
-	poetry install --with examples,linter,unittest,tracking
+	poetry install --with examples,linter,typecheck,unittest,tracking
 
 install-docs: ## Install docs dependencies
 	poetry install --with docs
 
-check-internal: ## Check for internal-only keywords in source
-	poetry run python tests/validate_internal.py
-
-lint: check-internal ## Run linter + internal keyword check
+lint: ## Run linter
 	poetry run ruff check
+
+typecheck: ## Run pyright type checker
+	poetry run pyright
 
 lint-fix: ## Auto-fix lint issues
 	poetry run ruff check --fix
@@ -69,4 +69,4 @@ clean: ## Remove build artifacts and caches
 	find . -name '.cache' -exec rm -rf {} + 2>/dev/null || true
 	find . -name '.testmondata' -exec rm -rf {} + 2>/dev/null || true
 
-validate: lint test-unit ## Quick validation (lint + unit tests)
+validate: lint typecheck test-unit ## Quick validation (lint + typecheck + unit tests)

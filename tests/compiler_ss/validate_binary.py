@@ -1,6 +1,7 @@
 from compileiq.ciq import Search
 from compileiq.types import SearchConfiguration
 import os
+from pathlib import Path
 from loguru import logger
 
 CONFIG_FOLDER = "./data/"
@@ -17,7 +18,7 @@ def main():
 
     for config in os.listdir(CONFIG_FOLDER):
         logger.info(f"Processing config file: {config}")
-        dna_config = os.path.join(CONFIG_FOLDER, config)
+        dna_config = Path(CONFIG_FOLDER) / config
 
         try:
             tuner = Search(

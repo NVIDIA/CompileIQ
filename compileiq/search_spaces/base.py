@@ -1,4 +1,4 @@
-from typing import Optional, Annotated, List
+from typing import Any, Optional, Annotated, Sequence
 from annotated_types import Gt
 import numpy as np
 
@@ -83,7 +83,7 @@ def range(
 
 
 def choice(
-    choice_list: List,
+    choice_list: Sequence[int | float | bool | str] | np.ndarray,
     knockout_prob: Optional[float] = None,
 ) -> ChoiceParamConfig:
     """
@@ -102,7 +102,7 @@ def choice(
             being dropped and not forwarded to the user objective function.
 
     """
-    processed = []
+    processed: list[Any] = []
     for val in choice_list:
         if isinstance(val, bool):
             processed.append(int(val))

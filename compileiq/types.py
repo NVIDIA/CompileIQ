@@ -4,11 +4,11 @@ import pathlib
 import ast
 import warnings
 from math import comb, ceil
-from enum import Enum, StrEnum
+from enum import StrEnum
 from abc import ABC, abstractmethod
 from importlib.metadata import version
 from pydantic import BaseModel, Field, model_validator, field_validator, SkipValidation
-from typing import Callable, Optional, List, Literal, Sequence, TextIO
+from typing import Callable, Optional, List, Literal, Sequence, TextIO, TypeAlias, cast, overload
 from compileiq.utils.validation import (  # noqa: F401 (re-exported)
     SingleScore,
     MultiScore,
@@ -18,14 +18,17 @@ from compileiq.utils.validation import (  # noqa: F401 (re-exported)
 )
 
 
-class ProblemType(Enum):
+ParamArg: TypeAlias = dict | str | list[dict | str]
+
+
+class ProblemType(StrEnum):
     """Supported problem types, min or max"""
 
     MIN = "min"
     MAX = "max"
 
 
-class MultiScoreComparison(Enum):
+class MultiScoreComparison(StrEnum):
     """
     Possible ways to aggregate multi-score at the end of the search.
 
@@ -44,7 +47,7 @@ class MultiScoreComparison(Enum):
     PARETO = "pareto_front"
 
 
-class TrackerTypes(Enum):
+class TrackerTypes(StrEnum):
     """
     Chooses between the available tracker types for experiment tracking.
     Trackers are responsible for logging and tracking experiment data during the search.
@@ -73,7 +76,7 @@ class TrackerTypes(Enum):
 # Useful for passing additional arguments to the trackers.
 # All tracker configs must inherit from this class, and also set the extra="allow" flag.
 class TrackerConfig(BaseModel, extra="allow"):
-    type: TrackerTypes
+    type: TrackerTypes | Literal["loguru", "mlflow", "disabled"]
     enqueue: bool = True
 
 
@@ -99,7 +102,7 @@ class BaseTracker(ABC):
         Initialize the tracker from a config, storing a defensive copy.
         Calls ``setup()`` automatically after initialization.
         """
-        self.tracker_type = tracker_config.type
+        self.tracker_type = TrackerTypes(tracker_config.type)
         self.tracker_config = tracker_config.model_copy()
 
         self.setup()
@@ -137,11 +140,11 @@ class BaseTracker(ABC):
         pass
 
     @abstractmethod
-    def pre_objective(self, config: dict, **kwargs):
+    def pre_objective(self, config: ParamArg, **kwargs):
         """Called before each objective function evaluation.
 
         Args:
-            config: The parameter dictionary being evaluated.
+            config: The parameters being evaluated.
             **kwargs: Worker-specific metadata (e.g., ``task_id``, ``node_id``).
         """
         pass
@@ -166,18 +169,20 @@ class Worker(ABC):
         self,
         cache_folder: str | os.PathLike,
         normalize: bool = False,
-        tracker: BaseTracker = None,
+        tracker: BaseTracker | None = None,
         respects_num_workers: bool = False,
         supports_timeout: bool = False,
     ):
         # Initialize internal properties here, but @property methods are the
         # primary public interface so concrete implementations can override
         # functionality as needed.
+        from compileiq.tracker import DisabledTracker
+
         self._normalize = normalize
         self._baseline_score = None
         self._cache_dir = cache_folder
         self._current_generation = 0
-        self._tracker = tracker
+        self._tracker: BaseTracker = tracker if tracker is not None else DisabledTracker()
         self._respects_num_workers = respects_num_workers
         self._supports_timeout = supports_timeout
 
@@ -246,8 +251,8 @@ class Worker(ABC):
         self,
         *,
         function: Callable,
-        params_pool: Sequence[dict | str],
-        params_ids: Sequence[str | int],
+        params_pool: Sequence[ParamArg],
+        params_ids: Sequence[int],
         num_function_returns: int = 1,
         num_workers: int = 1,
         **kwargs,
@@ -259,12 +264,29 @@ class Worker(ABC):
     @abstractmethod
     def create(
         cls,
-        cache_folder: str | os.PathLike | None,
+        cache_folder: str | os.PathLike,
         normalize: bool,
         tracker: BaseTracker | None,
     ) -> "Worker":
         """Construct a worker instance with the given configuration."""
         pass
+
+    @overload
+    @staticmethod
+    def normalize_scores(
+        current_score: SingleScore, baseline_score: SingleScore
+    ) -> SingleScore: ...
+
+    @overload
+    @staticmethod
+    def normalize_scores(current_score: MultiScore, baseline_score: MultiScore) -> MultiScore: ...
+
+    @overload
+    @staticmethod
+    def normalize_scores(
+        current_score: SingleScore | MultiScore,
+        baseline_score: SingleScore | MultiScore,
+    ) -> SingleScore | MultiScore: ...
 
     @staticmethod
     def normalize_scores(
@@ -285,26 +307,23 @@ class Worker(ABC):
         if baseline_score is None:
             raise RuntimeError("Trying to normalize score without configuring a baseline value.")
 
-        if isinstance(current_score, int) or isinstance(current_score, float):
-            norm_score = Worker._norm(current_score, baseline_score)
-        elif isinstance(current_score, list) or isinstance(current_score, tuple):
-            norm_score = [
-                Worker._norm(score, baseline_score[i]) for i, score in enumerate(current_score)
-            ]
-        else:
-            raise ValueError("Score type not recognized for normalization.")
-
-        return norm_score
+        if isinstance(current_score, (int, float)):
+            assert isinstance(baseline_score, (int, float, str))
+            return Worker._norm(current_score, baseline_score)
+        if isinstance(current_score, (list, tuple)):
+            assert isinstance(baseline_score, (list, tuple))
+            return [Worker._norm(score, baseline_score[i]) for i, score in enumerate(current_score)]
+        raise ValueError("Score type not recognized for normalization.")
 
     @staticmethod
     def _norm(score: SingleScore, baseline_score: SingleScore) -> SingleScore:
-        norm_score = INVALID_SCORE
-        try:
-            norm_score = score / baseline_score
-        except Exception:
-            pass
-
-        return norm_score
+        if (
+            isinstance(score, (int, float))
+            and isinstance(baseline_score, (int, float))
+            and baseline_score != 0
+        ):
+            return score / baseline_score
+        return INVALID_SCORE
 
     @staticmethod
     def invalidate_score(num_objectives: int) -> SingleScore | MultiScore:
@@ -312,7 +331,7 @@ class Worker(ABC):
         if num_objectives == 1:
             return INVALID_SCORE
         else:
-            return [INVALID_SCORE] * num_objectives
+            return cast(MultiScore, [INVALID_SCORE] * num_objectives)
 
 
 class WorkerTypes(StrEnum):
@@ -385,7 +404,7 @@ class DisabledTrackerConfig(TrackerConfig):
         type: The type of tracker it creates.
     """
 
-    type: Literal[TrackerTypes.DISABLED] = TrackerTypes.DISABLED
+    type: Literal[TrackerTypes.DISABLED] = TrackerTypes.DISABLED  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class DefaultTrackerConfig(DisabledTrackerConfig):
@@ -405,9 +424,10 @@ class LoguruTrackerConfig(TrackerConfig, extra="allow", arbitrary_types_allowed=
         type: The type of tracker it creates.
     """
 
-    type: Literal[TrackerTypes.LOGURU] = TrackerTypes.LOGURU
+    type: Literal[TrackerTypes.LOGURU] = TrackerTypes.LOGURU  # pyright: ignore[reportIncompatibleVariableOverride]
     sink: str | SkipValidation[TextIO] | SkipValidation[List] | None = None
     enqueue: bool = True
+    level: str = "INFO"
     format: str = "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {extra[task_id]} | {message}"
 
     @field_validator("sink", mode="after")
@@ -431,7 +451,7 @@ class MLflowTrackerConfig(TrackerConfig, extra="allow"):
         log_config: Whether to log the config for each objective function call.
     """
 
-    type: Literal[TrackerTypes.MLFLOW] = TrackerTypes.MLFLOW
+    type: Literal[TrackerTypes.MLFLOW] = TrackerTypes.MLFLOW  # pyright: ignore[reportIncompatibleVariableOverride]
     experiment_name: Optional[str] = None
     run_name: Optional[str] = None
     tracking_uri: Optional[str] = None
@@ -445,7 +465,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
     Supported values to configure your search behavior.
     """
 
-    problem_type: ProblemType = Field(
+    problem_type: ProblemType | Literal["min", "max"] = Field(
         default=ProblemType.MIN, description="If it is minimization or maximization problem"
     )
     normalize: bool = Field(
@@ -465,14 +485,14 @@ class SearchConfiguration(BaseModel, extra="forbid"):
         "to better results.",
     )
     pool_size: int | None = Field(
-        None,
+        default=None,
         gt=5,
         description="The batch size of evaluations for each generations. "
         "Also correlated with the population size per generation. "
         "If set to None, we calculate it based on your number of objectives.",
     )
     cull_size: int | None = Field(
-        None,
+        default=None,
         gt=1,
         multiple_of=2,
         description="The number of parents in a given generation that will become the progenitors "
@@ -491,7 +511,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
         "This will affect how we generate the algorithm reference directions.",
     )
     init_with_true_random_threshold: Optional[float] = Field(
-        0.9,
+        default=0.9,
         description="Controls what sampling percentage is performed at seed-low "
         "and seed-high vs normal range. Defaults to 0.9, so 90% will be sampled from the "
         "`seed-high` and `seed-low` range, and 10% from `start` and `end`.",
@@ -524,6 +544,9 @@ class SearchConfiguration(BaseModel, extra="forbid"):
             pool_size = max(ceil(target / (1 - cull_pct)), 32)
             self.pool_size = pool_size + pool_size % 2
 
+        if self.pool_size is None:
+            raise RuntimeError("pool_size must be populated before deriving cull_size")
+
         if self.cull_size is None:
             min_survivors = 1 + 2 * self.num_objectives
             cull_size = int(self.pool_size * cull_pct)
@@ -537,6 +560,9 @@ class SearchConfiguration(BaseModel, extra="forbid"):
 
     @model_validator(mode="after")
     def validate_pool_and_cull_sizes(self):
+        if self.pool_size is None or self.cull_size is None:
+            raise RuntimeError("pool_size and cull_size must be populated before validation")
+
         if self.cull_size >= self.pool_size:
             raise ValueError(
                 f"cull_size ({self.cull_size}) must be less than pool_size ({self.pool_size})"
@@ -585,7 +611,11 @@ class SearchConfiguration(BaseModel, extra="forbid"):
         legacy_string = f";THIS FILE WAS GENERATED USING COMPILEIQ {version('compileiq')}\n\n"
         for key, val in class_dict.items():
             if val is not None:
-                if isinstance(val, bool):
+                if "problem_type" in key:
+                    value = "#t" if ProblemType(val) == ProblemType.MIN else "#f"
+                    legacy_string += f"(seek_minimum . {value})\n"
+                    continue
+                elif isinstance(val, bool):
                     # Core source expects #t and #f for bool
                     val = "#t" if val else "#f"
                 elif isinstance(val, str):
@@ -597,10 +627,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
                     else:
                         val = "((" + " ".join(map(str, val)) + "))"
 
-                if "problem_type" in key:
-                    value = "#t" if val == ProblemType.MIN else "#f"
-                    legacy_string += f"(seek_minimum . {value})\n"
-                elif "normalize" in key:
+                if "normalize" in key:
                     value = "#f" if self.normalize else "#t"
                     legacy_string += f"(qualitative . {value})\n"
                 else:

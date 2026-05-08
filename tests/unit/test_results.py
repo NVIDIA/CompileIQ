@@ -94,22 +94,30 @@ def test_add_result(num_scores, score_val, norm_val, normalize):
     assert row["generation"] == 2
     assert row["params"] == {"x": 1.0}
 
-    score_vals = list(score.score) if num_scores > 1 else [score.score]
+    if num_scores > 1:
+        assert isinstance(score.score, (list, tuple))
+        score_vals = list(score.score)
+    else:
+        score_vals = [score.score]
     for i, v in enumerate(score_vals):
         assert row[f"score_{i + 1}"] == v
 
     if normalize:
-        norm_vals = list(score.norm_score) if num_scores > 1 else [score.norm_score]
+        if num_scores > 1:
+            assert isinstance(score.norm_score, (list, tuple))
+            norm_vals = list(score.norm_score)
+        else:
+            norm_vals = [score.norm_score]
         for i, v in enumerate(norm_vals):
             assert row[f"norm_score_{i + 1}"] == v
 
 
-def test_save():
+def test_save(tmp_path):
     df = _generate_results(num_scores=3, num_entries=20, allow_invalid=False)
     result = SearchResult(df=df, problem_type=ProblemType.MAX, num_scores=3)
 
     # Saving to a test file
-    test_filepath = "test_compileiq_results.csv"
+    test_filepath = tmp_path / "test_evo_results.csv"
     result.save(test_filepath)
 
     # Loading back the file to check contents
@@ -226,7 +234,12 @@ def test_invalid_results():
             result = SearchResult(df=df, problem_type=pt, num_scores=num_scores)
             for scope in MultiScoreComparison:
                 print("Testing:", pt, scope)
-                best = result.get_best_result(multiscore_scope=scope.value)
+                if scope == MultiScoreComparison.PARETO:
+                    if result.num_scores == 1:
+                        continue
+                    best = result.pareto_front()
+                else:
+                    best = result.get_best_result(multiscore_scope=scope.value)
 
                 if not isinstance(best, list):
                     best = [best]
@@ -245,7 +258,7 @@ def test_raise_on_all_failures():
     for df in dfs:
         df[df.columns[df.columns.str.contains(pat=r"score_\d+")]] = INVALID_SCORE
         num_scores = len([col for col in df.columns if "score" in col])
-        result = SearchResult(df=df, problem_type="min", num_scores=num_scores)
+        result = SearchResult(df=df, problem_type=ProblemType.MIN, num_scores=num_scores)
 
         with pytest.raises(
             ValueError,

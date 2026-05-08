@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal, Union
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class ParamConfigBase(BaseModel, populate_by_name=True):
@@ -16,8 +16,16 @@ class RangeParamConfig(ParamConfigBase):
     low: int | float
     high: int | float
     step: int | float = 1
-    seed_low: int | float | None = Field(default=None, alias="seed-low")
-    seed_high: int | float | None = Field(default=None, alias="seed-high")
+    seed_low: int | float | None = Field(
+        default=None,
+        validation_alias=AliasChoices("seed-low", "seed_low"),
+        serialization_alias="seed-low",
+    )
+    seed_high: int | float | None = Field(
+        default=None,
+        validation_alias=AliasChoices("seed-high", "seed_high"),
+        serialization_alias="seed-high",
+    )
 
 
 class ChoiceParamConfig(ParamConfigBase):

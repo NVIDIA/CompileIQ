@@ -79,20 +79,26 @@ class TestCalculateParetoFrontMax:
 
 
 # ---------------------------------------------------------------------------
-# get_best_result with pareto_front scope — end-to-end
+# pareto_front — end-to-end
 # ---------------------------------------------------------------------------
 
 
 class TestGetBestResultPareto:
-    """Verify the full pipeline: get_best_result(multiscore_scope="pareto_front")
-    correctly wires through to calculate_pareto_front and returns a list of
-    dicts (not a single dict like AVERAGE/STDDEV scopes)."""
+    """Verify the full Pareto pipeline returns a list of dicts."""
 
     def test_returns_list_of_dicts(self):
         result = _make_result([(1, 10), (5, 5), (10, 1)])
-        best = result.get_best_result(multiscore_scope="pareto_front")
+        best = result.pareto_front()
         assert isinstance(best, list), "Pareto front should return a list, not a single dict"
         assert all(isinstance(b, dict) for b in best)
+
+    def test_get_best_result_pareto_scope_matches_pareto_front(self):
+        result = _make_result([(1, 10), (5, 5), (10, 1)])
+        assert result.get_best_result(multiscore_scope="pareto_front") == result.pareto_front()
+
+    def test_get_best_result_defaults_to_pareto_front_for_multi_score(self):
+        result = _make_result([(1, 10), (5, 5), (10, 1)])
+        assert result.get_best_result() == result.pareto_front()
 
     def test_excludes_invalid_scores(self):
         """Rows with INVALID_SCORE ("*") should be filtered out before
@@ -103,7 +109,7 @@ class TestGetBestResultPareto:
         invalid_row = [99, 0, INVALID_SCORE, INVALID_SCORE, {"x": 99}]
         result.df_results.loc[len(result.df_results)] = invalid_row
 
-        best = result.get_best_result(multiscore_scope="pareto_front")
+        best = result.pareto_front()
         # The invalid row should not appear in results
         for b in best:
             assert b.get("score_1") != INVALID_SCORE
@@ -112,7 +118,7 @@ class TestGetBestResultPareto:
     def test_pareto_front_with_clear_winner(self):
         """When one point dominates all others, only it should be on the front."""
         result = _make_result([(1, 1), (5, 5), (10, 10)])
-        best = result.get_best_result(multiscore_scope="pareto_front")
+        best = result.pareto_front()
         assert len(best) == 1
         assert best[0]["score_1"] == 1
         assert best[0]["score_2"] == 1

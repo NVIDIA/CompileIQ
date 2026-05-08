@@ -111,7 +111,7 @@ def mock_receive_from_core(monkeypatch):
 
             return param_set
         else:
-            return CompletionMessage(complete=1)
+            return CompletionMessage(complete=True)
 
     monkeypatch.setattr("compileiq.ciq.CoreIPC.receive_from_core", mock_receive)
 

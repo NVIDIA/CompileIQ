@@ -80,6 +80,7 @@ class TestSetPoolAndCullSizes:
         num_obj = 10
         min_survivors = 1 + 2 * num_obj  # 21
         cfg = SearchConfiguration(generations=1, pool_size=32, num_objectives=num_obj)
+        assert cfg.pool_size is not None and cfg.cull_size is not None
         assert cfg.cull_size % 2 == 0
         assert cfg.pool_size - cfg.cull_size >= min_survivors
 
@@ -221,17 +222,13 @@ class TestJsonDict:
         assert "objective_weights" not in d
 
     def test_output_is_json_serializable(self):
-        cfg = SearchConfiguration(
-            generations=5, pool_size=32, cull_size=16, mutate_rate=0.3
-        )
+        cfg = SearchConfiguration(generations=5, pool_size=32, cull_size=16, mutate_rate=0.3)
         d = cfg.to_json_dict()
         roundtripped = json.loads(json.dumps(d))
         assert roundtripped == d
 
     def test_numeric_fields_preserved(self):
-        cfg = SearchConfiguration(
-            generations=10, pool_size=50, cull_size=20, mutate_rate=0.15
-        )
+        cfg = SearchConfiguration(generations=10, pool_size=50, cull_size=20, mutate_rate=0.15)
         d = cfg.to_json_dict()
         assert d["generations"] == 10
         assert d["pool_size"] == 50
@@ -266,4 +263,4 @@ class TestSearchConfigConstraints:
         """Typos in config keys (e.g. 'generatons') should fail, not be
         silently ignored.  This is why we use extra='forbid'."""
         with pytest.raises(Exception):
-            SearchConfiguration(generations=1, typo_field=True)
+            SearchConfiguration(generations=1, typo_field=True)  # type: ignore[call-arg]
