@@ -19,10 +19,9 @@ def main():
     main_config = SearchConfiguration(
         generations=5,
         problem_type="min",
-        num_objectives=1,
     )
 
-    tuner = Search(
+    tuner = Search.single_objective(
         objective_function=objective,
         search_space=dna_config,
         search_config=main_config,

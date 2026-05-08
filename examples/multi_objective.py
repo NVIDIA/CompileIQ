@@ -22,15 +22,17 @@ def main():
         generations=3,
         mutate_rate=0.5,
         problem_type="min",
+    )
+
+    tuner = Search.multi_objective(
+        objective_function=multiobjective,
+        search_space=dna_config,
+        search_config=main_config,
         num_objectives=2,
     )
 
-    tuner = Search(
-        objective_function=multiobjective, search_space=dna_config, search_config=main_config
-    )
-
     results = tuner.start(num_workers=2)
-    print(results.get_best_result())
+    print(results.pareto_front())
 
 
 if __name__ == "__main__":
