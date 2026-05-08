@@ -54,6 +54,13 @@ optional = true
 [tool.poetry.group.linter.dependencies]
 ruff = "^0.7.3"
 
+[tool.poetry.group.typecheck]
+optional = true
+
+[tool.poetry.group.typecheck.dependencies]
+pyright = "~1.1.408"
+pandas-stubs = "^3.0.0.260204"
+
 [tool.poetry.group.unittest]
 optional = true
 

@@ -2,8 +2,13 @@
 Fast unit tests for tracker classes in compileiq/tracker.py.
 """
 
+import pickle
 import warnings
-from compileiq.types import TrackerTypes, LoguruTrackerConfig
+from unittest.mock import MagicMock
+
+import pytest
+
+from compileiq.types import TrackerTypes, LoguruTrackerConfig, MLflowTrackerConfig
 from compileiq.tracker import (
     DisabledTracker,
     LoguruTracker,
@@ -11,6 +16,16 @@ from compileiq.tracker import (
     _TRACKER_TYPES_TO_CLASSES,
     _TRACKER_TYPES_TO_CONFIG,
 )
+
+
+@pytest.fixture
+def mock_mlflow(monkeypatch):
+    mock = MagicMock()
+    mock.get_experiment_by_name.return_value.experiment_id = "test-experiment-id"
+    mock.active_run.return_value.info.run_id = "test-child-run-id"
+    mock.active_run.return_value.info.run_name = "test-child-run-name"
+    monkeypatch.setattr("compileiq.tracker._mlflow", mock)
+    return mock
 
 
 # ---------------------------------------------------------------------------
@@ -62,6 +77,54 @@ class TestLoguruTracker:
         assert "Search ended" in content
         assert "Generation 0 started" in content
         assert "Generation 0 ended" in content
+
+
+# ---------------------------------------------------------------------------
+# MLflowTracker — must stay picklable and handle every ParamArg shape
+# ---------------------------------------------------------------------------
+
+
+class TestMLflowTracker:
+    def test_pickle_roundtrip(self, mock_mlflow):
+        from compileiq.tracker import MLflowTracker
+
+        tracker = MLflowTracker(MLflowTrackerConfig())
+        restored = pickle.loads(pickle.dumps(tracker))
+
+        assert type(restored) is MLflowTracker
+        assert restored.tracker_config.model_dump() == tracker.tracker_config.model_dump()
+
+    def test_dict_config_logs_verbatim(self, mock_mlflow):
+        from compileiq.tracker import MLflowTracker
+
+        tracker = MLflowTracker(MLflowTrackerConfig(log_config=False))
+        tracker.pre_objective(config={"lr": 0.1, "batch": 32})
+        mock_mlflow.log_params.assert_called_with({"lr": 0.1, "batch": 32})
+
+    def test_str_config_logs_path(self, mock_mlflow):
+        from compileiq.tracker import MLflowTracker
+
+        tracker = MLflowTracker(MLflowTrackerConfig(log_config=False))
+        tracker.pre_objective(config="/some/dna.config")
+        mock_mlflow.log_params.assert_called_with({"dna_path": "/some/dna.config"})
+
+    def test_list_config_flattens_with_index_prefix(self, mock_mlflow):
+        from compileiq.tracker import MLflowTracker
+
+        tracker = MLflowTracker(MLflowTrackerConfig(log_config=False))
+        tracker.pre_objective(config=[{"a": 1, "b": 2}, {"c": 3}])
+        mock_mlflow.log_params.assert_called_with(
+            {"config_0.a": 1, "config_0.b": 2, "config_1.c": 3}
+        )
+
+    def test_list_config_with_str_entry_flattens_as_dna_path(self, mock_mlflow):
+        from compileiq.tracker import MLflowTracker
+
+        tracker = MLflowTracker(MLflowTrackerConfig(log_config=False))
+        tracker.pre_objective(config=[{"a": 1}, "/legacy/dna.cfg"])
+        mock_mlflow.log_params.assert_called_with(
+            {"config_0.a": 1, "config_1.dna_path": "/legacy/dna.cfg"}
+        )
 
 
 # ---------------------------------------------------------------------------

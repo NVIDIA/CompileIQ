@@ -105,6 +105,7 @@ class CoreIPC:
             try:
                 current_data = socket.recvfrom(MAX_BYTES)[0]
             except TimeoutError as e:
+                assert self.core_process is not None, "receive_from_core is called after start()"
                 core_return_code = self.core_process.poll()
                 if (core_return_code is None) and (retries < MAX_RETRIES):
                     retries += 1
@@ -130,6 +131,7 @@ class CoreIPC:
 
         # Message can be different depending on the mode/stage we are at
         # TODO: Implement a clever identification of message type
+        received_msg: ParameterSet | CompletionMessage
         if "generation_num" in params:
             dna_list = TypeAdapter(List[SingleDNA]).validate_python(params.pop("params"))
             received_msg = ParameterSet(params=dna_list, **params)

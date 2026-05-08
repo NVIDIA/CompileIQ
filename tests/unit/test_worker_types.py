@@ -30,7 +30,7 @@ def _make_search(mocker, tmp_path, **overrides):
         cache_folder=tmp_path,
     )
     defaults.update(overrides)
-    return Search(**defaults)
+    return Search(**defaults)  # pyright: ignore[reportArgumentType]
 
 
 # ---------------------------------------------------------------------------
@@ -138,7 +138,7 @@ class TestRespectsNumWorkers:
 class TestNormalizeScores:
     def test_raises_when_baseline_is_none(self):
         with pytest.raises(RuntimeError, match="baseline"):
-            Worker.normalize_scores(1.0, None)
+            Worker.normalize_scores(1.0, None)  # type: ignore[arg-type]
 
     def test_single_score(self):
         assert Worker.normalize_scores(10.0, 5.0) == 2.0

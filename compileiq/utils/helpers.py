@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict, overload
 import base64
 from compileiq.search_spaces import base as ss
 from compileiq.search_spaces.models import ParamConfig
@@ -20,7 +20,7 @@ def _decode_from_core(string: str) -> str:
     return base64.b64decode(string).decode()
 
 
-def flatten_nested_dict(dna_search_space: Dict[str, Dict]) -> Dict[str, ParamConfig]:
+def flatten_nested_dict(dna_search_space: Dict[str, Any]) -> Dict[str, ParamConfig]:
     """
     Converts a dictionary with nested keys into a flat dictionary. We encode the keys
     as a way to nest them back again without losing the original structure, independent
@@ -51,7 +51,7 @@ def flatten_nested_dict(dna_search_space: Dict[str, Dict]) -> Dict[str, ParamCon
     return flat_dict
 
 
-def restore_nested_search_space(params: Dict[str, str]) -> Dict[str, Dict | str]:
+def restore_nested_search_space(params: Dict[str, Any]) -> Dict[str, Any]:
     """
     Restore the nested dictionary structure provided by the user at search space.
     We are reversing the processes of `flatten_nested_dict`.
@@ -63,13 +63,13 @@ def restore_nested_search_space(params: Dict[str, str]) -> Dict[str, Dict | str]
         A nested dictionary structure that matches the original search space.
     """
 
-    restored = {}
+    restored: dict[str, object] = {}
     for key, val in params.items():
         # Decoding the hex-encoded key and splitting it into parents
         hierarchy = list(map(_decode_from_core, key.split("_")))
         # Restore the nested dictionary structure
         last_key = hierarchy.pop(-1)
-        nested = {last_key: val}
+        nested: dict[str, object] = {last_key: val}
 
         # Rebuild the hierarchy in reverse order
         for nest_key in reversed(hierarchy):
@@ -101,6 +101,14 @@ def _merge_nested_dictionaries(dict1: Dict, dict2: Dict) -> Dict:
             dict1[key] = dict2[key]
 
     return dict1
+
+
+@overload
+def _literal_dive(val: dict, knockout: float | None = None) -> dict: ...
+
+
+@overload
+def _literal_dive(val: str | int | float, knockout: float | None = None) -> ParamConfig: ...
 
 
 def _literal_dive(

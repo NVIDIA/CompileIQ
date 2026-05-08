@@ -12,16 +12,16 @@ from pydantic.functional_validators import AfterValidator
 from typing import Any, Annotated, Tuple, List, Literal
 
 # DNA representing the baseline measurement
-BASELINE_DNA = {}
-INVALID_SCORE = "*"
+BASELINE_DNA: dict[str, object] = {}
+INVALID_SCORE: Literal["*"] = "*"
 
 
-def validate_inf_nan(val: float) -> float | str:
+def validate_inf_nan(val: float) -> float | Literal["*"]:
     """
     Communication with Core is done through json which does not handle 'inf' and 'nan' when dumped.
     """
     if math.isnan(val) or math.isinf(val):
-        val = INVALID_SCORE
+        return INVALID_SCORE
 
     return val
 
@@ -40,7 +40,7 @@ class Score(BaseModel):
         description="The raw score returned by the objective function."
     )
     norm_score: MultiScore | SingleScore | None = Field(
-        None,
+        default=None,
         description="The normalized score computed by the Worker based on the baseline score"
         "and the score returned by the objective function."
         "Only needed if `normalization=True`",
@@ -49,13 +49,16 @@ class Score(BaseModel):
         description="The parameters sent to the objective function that generated this score"
     )
     metadata: str = Field(
-        "", description="Additional metadata that will be forward to the resulting dataframe"
+        default="",
+        description="Additional metadata that will be forward to the resulting dataframe",
     )
     param_id: int | str = Field(
         description="The unique identifier for the parameters used in the objective function"
     )
     num_objectives: int = Field(description="The number of objectives in the optimization problem")
-    is_baseline: bool = Field(False, description="Indicates if this score is a baseline score")
+    is_baseline: bool = Field(
+        default=False, description="Indicates if this score is a baseline score"
+    )
 
     @property
     def failed(self) -> bool:
@@ -69,7 +72,9 @@ class Score(BaseModel):
         else:
             norm_failed = False
             if self.norm_score is not None:
+                assert isinstance(self.norm_score, (list, tuple))
                 norm_failed = any(s == INVALID_SCORE for s in self.norm_score)
+            assert isinstance(self.score, (list, tuple))
             return any(s == INVALID_SCORE for s in self.score) or norm_failed
 
     @model_validator(mode="after")
@@ -83,7 +88,7 @@ class Score(BaseModel):
         return self
 
 
-def validate_scores(func_return: Any, num_objectives: int) -> List:
+def validate_scores(func_return: Any, num_objectives: int) -> SingleScore | tuple[SingleScore, ...]:
     """
     Check if the objective function return matches the expected type
     and `num_objectives` reported by the user at `SearchConfiguration`.
@@ -91,6 +96,7 @@ def validate_scores(func_return: Any, num_objectives: int) -> List:
 
     # Create type here to set num_objectives inside Tuple typehint
     # and let pydantic validate it himself
+    score_typer: TypeAdapter
     if num_objectives > 1:
         if INVALID_SCORE == func_return:
             # Adjusting for the case where the function returns a single invalid score
@@ -113,7 +119,7 @@ def validate_scores(func_return: Any, num_objectives: int) -> List:
     return fixed_func_return
 
 
-def _manual_validation(func_return: Any, num_objectives: int) -> List:
+def _manual_validation(func_return: Any, num_objectives: int) -> list[SingleScore]:
     if not isinstance(func_return, list) and not isinstance(func_return, tuple):
         raise ValueError(
             f"Number of returns (1) is not matching num_objectives ({(num_objectives)})."
@@ -126,7 +132,7 @@ def _manual_validation(func_return: Any, num_objectives: int) -> List:
         )
 
     # Validating each of the returns individually
-    score_typer = TypeAdapter(SingleScore)
+    score_typer: TypeAdapter = TypeAdapter(SingleScore)
     fixed_return = [score_typer.validate_python(val) for val in func_return]
 
     return fixed_return

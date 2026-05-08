@@ -106,6 +106,7 @@ async def async_multi_light_obj_func(config):
 
 
 def heavy_obj_func(config):
+    score = 0.0
     if config == BASELINE_DNA:
         score = 2.0
     else:
@@ -155,4 +156,4 @@ def validate_scores(
 
     df["check"] = df["val_score"] == df["combined"]
     print(df[["val_score", "combined", "check"]])
-    assert df["check"].all(), df[["val_score", "combined", "check"]][not df["check"]].to_string()
+    assert df["check"].all(), df[["val_score", "combined", "check"]][~df["check"]].to_string()

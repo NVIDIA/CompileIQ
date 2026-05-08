@@ -69,7 +69,7 @@ print(f"Best Result: {results.get_best_result()}")
     - `num_objectives`: Number of objectives to optimize
 
 4. **Running the Search**
-    - Create an `Search` instance with your configurations
+    - Create a `Search` instance with your configurations
     - Call `start()` to run the optimization
     - Access results through the returned Results object
 
@@ -103,16 +103,18 @@ main_config = SearchConfiguration(
 )
 
 tuner = Search(
-    objective_function=multiobjective, search_space=dna_config, search_config=main_config
+    objective_function=multiobjective,
+    search_space=dna_config,
+    search_config=main_config,
 )
 
 results = tuner.start()
-print(results.get_best_result())
+print(results.pareto_front())
 ```
 
-The only two changes here are the `num_objectives` for `SearchConfiguration` and returning two values instead of one in the objective function.
+The two important differences are setting `num_objectives=2` and returning two values from the objective function.
 
-The return value of `results.get_best_result()` is now a list with the `pareto_front`.
+The return value of `results.pareto_front()` is a list with the Pareto-efficient rows.
 
 ### Sample the Search Space
 

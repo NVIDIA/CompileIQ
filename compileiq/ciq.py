@@ -5,7 +5,6 @@ import shutil
 import socket
 import json
 import warnings
-import pandas as pd
 from datetime import datetime
 from tqdm.auto import tqdm
 from uuid import uuid4
@@ -23,14 +22,18 @@ from typing import (
     Dict,
     List,
     Optional,
+    TypeAlias,
+    cast,
 )
-from compileiq.utils.validation import Score
+from compileiq.utils.validation import Score, SingleScore, MultiScore
 from compileiq.tracker import (
     _TRACKER_TYPES_TO_CLASSES,
 )
 from compileiq.config.const import _CACHE_DIR, KEEP_CACHE_FILES
 from compileiq.types import (
     BaseTracker,
+    ParamArg,
+    TrackerTypes,
     Worker,
     WorkerTypes,
     SearchConfiguration,
@@ -57,6 +60,23 @@ from compileiq.utils.helpers import (
     _decode_from_core,
 )
 
+SearchSpaceInput: TypeAlias = (
+    Dict[str, Any] | pathlib.Path | List[Dict | pathlib.Path] | SearchSpaceProvider
+)
+SearchConfigInput: TypeAlias = Dict[str, Any] | SearchConfiguration | pathlib.Path
+
+
+def _expand_objective_values(
+    value: SingleScore | MultiScore, num_objectives: int
+) -> list[int | float | str]:
+    if num_objectives > 1:
+        assert isinstance(
+            value, (list, tuple)
+        ), f"num_objectives > 1 requires list/tuple score; got {type(value).__name__}"
+        return cast(list[int | float | str], list(value))
+    assert not isinstance(value, (list, tuple))
+    return [value]
+
 
 class Search(BaseModel):
     """
@@ -72,9 +92,7 @@ class Search(BaseModel):
             "The function must have all imports and objects declared inside."
         )
     )
-    search_space: (
-        Dict[str, Any] | pathlib.Path | List[Dict | pathlib.Path] | SearchSpaceProvider
-    ) = Field(
+    search_space: SearchSpaceInput = Field(
         description=(
             "The user search space for CompileIQ to explore. "
             "The objective function will receive a single set following this declaration. "
@@ -82,7 +100,7 @@ class Search(BaseModel):
             "a path (str) to a legacy .config file, or a SearchSpaceProvider instance."
         )
     )
-    search_config: Dict[str, Any] | SearchConfiguration | pathlib.Path = Field(
+    search_config: SearchConfigInput = Field(
         description=(
             "Search configuration parameters such as generation number and mutation rate. "
             "Accepted values: a SearchConfiguration object, a dict with SearchConfiguration keys, "
@@ -145,24 +163,24 @@ class Search(BaseModel):
         datetime.now().strftime("%Y-%m-%d-%H_%M_%S-") + str(uuid4())
     )
     # CompileIQ Core will give us the id once generation starts
-    run_id: int = Field(None, init=False)
-    _worker: Worker
-    _tracker: BaseTracker = PrivateAttr(None, init=False)
+    run_id: int | None = Field(None, init=False)
+    _worker: Worker = PrivateAttr()
+    _tracker: BaseTracker = PrivateAttr()
     current_generation: int = Field(
         0, init=False, description="Current generation of the search, starting at 0."
     )
-    _search_config: InternalSearchConfiguration
-    _result: SearchResult
+    _search_config: InternalSearchConfiguration = PrivateAttr()
+    _result: SearchResult = PrivateAttr()
     _using_legacy_dna: bool | list[bool] = False
     _multi_config: bool = False
 
     # Cache directory management
-    _base_cache_dir: pathlib.Path = PrivateAttr(default=None)
+    _base_cache_dir: Optional[pathlib.Path] = PrivateAttr(default=None)
 
     # Communication with Core
     _listen_socket: socket.socket = PrivateAttr(default_factory=initialize_socket)
-    _core_socket: socket.socket = None  # This will be updated once `start()` is called
-    _core_ipc: CoreIPC
+    _core_socket: Optional[socket.socket] = PrivateAttr(default=None)
+    _core_ipc: CoreIPC = PrivateAttr()
 
     # Pydantic config
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
@@ -176,8 +194,15 @@ class Search(BaseModel):
 
         return value
 
-    @model_validator(mode="after")
-    def _init_folders(self):
+    @field_validator("search_config", mode="after")
+    def normalize_search_config(cls, value: SearchConfigInput) -> SearchConfigInput:
+        if isinstance(value, SearchConfiguration):
+            return value
+        if isinstance(value, dict):
+            return SearchConfiguration(**value)
+        return SearchConfiguration.from_legacy(str(value))
+
+    def _do_init_folders(self) -> None:
         # Determine the base cache directory (only on first call)
         if self._base_cache_dir is None:
             if self.cache_folder is None:
@@ -189,17 +214,19 @@ class Search(BaseModel):
         #  (this is crucial for Win32 where filepath lengths are bounded)
         self.cache_folder = self._base_cache_dir / str(self._create_new_id())
         self.cache_folder.mkdir(parents=True, exist_ok=True)
-        self._main_config_filepath, _ = get_core_filepaths(self.cache_folder)
-
-        return self
 
     @model_validator(mode="after")
-    def _setup_search_config(self):
+    def _init_folders(self):
+        self._do_init_folders()
+        return self
+
+    def _do_setup_search_config(self) -> None:
         """
         Converting user-defined configuration to internal representation
         """
 
-        self._search_config = InternalSearchConfiguration(**self.search_config.model_dump())
+        search_config = cast(SearchConfiguration, self.search_config)
+        self._search_config = InternalSearchConfiguration(**search_config.model_dump())
 
         _, dna_config_filepath = get_core_filepaths(str(self.cache_folder))
 
@@ -209,10 +236,12 @@ class Search(BaseModel):
 
         self._search_config.dna_config = dna_config_filepath
 
+    @model_validator(mode="after")
+    def _setup_search_config(self):
+        self._do_setup_search_config()
         return self
 
-    @model_validator(mode="after")
-    def _setup(self):
+    def _do_setup(self) -> None:
         """
         Using this as a secondary __init__ to perform validation and start variables
         that depend on user-defined values, perform additional validation and create
@@ -223,11 +252,12 @@ class Search(BaseModel):
         if isinstance(self.search_space, SearchSpaceProvider):
             self.search_space = self.search_space.retrieve()
         self._multi_config = isinstance(self.search_space, list)
-        self._using_legacy_dna = (
-            [isinstance(sspace, pathlib.Path) for sspace in self.search_space]
-            if self._multi_config
-            else isinstance(self.search_space, pathlib.Path)
-        )
+        if isinstance(self.search_space, list):
+            self._using_legacy_dna = [
+                isinstance(sspace, pathlib.Path) for sspace in self.search_space
+            ]
+        else:
+            self._using_legacy_dna = isinstance(self.search_space, pathlib.Path)
 
         # Initializing Core IPC
         self._core_ipc = CoreIPC()
@@ -239,7 +269,9 @@ class Search(BaseModel):
             raise ValueError(
                 f"Tracker configuration is not a TrackerConfig, got {type(self.tracker_config)}"
             )
-        self._tracker = _TRACKER_TYPES_TO_CLASSES[self.tracker_config.type](self.tracker_config)
+        self._tracker = _TRACKER_TYPES_TO_CLASSES[TrackerTypes(self.tracker_config.type)](
+            self.tracker_config
+        )
 
         wt = self.worker_type
         if isinstance(wt, WorkerTypes):
@@ -249,12 +281,16 @@ class Search(BaseModel):
         else:
             raise RuntimeError(f"Expected a WorkerTypes or Worker subclass, but found {wt}")
 
+        assert self.cache_folder is not None, "_init_folders populates cache_folder before _setup"
         self._worker = worker_cls.create(
             cache_folder=self.cache_folder,
             normalize=self._search_config.normalize,
             tracker=self._tracker,
         )
 
+    @model_validator(mode="after")
+    def _setup(self):
+        self._do_setup()
         return self
 
     def __enter__(self):
@@ -272,12 +308,13 @@ class Search(BaseModel):
             del self._core_ipc
         if (
             hasattr(self, "cache_folder")
+            and self.cache_folder is not None
             and os.path.exists(self.cache_folder)
             and not KEEP_CACHE_FILES
         ):
             self._clean_files()
 
-    def sample(self, num_samples: int = 1) -> List[Dict | str | List[Dict | str]]:
+    def sample(self, num_samples: int = 1) -> List[ParamArg]:
         """
         Instead of performing a full search, this function will just sample `num_samples`
         from the search space provided by the user.
@@ -288,6 +325,7 @@ class Search(BaseModel):
             A list of parameter sets sampled from the search space, in the same format as the
             parameters sent to the objective function during a normal search.
         """
+        assert self.cache_folder is not None
         main_config_filepath, dna_config_filepath = get_core_filepaths(self.cache_folder)
 
         hijacked_config = self._search_config.model_copy(deep=True)
@@ -388,11 +426,9 @@ class Search(BaseModel):
 
         worker_count = num_workers if isinstance(num_workers, int) else 1
 
-        if self._worker is None:
-            raise ValueError("No worker configured. Pass a worker_type to use.")
-
-        if not self.cache_folder.exists():
-            self._init_folders()
+        if self.cache_folder is None or not self.cache_folder.exists():
+            self._do_init_folders()
+        assert self.cache_folder is not None
 
         # Initializing Result df
         self._result = SearchResult._initialize_empty(
@@ -442,7 +478,7 @@ class Search(BaseModel):
         num_workers: int,
         task_timeout: Optional[int | float] = None,
         **additional_worker_kwargs,
-    ) -> SearchResult | pd.DataFrame:
+    ) -> SearchResult:
         """
         We receive the parameter set, call upon the worker to execute the objective function, and
         send the score back through the socket, until we receive a completion message.
@@ -460,6 +496,7 @@ class Search(BaseModel):
         while True:
             try:
                 # receiving params ('knobs') from core subprocess
+                assert self._core_socket is not None
                 parameter_sets = self._core_ipc.receive_from_core(self._core_socket)
             except Exception as e:
                 pbar.close()
@@ -491,18 +528,21 @@ class Search(BaseModel):
                         try:
                             best_score = self._result.get_best_result()
                         except Exception:
-                            # In case of error, keep previous best score or set to nan
-                            best_score = float("nan") if best_score is None else best_score
+                            best_score = None
 
-                        gen_from_best = int(best_score["generation"])
-                        best_score = (
-                            best_score["score_1"]
-                            if not self._search_config.normalize
-                            else best_score["norm_score_1"]
-                        )
-                        pbar.set_postfix(
-                            {"🏆 best_score": f"{best_score:.4f}", "at_gen": gen_from_best}
-                        )
+                        if isinstance(best_score, dict):
+                            gen_from_best = int(best_score["generation"])
+                            best_score_value = (
+                                best_score["score_1"]
+                                if not self._search_config.normalize
+                                else best_score["norm_score_1"]
+                            )
+                            pbar.set_postfix(
+                                {
+                                    "🏆 best_score": f"{best_score_value:.4f}",
+                                    "at_gen": gen_from_best,
+                                }
+                            )
 
                     pbar.update()
                     self._tracker.generation_starts(self.current_generation)
@@ -543,6 +583,8 @@ class Search(BaseModel):
 
                 # Storing worker results and preparing response to Core
                 scores_response = ResponseTemplate(evaluated_dna=[])
+                assert isinstance(scores_response.evaluated_dna, list)
+                num_objectives = self._search_config.num_objectives
                 for score in scores:
                     self._result.add_result(
                         score, parameter_sets.generation_num, self._search_config.normalize
@@ -551,12 +593,15 @@ class Search(BaseModel):
                     # Preparing response to Core
                     # Baselines are not reported back to core
                     if not score.is_baseline:
-                        score_value = (
+                        raw_score_value = (
                             score.norm_score if self._search_config.normalize else score.score
                         )
-                        if self._search_config.num_objectives == 1:
-                            # Core always expects a list of scores
-                            score_value = [score_value]
+                        assert raw_score_value is not None
+                        score_value = _expand_objective_values(raw_score_value, num_objectives)
+                        assert isinstance(score.param_id, int), (
+                            f"non-baseline score must have int param_id; got "
+                            f"{type(score.param_id).__name__}"
+                        )
 
                         response = EvaluatedDnaResponse(id=score.param_id, scores=score_value)
                         scores_response.evaluated_dna.append(response)
@@ -565,7 +610,8 @@ class Search(BaseModel):
                 if len(param_ids) != len(scores_response.evaluated_dna):
                     raise RuntimeError(
                         "Worker did not return all scores passed down for calculation."
-                        f"Sent {len(param_ids)} and only returned {len(scores_response)}"
+                        f"Sent {len(param_ids)} and only returned "
+                        f"{len(scores_response.evaluated_dna)}"
                     )
 
                 # Checkpointing intermediate results every batch
@@ -580,7 +626,7 @@ class Search(BaseModel):
                     scores_response,
                 )
 
-    def _load_params(self, parameter_sets: ParameterSet) -> List[str | Dict | List[Dict | str]]:
+    def _load_params(self, parameter_sets: ParameterSet) -> List[ParamArg]:
         """
         We verify if the params (knobs) received from core are json-compatible
         otherwise we will send them as strings and is the responsibility of the user to
@@ -606,9 +652,10 @@ class Search(BaseModel):
 
             return param_set
 
-        params_from_generation = []
+        params_from_generation: List[ParamArg] = []
         for param in parameter_sets.params:
             if self._multi_config:
+                assert isinstance(self._using_legacy_dna, list)
                 # When specifying multiple configs, a list of base64 strings is returned
                 # Each string is the representation from one config (in the same order as
                 # provided by the user)
@@ -618,17 +665,18 @@ class Search(BaseModel):
                     for i, single_param in enumerate(decoded_param)
                 ]
             else:
+                assert isinstance(self._using_legacy_dna, bool)
                 single_pset = handle_phenotype(param.knobs, self._using_legacy_dna)
 
-            params_from_generation.append(single_pset)
+            params_from_generation.append(cast(ParamArg, single_pset))
 
         return params_from_generation
 
     def _clean_files(self):
         """Deletes cache files from this run"""
-        if self._tracker is not None:
+        if hasattr(self, "_tracker") and self._tracker is not None:
             self._tracker.cleanup()
-        if pathlib.Path(self.cache_folder).exists():
+        if self.cache_folder is not None and pathlib.Path(self.cache_folder).exists():
             shutil.rmtree(self.cache_folder, ignore_errors=True)
 
     def _check_fail_count(self, scores: List[Score]):

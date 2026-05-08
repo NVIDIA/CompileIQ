@@ -142,6 +142,7 @@ def test_single_objective_max(cache_dir):
     ).start()
 
     best = result.get_best_result()
+    assert isinstance(best, dict)
 
     # Sanity: optimizer found something better than the worst possible
     # (worst for MAX = 1.0^2 + 1 = 2)
@@ -184,7 +185,7 @@ def test_multi_objective(cache_dir):
     assert "score_1" in df.columns
     assert "score_2" in df.columns
 
-    pareto = result.get_best_result(multiscore_scope="pareto_front")
+    pareto = result.pareto_front()
     assert isinstance(pareto, list), "Pareto front should return a list"
     assert len(pareto) > 0, "Pareto front should not be empty"
     for point in pareto:
@@ -381,9 +382,9 @@ def test_string_choices_with_real_core(cache_dir):
     for params in df["params"]:
         if isinstance(params, dict) and params:
             assert params["booster"] in valid_boosters, f"Unexpected booster: {params['booster']}"
-            assert params["opt_level"] in valid_flags, (
-                f"Unexpected opt_level: {params['opt_level']}"
-            )
+            assert (
+                params["opt_level"] in valid_flags
+            ), f"Unexpected opt_level: {params['opt_level']}"
 
 
 # ---------------------------------------------------------------------------
@@ -434,9 +435,9 @@ def test_complex_literal_strings_with_real_core(cache_dir):
                 found_plain_literal = True
 
     # Knockout may remove some params, but at least some rows should have them
-    assert found_json_literal or found_plain_literal, (
-        "No row contained the literal parameters — they may not be round-tripping"
-    )
+    assert (
+        found_json_literal or found_plain_literal
+    ), "No row contained the literal parameters — they may not be round-tripping"
 
 
 # ---------------------------------------------------------------------------

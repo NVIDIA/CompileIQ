@@ -79,6 +79,7 @@ class TestValidateScoresMultiObjective:
 
     def test_correct_length_tuple(self):
         result = validate_scores((1.0, 2.0), num_objectives=2)
+        assert isinstance(result, tuple)
         assert len(result) == 2
 
     def test_wrong_length_raises(self):
@@ -89,17 +90,20 @@ class TestValidateScoresMultiObjective:
 
     def test_mixed_int_float(self):
         result = validate_scores((1, 2.5), num_objectives=2)
+        assert isinstance(result, tuple)
         assert len(result) == 2
 
     def test_single_star_expands_to_all_invalid(self):
         """When a multi-objective function returns just "*", we expand it to
         ["*", "*", ...] so downstream code can treat each objective uniformly."""
         result = validate_scores(INVALID_SCORE, num_objectives=3)
+        assert isinstance(result, tuple)
         assert list(result) == [INVALID_SCORE, INVALID_SCORE, INVALID_SCORE]
 
     def test_partial_invalid_in_tuple(self):
         """One objective fails, the others succeed — this is valid."""
         result = validate_scores((1.0, INVALID_SCORE), num_objectives=2)
+        assert isinstance(result, tuple)
         assert result[0] == 1.0
         assert result[1] == INVALID_SCORE
 

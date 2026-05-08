@@ -1,8 +1,10 @@
 import json
+import os
 import pandas as pd
 import numpy as np
-from typing import Dict
-from compileiq.types import ProblemType, MultiScoreComparison, Score
+import numpy.typing as npt
+from typing import Dict, List, Literal
+from compileiq.types import ProblemType, MultiScoreComparison, Score, SingleScore, MultiScore
 
 
 class SearchResult:
@@ -37,11 +39,11 @@ class SearchResult:
 
     @property
     def is_normalized(self) -> bool:
-        return self.df_results.columns.str.contains(pat=r"norm_score_\d+").any()
+        return bool(self.df_results.columns.str.contains(pat=r"norm_score_\d+").any())
 
     @classmethod
     def from_csv(
-        cls, csv_path: str, problem_type: str, clear_duplicates: bool = True
+        cls, csv_path: str, problem_type: str | ProblemType, clear_duplicates: bool = True
     ) -> "SearchResult":
         """
         Loads dataframe into an SearchResult object.
@@ -70,7 +72,7 @@ class SearchResult:
 
     @classmethod
     def from_dataframe(
-        cls, df: pd.DataFrame, problem_type: str, clear_duplicates: bool = True
+        cls, df: pd.DataFrame, problem_type: str | ProblemType, clear_duplicates: bool = True
     ) -> "SearchResult":
         """
         Loads dataframe into an SearchResult object.
@@ -121,7 +123,7 @@ class SearchResult:
 
     @classmethod
     def _initialize_empty(
-        cls, num_scores: int, problem_type: str, norm_scores: bool = False
+        cls, num_scores: int, problem_type: str | ProblemType, norm_scores: bool = False
     ) -> "SearchResult":
         """
         Initializes an SearchResult object with an empty dataframe.
@@ -140,6 +142,12 @@ class SearchResult:
 
         return result
 
+    def _score_values(self, value: SingleScore | MultiScore | None) -> list:
+        if self.num_scores > 1:
+            assert isinstance(value, (list, tuple))
+            return list(value)
+        return [value]
+
     def add_result(self, score: Score, generation_num: int, normalize: bool = False) -> None:
         """
         Appends a single evaluated score to the results DataFrame.
@@ -150,29 +158,15 @@ class SearchResult:
             normalize: Whether normalized scores should also be recorded.
         """
         row = [score.metadata, generation_num]
-        row += list(score.score) if self.num_scores > 1 else [score.score]
+        row += self._score_values(score.score)
         row += [score.params]
         if normalize:
-            row += list(score.norm_score) if self.num_scores > 1 else [score.norm_score]
+            row += self._score_values(score.norm_score)
         self.df_results.loc[len(self.df_results)] = row
 
-    def get_best_result(self, multiscore_scope: MultiScoreComparison = "pareto_front") -> Dict:
-        """
-        Returns the best result from your search.
-
-        Args:
-            multiscore_scope:
-                If your search has multiple scores, this param will aggregate the scores
-                and pick the best one available based on your `problem_type`.
-
-        Returns:
-            Dictionary with the best search scores, parameters and generation number.
-        """
-
-        # temporarily updating non-numeric values to 'nan'
+    def _numeric_scores_df(self) -> pd.DataFrame:
         scores_df = self.df_results[self.score_columns].apply(pd.to_numeric, errors="coerce").copy()
         if self.is_normalized:
-            # Use Norm columns as the main score if available
             norm_score_columns = self.df_results.columns[
                 self.df_results.columns.str.contains(pat=r"norm_score_\d+")
             ]
@@ -183,6 +177,29 @@ class SearchResult:
                 "Number of score columns does not match the initialized number of scores. "
                 "If using normalized scores make sure your baseline measurements are present."
             )
+        return scores_df
+
+    def get_best_result(
+        self,
+        multiscore_scope: (
+            MultiScoreComparison | Literal["avg", "stddev", "pareto_front"]
+        ) = MultiScoreComparison.PARETO,
+    ) -> Dict | List[Dict]:
+        """
+        Returns the best result from your search.
+
+        Args:
+            multiscore_scope:
+                For multi-score searches, how to aggregate scores before picking
+                results. The default preserves existing behavior: single-score
+                searches return the best row, while multi-score searches return
+                the Pareto front.
+
+        Returns:
+            Dictionary with the best search scores, parameters and generation number,
+            or a list of dictionaries when returning a Pareto front.
+        """
+        scores_df = self._numeric_scores_df()
 
         if scores_df.isna().all().all():
             raise ValueError(
@@ -193,16 +210,14 @@ class SearchResult:
             scores_df["score"] = scores_df
         else:
             scope = MultiScoreComparison(multiscore_scope)
+            if scope == MultiScoreComparison.PARETO:
+                return self.pareto_front()
             if scope == MultiScoreComparison.AVERAGE:
                 scores_df["score"] = scores_df.agg("mean", axis="columns")
             elif scope == MultiScoreComparison.STDDEV:
                 scores_df["score"] = scores_df.agg("std", axis="columns")
-            elif scope == MultiScoreComparison.PARETO:
-                # We ignore any lines with at least an `INVALID_SCORE`
-                scores_df = scores_df[~scores_df.isnull().values.any(axis=1)]
-                mask = self.calculate_pareto_front(scores_df.to_numpy())
-                fdf = self.df_results.loc[scores_df.index]
-                return fdf[mask].to_dict(orient="records")
+            else:
+                raise ValueError(f"Invalid multi-score comparison scope: {scope}")
 
         if self.problem_type == ProblemType.MAX:
             best_idx = scores_df["score"].idxmax()
@@ -214,6 +229,19 @@ class SearchResult:
         best_score = self.df_results.loc[best_idx]
         return best_score.to_dict()
 
+    def pareto_front(self) -> List[Dict]:
+        """
+        Returns the Pareto-efficient rows from a multi-score search.
+        """
+        if self.num_scores == 1:
+            raise ValueError("pareto_front is only meaningful for multi-score searches.")
+
+        scores_df = self._numeric_scores_df()
+        scores_df = scores_df[~scores_df.isnull().values.any(axis=1)]
+        mask = self.calculate_pareto_front(scores_df.to_numpy())
+        fdf = self.df_results.loc[scores_df.index]
+        return fdf[mask].to_dict(orient="records")
+
     def get_results(self) -> pd.DataFrame:
         """
         Returns:
@@ -224,13 +252,12 @@ class SearchResult:
     def __getitem__(self, idx: int):
         return self.df_results.iloc[idx]
 
-    def calculate_pareto_front(self, scores: np.ndarray) -> np.ndarray[bool]:
+    def calculate_pareto_front(self, scores: np.ndarray) -> npt.NDArray[np.bool_]:
         """
         Find the pareto-efficient points given a list of scores.
 
         Note:
-            Using `get_best_result(multiscore_scope="pareto_front")` will yield the same
-            pareto front.
+            Using `pareto_front()` will yield the same Pareto front.
 
         Args:
             scores:
@@ -281,7 +308,7 @@ class SearchResult:
 
         return self.df_results
 
-    def save(self, filepath: str = "./search_results.csv"):
+    def save(self, filepath: str | os.PathLike = "./search_results.csv"):
         """
         Saves entire results dataframe to a CSV file. It will convert the `params`
         column into a JSON string for better parsing.

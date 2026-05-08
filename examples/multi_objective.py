@@ -26,11 +26,13 @@ def main():
     )
 
     tuner = Search(
-        objective_function=multiobjective, search_space=dna_config, search_config=main_config
+        objective_function=multiobjective,
+        search_space=dna_config,
+        search_config=main_config,
     )
 
     results = tuner.start(num_workers=2)
-    print(results.get_best_result())
+    print(results.pareto_front())
 
 
 if __name__ == "__main__":
