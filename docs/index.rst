@@ -13,19 +13,12 @@ CompileIQ Documentation
 .. toctree::
    :hidden:
    :maxdepth: 3
-   :caption: More Examples
-
-   xgboost
-   experiment_tracking
-
-.. toctree::
-   :hidden:
-   :maxdepth: 3
    :caption: Nvidia Compiler Tuning
 
    compilers_overview
-   nvcc_example
+   booster_packs
    ptx_spill_example
+   nvcc_example
    triton_example
 
 .. toctree::
@@ -35,6 +28,15 @@ CompileIQ Documentation
 
    workers
    normalization
+
+.. toctree::
+   :hidden:
+   :maxdepth: 3
+   :caption: More Examples
+
+   xgboost
+   experiment_tracking
+   flashinfer_booster
 
 .. toctree::
    :hidden:

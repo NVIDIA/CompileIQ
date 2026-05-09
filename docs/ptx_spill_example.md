@@ -1,6 +1,6 @@
-# First steps to apply compiler knobs
+# First steps to apply compiler controls
 
-In this section, we will walk you through how to set up your first search to tune PTXAS compiler knobs.
+In this section, we will walk you through how to set up your first search to tune PTXAS compiler controls.
 
 > The example code and supporting files can be found [in our repo here](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/ptxas_example/ptx_spill.py).
 
@@ -8,7 +8,7 @@ In this section, we will walk you through how to set up your first search to tun
 
 In this example, we will use a PTX kernel that contains register spill issues. Register spilling occurs when there aren’t enough GPU registers to hold active variables. These variables are temporarily moved to slower memory and then loaded back when needed, which can slow performance due to increased memory traffic.
 
-Our end goal is to run a search that tunes PTXAS compiler knobs and reduces register spilling to (or close to) zero.
+Our end goal is to run a search that tunes PTXAS compiler controls and reduces register spilling to (or close to) zero.
 
 What you’ll need:
 
@@ -85,7 +85,7 @@ PTX_SOURCE_PATH = "w8_spill.ptx"
 
 def objective(config):
     """
-    This function will receive a string blob that contains the compiler knobs configuration.
+    This function will receive a string blob that contains the compiler controls configuration.
     It will save it to a temporary file, and then call ptxas with that configuration to compile
     the PTX file. Finally, it will parse the output of ptxas to extract the number of register spills.
     """
@@ -168,15 +168,15 @@ def main():
 
     best = results.get_best_result()
     logger.info(f"Best spill found: {best['score_1']}")
-    save_compiler_config("best_compiler_knobs.acf", best["params"])
+    save_compiler_config("best_compiler_controls.acf", best["params"])
 ```
 
 The structure is mostly the same as other CompileIQ examples. Here we use the default worker (multiprocess), which executes 4 objective evaluations in parallel.
 
-We save the best solution to `best_compiler_knobs.acf`. You can call `ptxas` from the command line to reproduce the result:
+We save the best solution to `best_compiler_controls.acf`. You can call `ptxas` from the command line to reproduce the result:
 
 ```bash
-ptxas -v -arch=sm_90a --apply-controls best_compiler_knobs.acf w8_spill.ptx
+ptxas -v -arch=sm_90a --apply-controls best_compiler_controls.acf w8_spill.ptx
 ```
 
 Expected output:
@@ -190,8 +190,14 @@ ptxas info    : Used 240 registers, used 1 barriers
 ptxas info    : Compile time = 369.596 ms
 ```
 
-## Other compilers
+## Other compilers and environments
 
-Our current support extends to PTXAS and NVCC. For NVCC, nvidia also offer a cli option called `--apply-controls` to apply ACF files through `nvcc`.
+Our current support extends to PTXAS and NVCC. This option offers the user to tune standalone NVCC, standalone PTXAS or a search space with both combined. 
 
-This option offers the user to tune standalone NVCC, standalone PTXAS or a search space with both combined. PTXAS ACFs are automatically detected and forwarded to PTXAS.
+Other environments like Triton and Helion provide facilities to inject ACFs on the compilation flow, and even to select ACFs for specific kernels or inputs. 
+
+Consult the respective documentations or follow our examples in the next pages of this guide:
+
+* [Tuning NVCC compiler controls](nvcc_example.md)
+* [Tuning PTXAS controls in your Triton kernel](triton_example.md)
+
