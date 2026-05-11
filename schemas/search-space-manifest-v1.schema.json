@@ -1,0 +1,102 @@
+{
+  "$defs": {
+    "SearchSpaceEntry": {
+      "additionalProperties": false,
+      "description": "One entry in the manifest, describing a single search-space binary.",
+      "properties": {
+        "compiler": {
+          "enum": [
+            "ptxas",
+            "nvcc"
+          ],
+          "title": "Compiler",
+          "type": "string"
+        },
+        "compiler_version": {
+          "title": "Compiler Version",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "filename": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+          "title": "Filename",
+          "type": "string"
+        },
+        "search_space_format": {
+          "default": "1.0.0",
+          "title": "Search Space Format",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "variant": {
+          "default": "default",
+          "title": "Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "compiler",
+        "compiler_version",
+        "filename",
+        "sha256",
+        "size_bytes"
+      ],
+      "title": "SearchSpaceEntry",
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/NVIDIA/CompileIQ/main/schemas/search-space-manifest-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Top-level release catalog published as ``manifest.json``.",
+  "properties": {
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/SearchSpaceEntry"
+      },
+      "title": "Entries",
+      "type": "array"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "manifest_format": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Manifest Format",
+      "type": "string"
+    },
+    "tag": {
+      "title": "Tag",
+      "type": "string"
+    }
+  },
+  "required": [
+    "tag",
+    "generated_at",
+    "entries"
+  ],
+  "title": "SearchSpaceManifestModel",
+  "type": "object"
+}

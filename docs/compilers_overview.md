@@ -14,7 +14,28 @@ This is what we mean by changing the compiler heuristics profile for a workload:
 
 One of CompileIQ’s key features is support for NVIDIA compiler tuning. Currently supported compilers are NVCC and PTXAS.
 
-To enable compiler tuning, you must first download the search space from [our repository](https://github.com/NVIDIA/CompileIQ/blob/main/assets) or leverage `compileiq.search_spaces.compilers.py` to automatically pull.
+To run a compiler search, select a curated compiler search space with `PtxasSearchSpace` or `NvccSearchSpace`. CompileIQ maps the compiler, compiler version, and variant to a published `.bin` release asset, verifies its `sha256` and size, caches it locally, and passes the local path into the normal `Search` flow.
+
+```python
+from compileiq.search_spaces.compilers import NvccSearchSpace, PtxasSearchSpace
+
+ptxas_space = PtxasSearchSpace(version="13.3", variant="att")
+nvcc_space = NvccSearchSpace(version="13.3")
+```
+
+For reproducible runs, pin a search-space release tag:
+
+```python
+ptxas_space = PtxasSearchSpace(
+    version="13.3",
+    variant="att",
+    tag="search-spaces-2026.05.05",
+)
+```
+
+For offline or mirrored environments, set `CIQ_SEARCH_SPACES_DIR` to a directory containing `manifest.json` and the referenced `.bin` files. For staging or a future dedicated artifact repository, set `CIQ_SEARCH_SPACES_REPO`.
+
+This retrieval flow is for search-space `.bin` files used to generate new ACFs during a CompileIQ search. Curated Booster Packs are different artifacts: they are zip bundles of already-generated `.acf` candidates that you download and validate directly against a workload.
 
 These files contain search-space information for CompileIQ to sample from. Each file includes a curated set of compiler controls that modify compiler behavior and interact with each other, producing different SASS.
 

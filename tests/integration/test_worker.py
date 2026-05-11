@@ -22,7 +22,7 @@ from tests.utils import (
 )
 
 
-def validate_scores(func, compileiq_scores, used_params):
+def validate_scores(func, core_scores, used_params):
     """
     Validates if workers computed the scores correctly and returned it in the correct order.
     Mostly useful for Multi-worker setups.
@@ -34,7 +34,7 @@ def validate_scores(func, compileiq_scores, used_params):
         scores = func(param)
         if isinstance(scores, float) or isinstance(scores, int):
             scores = [scores]
-        for j, ss in enumerate(compileiq_scores[i]):
+        for j, ss in enumerate(core_scores[i]):
             assert ss == scores[j]
 
 

@@ -13,6 +13,7 @@ from compileiq.tracker import (
     DisabledTracker,
     LoguruTracker,
     logging_exception,
+    _resolution_metadata_to_mlflow_tags,
     _TRACKER_TYPES_TO_CLASSES,
     _TRACKER_TYPES_TO_CONFIG,
 )
@@ -77,6 +78,67 @@ class TestLoguruTracker:
         assert "Search ended" in content
         assert "Generation 0 started" in content
         assert "Generation 0 ended" in content
+
+    def test_search_space_resolution_metadata_logged(self, tmp_path):
+        log_file = str(tmp_path / "test.log")
+        config = LoguruTrackerConfig(sink=log_file, level="DEBUG", enqueue=False)
+        tracker = LoguruTracker(config)
+
+        tracker.search_starts(
+            search_space_resolution_metadata=[
+                {
+                    "compiler": "ptxas",
+                    "resolved_tag": "search-spaces-2026.05.05",
+                    "filename": "ptxas13.3_search_space.bin",
+                    "sha256": "a" * 64,
+                }
+            ]
+        )
+
+        with open(log_file) as f:
+            content = f.read()
+
+        assert "Resolved search space" in content
+        assert "ptxas13.3_search_space.bin" in content
+
+    def test_search_space_resolution_metadata_list_logged(self, tmp_path):
+        log_file = str(tmp_path / "test.log")
+        config = LoguruTrackerConfig(sink=log_file, level="DEBUG", enqueue=False)
+        tracker = LoguruTracker(config)
+
+        tracker.search_starts(
+            search_space_resolution_metadata=[
+                {"compiler": "ptxas", "filename": "ptxas13.3_search_space.bin"},
+                {"compiler": "nvcc", "filename": "nvcc13.3_search_space.bin"},
+            ]
+        )
+
+        with open(log_file) as f:
+            content = f.read()
+
+        assert "ptxas13.3_search_space.bin" in content
+        assert "nvcc13.3_search_space.bin" in content
+
+
+def test_resolution_metadata_to_mlflow_tags_flattens_records():
+    assert _resolution_metadata_to_mlflow_tags([{"compiler": "ptxas"}]) == {
+        "search_space.0.compiler": "ptxas",
+    }
+
+    assert _resolution_metadata_to_mlflow_tags(
+        [
+            {"compiler": "ptxas", "filename": "ptxas.bin"},
+            {"compiler": "nvcc", "filename": "nvcc.bin"},
+        ]
+    ) == {
+        "search_space.0.compiler": "ptxas",
+        "search_space.0.filename": "ptxas.bin",
+        "search_space.1.compiler": "nvcc",
+        "search_space.1.filename": "nvcc.bin",
+    }
+
+    assert _resolution_metadata_to_mlflow_tags(None) == {}
+    assert _resolution_metadata_to_mlflow_tags([]) == {}
 
 
 # ---------------------------------------------------------------------------
