@@ -80,6 +80,27 @@ void reduction_bench(nvbench::state &state)
     int *d_idata_ptr = thrust::raw_pointer_cast(d_idata.data());
     int *d_odata_ptr = thrust::raw_pointer_cast(d_odata.data());
 
+    // Correctness check (outside the timed region): a miscompiled config could
+    // still benchmark fast — verify the kernel's result against a CPU reference
+    // before accepting any timing. On mismatch, skip the state so the Python
+    // objective returns INVALID_SCORE.
+    reduce_kernel<<<numBlocks, BLOCK_SIZE>>>(d_idata_ptr, d_odata_ptr, n);
+    cudaDeviceSynchronize();
+
+    std::vector<int> h_odata(numBlocks);
+    cudaMemcpy(h_odata.data(), d_odata_ptr, numBlocks * sizeof(int),
+               cudaMemcpyDeviceToHost);
+
+    long long gpu_sum = 0;
+    for (int i = 0; i < numBlocks; i++) gpu_sum += h_odata[i];
+    long long cpu_sum = 0;
+    for (unsigned int i = 0; i < n; i++) cpu_sum += h_data[i];
+
+    if (gpu_sum != cpu_sum) {
+        state.skip("Correctness check failed");
+        return;
+    }
+
     // NVBench timed region: only the kernel launch is measured.
     // NVBench handles warm-up, cold measurements, and statistical convergence.
     state.exec([&](nvbench::launch &launch) {
