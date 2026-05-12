@@ -1,6 +1,9 @@
 /*
  * Self-contained CUDA reduction benchmark for CompileIQ optimization.
  *
+ * Uses cub::BlockReduce for the block-wide reduction and thrust::device_vector
+ * for RAII device memory management.
+ *
  * Compiles in a single step:
  *   nvcc -O3 -std=c++17 -arch=sm_100 reduction.cu -o reduction
  *
@@ -8,14 +11,15 @@
  *   ./reduction [-n=67108864]
  */
 
-#include <cooperative_groups.h>
+#include <cub/block/block_reduce.cuh>
+#include <cuda_runtime.h>
+#include <thrust/device_vector.h>
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cuda_runtime.h>
-
-namespace cg = cooperative_groups;
+#include <vector>
 
 #define CUDA_CHECK(call)                                                                    \
     do {                                                                                    \
@@ -31,24 +35,16 @@ static constexpr int BLOCK_SIZE = 256;
 static constexpr int MAX_BLOCKS = 64;
 static constexpr int TEST_ITERATIONS = 100;
 
-// Warp-level reduction via shuffle
-__device__ __forceinline__ int warpReduceSum(int val)
-{
-    for (int offset = warpSize / 2; offset > 0; offset /= 2)
-        val += __shfl_down_sync(0xffffffff, val, offset);
-    return val;
-}
-
-// Shared-memory reduction with warp shuffle for the final warp.
-// Each thread loads multiple elements (Brent's theorem) to keep the grid small.
+// Reduction kernel using cub::BlockReduce.
+// Each thread loads multiple elements via grid-stride loop (Brent's theorem)
+// to keep the grid small, then CUB handles the block-wide reduction.
 template <int BlockSize>
 __global__ void reduce_kernel(const int *__restrict__ g_idata, int *__restrict__ g_odata,
                               unsigned int n)
 {
-    extern __shared__ int sdata[];
-    cg::thread_block cta = cg::this_thread_block();
+    using BlockReduceT = cub::BlockReduce<int, BlockSize>;
+    __shared__ typename BlockReduceT::TempStorage temp_storage;
 
-    unsigned int tid = threadIdx.x;
     unsigned int i = blockIdx.x * BlockSize * 2 + threadIdx.x;
     unsigned int gridSize = BlockSize * 2 * gridDim.x;
 
@@ -60,31 +56,15 @@ __global__ void reduce_kernel(const int *__restrict__ g_idata, int *__restrict__
             mySum += g_idata[i + BlockSize];
         i += gridSize;
     }
-    sdata[tid] = mySum;
-    cg::sync(cta);
 
-    // Tree reduction in shared memory (compile-time unrolled)
-    if (BlockSize >= 512 && tid < 256) sdata[tid] = mySum = mySum + sdata[tid + 256];
-    cg::sync(cta);
-    if (BlockSize >= 256 && tid < 128) sdata[tid] = mySum = mySum + sdata[tid + 128];
-    cg::sync(cta);
-    if (BlockSize >= 128 && tid < 64) sdata[tid] = mySum = mySum + sdata[tid + 64];
-    cg::sync(cta);
+    // Block-wide reduction via CUB
+    int blockSum = BlockReduceT(temp_storage).Sum(mySum);
 
-    // Final warp: shuffle reduction
-    cg::thread_block_tile<32> tile32 = cg::tiled_partition<32>(cta);
-    if (cta.thread_rank() < 32) {
-        if (BlockSize >= 64)
-            mySum += sdata[tid + 32];
-        for (int offset = tile32.size() / 2; offset > 0; offset /= 2)
-            mySum += tile32.shfl_down(mySum, offset);
-    }
-
-    if (cta.thread_rank() == 0)
-        g_odata[blockIdx.x] = mySum;
+    if (threadIdx.x == 0)
+        g_odata[blockIdx.x] = blockSum;
 }
 
-// CPU reference using Kahan summation
+// CPU reference using simple summation
 static long long reduceCPU(const int *data, int n)
 {
     long long sum = 0;
@@ -106,8 +86,8 @@ int main(int argc, char **argv)
 {
     int n = parseIntArg(argc, argv, "-n", 1 << 26);  // 67108864
 
-    // Allocate and initialize host data
-    int *h_idata = new int[n];
+    // Initialize host data
+    std::vector<int> h_idata(n);
     for (int i = 0; i < n; i++)
         h_idata[i] = rand() & 0xFF;
 
@@ -115,16 +95,15 @@ int main(int argc, char **argv)
     int numBlocks = (n + (BLOCK_SIZE * 2 - 1)) / (BLOCK_SIZE * 2);
     if (numBlocks > MAX_BLOCKS) numBlocks = MAX_BLOCKS;
 
-    // Allocate device memory
-    int *d_idata, *d_odata;
-    CUDA_CHECK(cudaMalloc(&d_idata, (size_t)n * sizeof(int)));
-    CUDA_CHECK(cudaMalloc(&d_odata, numBlocks * sizeof(int)));
-    CUDA_CHECK(cudaMemcpy(d_idata, h_idata, (size_t)n * sizeof(int), cudaMemcpyHostToDevice));
+    // RAII device memory via thrust
+    thrust::device_vector<int> d_idata(h_idata.begin(), h_idata.end());
+    thrust::device_vector<int> d_odata(numBlocks);
 
-    int smem = BLOCK_SIZE * sizeof(int);
+    int *d_idata_ptr = thrust::raw_pointer_cast(d_idata.data());
+    int *d_odata_ptr = thrust::raw_pointer_cast(d_odata.data());
 
     // Warm-up
-    reduce_kernel<BLOCK_SIZE><<<numBlocks, BLOCK_SIZE, smem>>>(d_idata, d_odata, n);
+    reduce_kernel<BLOCK_SIZE><<<numBlocks, BLOCK_SIZE, 0>>>(d_idata_ptr, d_odata_ptr, n);
     CUDA_CHECK(cudaDeviceSynchronize());
 
     // Timed iterations using CUDA events
@@ -134,7 +113,7 @@ int main(int argc, char **argv)
 
     CUDA_CHECK(cudaEventRecord(start));
     for (int i = 0; i < TEST_ITERATIONS; i++)
-        reduce_kernel<BLOCK_SIZE><<<numBlocks, BLOCK_SIZE, smem>>>(d_idata, d_odata, n);
+        reduce_kernel<BLOCK_SIZE><<<numBlocks, BLOCK_SIZE, 0>>>(d_idata_ptr, d_odata_ptr, n);
     CUDA_CHECK(cudaEventRecord(stop));
     CUDA_CHECK(cudaEventSynchronize(stop));
 
@@ -143,14 +122,15 @@ int main(int argc, char **argv)
     double avgTimeSec = (totalMs / TEST_ITERATIONS) / 1000.0;
 
     // Read back block partial sums and finalize on CPU
-    int *h_odata = new int[numBlocks];
-    CUDA_CHECK(cudaMemcpy(h_odata, d_odata, numBlocks * sizeof(int), cudaMemcpyDeviceToHost));
+    std::vector<int> h_odata(numBlocks);
+    CUDA_CHECK(cudaMemcpy(h_odata.data(), d_odata_ptr, numBlocks * sizeof(int),
+                          cudaMemcpyDeviceToHost));
     long long gpuResult = 0;
     for (int i = 0; i < numBlocks; i++)
         gpuResult += h_odata[i];
 
     // CPU reference
-    long long cpuResult = reduceCPU(h_idata, n);
+    long long cpuResult = reduceCPU(h_idata.data(), n);
 
     // Report
     double throughput = 1.0e-9 * ((double)n * sizeof(int)) / avgTimeSec;
@@ -160,13 +140,9 @@ int main(int argc, char **argv)
     printf("CPU result = %lld\n", cpuResult);
     printf(gpuResult == cpuResult ? "Test passed\n" : "Test failed!\n");
 
-    // Cleanup
+    // Cleanup (events only — thrust handles device memory)
     CUDA_CHECK(cudaEventDestroy(start));
     CUDA_CHECK(cudaEventDestroy(stop));
-    CUDA_CHECK(cudaFree(d_idata));
-    CUDA_CHECK(cudaFree(d_odata));
-    delete[] h_idata;
-    delete[] h_odata;
 
     return (gpuResult == cpuResult) ? 0 : 1;
 }
