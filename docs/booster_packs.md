@@ -35,7 +35,7 @@ For example, the Helion Booster Pack has shown beneficial impact on FlashInfer's
 
 ## Downloading a Booster Pack
 
-Booster Packs will be published as zip assets on the [CompileIQ GitHub Releases page](https://github.com/NVIDIA/CompileIQ/releases) under Booster Pack catalog releases, tagged with a Booster Pack-specific prefix, for example `booster-packs-*`.
+Booster Packs will be published as zip assets on the [CompileIQ GitHub Releases page](https://github.com/NVIDIA/CompileIQ/releases) under a Booster Pack catalog release, tagged with a Booster Pack-specific prefix, for example `booster-packs-*`.
 
 
 * Each Booster Pack catalog release will contain the complete set of Booster Pack zip assets that are currently supported for that catalog version, so users can go to one release to find every supported pack.
