@@ -1,4 +1,5 @@
 import functools
+import json
 import os
 import sys
 import warnings
@@ -24,6 +25,16 @@ try:
     import mlflow as _mlflow
 except ImportError:
     _mlflow = None
+
+
+def _resolution_metadata_to_mlflow_tags(metadata) -> dict[str, str]:
+    if not metadata:
+        return {}
+    return {
+        f"search_space.{idx}.{key}": str(value)
+        for idx, item in enumerate(metadata)
+        for key, value in item.items()
+    }
 
 
 def logging_exception(func):
@@ -109,6 +120,9 @@ class LoguruTracker(BaseTracker):
 
     def search_starts(self, **kwargs):
         logger.info("Search started")
+        metadata = kwargs.get("search_space_resolution_metadata")
+        if metadata:
+            logger.info(f"Resolved search space: {json.dumps(metadata, sort_keys=True)}")
 
     # TODO: Add handling for different search outcomes (success, failure, etc.)
     def search_ends(self, **kwargs):
@@ -193,6 +207,9 @@ class MLflowTracker(BaseTracker):
             _mlflow.set_tags({"status": "running", "search_name": self.run_name, "type": "search"})
         else:
             self.run = _mlflow.get_run(run_id=self.run_id)
+        metadata = kwargs.get("search_space_resolution_metadata")
+        if metadata:
+            _mlflow.set_tags(_resolution_metadata_to_mlflow_tags(metadata))
 
     @logging_exception
     def search_ends(self, **kwargs):

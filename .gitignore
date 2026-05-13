@@ -20,3 +20,4 @@
 **/public
 **/.coverage
 **/*.db
+release/search-spaces/**/*.bin

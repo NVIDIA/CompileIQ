@@ -5,6 +5,7 @@ Tests for SearchConfiguration validators in compileiq/types.py.
 import json
 import pytest
 from compileiq.types import (
+    InternalSearchConfiguration,
     ProblemType,
     SearchConfiguration,
 )
@@ -234,6 +235,13 @@ class TestJsonDict:
         assert d["pool_size"] == 50
         assert d["cull_size"] == 20
         assert d["mutate_rate"] == 0.15
+
+    def test_internal_config_excludes_removed_legacy_field(self):
+        cfg = InternalSearchConfiguration(generations=1, dna_config="dna.config")
+        d = cfg.to_json_dict()
+        removed_field = "experience" + "_mode"
+
+        assert removed_field not in d
 
 
 # ---------------------------------------------------------------------------

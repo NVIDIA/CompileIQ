@@ -236,6 +236,7 @@ def test_setup_dna_with_dict_produces_valid_json():
     parsed = json.loads(result)
 
     assert parsed["format"] == "compileiq-search-space-v1"
+    assert "search_space_format" not in parsed
     assert "classes" in parsed
     assert "dna" in parsed
 
