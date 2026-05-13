@@ -1,12 +1,12 @@
-# Tuning NVCC compiler knobs for a CUDA kernel
+# Tuning NVCC compiler controls for a CUDA kernel
 
-In this section, we walk through optimizing the runtime of a CUDA reduction kernel by tuning NVCC compiler knobs with CompileIQ.
+In this section, we walk through optimizing the runtime of a CUDA reduction kernel by tuning NVCC compiler controls with CompileIQ.
 
 > The example code can be found [in our repo here](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/nvcc_example/optimize_reduction.py).
 
 ## CUDA Reduction Example
 
-This example uses a self-contained CUDA reduction kernel (`reduction.cu`) that sums 64M integers using shared memory and warp shuffle. CompileIQ tunes the NVCC compiler knobs via `--apply-controls` to minimize runtime.
+This example uses a self-contained CUDA reduction kernel (`reduction.cu`) that sums 64M integers using shared memory and warp shuffle. CompileIQ tunes the NVCC compiler controls via `--apply-controls` to minimize runtime.
 
 What you'll need:
 

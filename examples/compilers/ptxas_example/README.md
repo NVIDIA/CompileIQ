@@ -28,4 +28,4 @@ python ptx_spill.py --arch sm_90a
 
 - `ptx_spill.py` - Optimization script
 - `w8_spill.ptx` - PTX file with register pressure
-- `best_compiler_knobs.acf` - Best config (generated)
+- `best_compiler_controls.acf` - Best config (generated)

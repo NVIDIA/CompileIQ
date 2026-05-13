@@ -1,4 +1,4 @@
-# Tuning PTX knobs in your Triton kernel
+# Tuning PTXAS controls in your Triton kernel
 
 In this section, we will build on an existing Triton tutorial kernel and apply PTXAS ACFs.
 
@@ -104,7 +104,7 @@ This objective is following all guidelines from our [Safety Section](compilers_o
 
 #### Expanding the search to different matrix sizes
 
-In this example, we tune PTXAS knobs for a specific matrix size of 512×512. If you want to support multiple sizes, you have a few options:
+In this example, we tune PTXAS controls for a specific matrix size of 512×512. If you want to support multiple sizes, you have a few options:
 
 * Perform one different search for each size
 * Benchmark and validate all matrix sizes inside the objective and return the mean, or only return a score if the ACF showed gains on most or all of the benchmarks

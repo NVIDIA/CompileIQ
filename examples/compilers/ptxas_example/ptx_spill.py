@@ -74,7 +74,7 @@ def main():
     # Save best result
     best = results.get_best_result()
     print(f"Best spill bytes: {best['score_1']}")
-    save_compiler_config("best_compiler_knobs.acf", best["params"])
+    save_compiler_config("best_compiler_controls.acf", best["params"])
 
 
 if __name__ == "__main__":

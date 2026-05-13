@@ -16,7 +16,7 @@ python triton_ptx.py
 
 Searches both Triton configs AND PTXAS controls together:
 - **User space**: Block sizes, warps, stages
-- **Compiler space**: PTXAS internal knobs
+- **Compiler space**: PTXAS compiler controls
 
 ```bash
 python mixed_triton.py
