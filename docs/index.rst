@@ -20,6 +20,7 @@ CompileIQ Documentation
    ptx_spill_example
    nvcc_example
    triton_example
+   benchmarking
 
 .. toctree::
    :hidden:

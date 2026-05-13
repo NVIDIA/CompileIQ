@@ -73,5 +73,6 @@ Each example below follows this pattern: define an objective function, fetch a c
 | [NVCC reduction](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/nvcc_example/) | NVCC | Runtime (ms) | [NVCC example](nvcc_example.md) |
 | [PTXAS spill reduction](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/ptxas_example/) | PTXAS | Spill bytes | [PTXAS example](ptx_spill_example.md) |
 | [Triton matmul](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/triton_example/) | PTXAS via Triton | Runtime (ms) | [Triton example](triton_example.md) |
+| [NVBench reduction](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/nvbench_example/) | PTXAS via NVCC | Runtime (P75, NVBench) | [Benchmarking](benchmarking.md) |
 
 The PTXAS example is the simplest starting point — it only requires `ptxas` and runs on CPU (no GPU needed). The NVCC and Triton examples require a GPU to measure runtime.
