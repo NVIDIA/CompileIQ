@@ -1,4 +1,4 @@
-# Tuning PTXAS controls in your Triton kernel
+# Tuning PTXAS Advanced Controls in your Triton Kernel
 
 In this section, we will build on an existing Triton tutorial kernel and apply PTXAS ACFs.
 

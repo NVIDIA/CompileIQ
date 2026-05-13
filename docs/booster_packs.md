@@ -100,6 +100,8 @@ As an example we have applied the Helion Booster Pack to Batch Decode in FlashIn
 
 For a FlashInfer-specific walkthrough, see [Applying a Booster Pack to FlashInfer](flashinfer_booster.md).
 
+> There is no guarantee that ACFs will always provide benefits. We encourage you to validate performance and remain using the default compiler profiles when beneficial.
+
 ## When to Run a Search Instead
 
 Run your own CompileIQ search if:

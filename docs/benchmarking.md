@@ -1,4 +1,4 @@
-# Benchmarking Approaches
+# Benchmarking Guidelines
 
 CompileIQ's compiler tuning requires accurate, repeatable kernel timing.
 Different measurement tools suit different workflows. This page summarizes
