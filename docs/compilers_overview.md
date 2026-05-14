@@ -1,6 +1,6 @@
 # Tuning NVIDIA Compilers
 
-Starting in CUDA Toolkit (CTK) 13.3, NVCC and PTXAS expose a __Controls Interface__ through the `--apply-controls` option. This interface lets you pass an __Advanced Controls File__ (ACF) to the compiler and change the compiler decisions used for that compilation.
+Starting in CUDA Toolkit (CTK) 13.3, NVCC and PTXAS expose the __Advanced Controls Interface__ through the `--apply-controls` option. This interface lets you pass an __Advanced Controls File__ (ACF) to the compiler and change the compiler optimization choices used for that compilation.
 
 CompileIQ uses this interface to generate ACFs for a given workload. In practice, this lets you adapt the compiler to the workload without changing the kernel source. If you want to try curated ACFs before running a full search, see [Booster Packs](booster_packs.md).
 

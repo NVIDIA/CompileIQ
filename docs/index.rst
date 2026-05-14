@@ -1,12 +1,11 @@
 CompileIQ Documentation
-=======================
+======================================
 
 .. toctree::
    :hidden:
    :maxdepth: 3
    :caption: Overview
 
-   primer
    install
    getting_started
 
@@ -18,9 +17,9 @@ CompileIQ Documentation
    compilers_overview
    search_space_release_testing
    booster_packs
-   ptx_spill_example
-   nvcc_example
-   triton_example
+   Tuning PTXAS <ptx_spill_example>
+   Tuning NVCC <nvcc_example>
+   Tuning PTXAS in Triton <triton_example>
    benchmarking
 
 .. toctree::
@@ -43,15 +42,31 @@ CompileIQ Documentation
 .. toctree::
    :hidden:
    :maxdepth: 3
-   :caption: Programmer's Guide
+   :caption: Developer Resources
 
    api
-
+   Evolutionary Algorithms <evolutionary>
 
 
 What is CompileIQ?
-------------------
+------------------------------------------
 
-CompileIQ is an evolutionary-based HPO. The internal parameters were fine-tuned to work well with Nvidia's compilers.
+CompileIQ is a Hyper-Parameter Optimization Engine (HPO), based on evolutionary algorithms and fine-tuned to work well tuning controls of NVIDIA compilers.
 
-CompileIQ's primary use is evolutionary optimization over a multidimensional problem space. More usefully, CompileIQ's goal is to target performance improvements in any application capable of deterministically altering its behavior according to a set of configuration settings or a defined search space.
+This documentation portal enables you to:
+
+* Learn about the new Advanced Controls interface of NVIDIA Compilers.
+* Make CompileIQ tune Advanced Controls to maximise a metric of interest.
+* Use CompileIQ to simultaneously adjust Advanced Controls and application parameters like block and batch sizes.
+
+
+What can be expected from using CompileIQ?
+------------------------------------------
+
+For highly optimized workloads, CompileIQ has shown 2% to 3% improvements in some cases. Less optimized workloads may see larger gains, but actual results depend on the workload, hardware, metric, and available optimization headroom.
+
+* Dive into the :doc:`Getting Started guide <getting_started>` to get started quickly.
+* Get extra performance now with pre-made solutions from our :doc:`Booster Packs <booster_packs>`.
+* Learn more about the new Compiler Controls interface by :doc:`Tuning NVIDIA Compilers <compilers_overview>`.
+* Peruse our :doc:`API Documentation <api>` to get detailed information about our Python package.
+

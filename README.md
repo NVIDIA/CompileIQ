@@ -53,3 +53,25 @@ If you are planning on running examples, you may need additional dependencies:
 ```bash
 python -m poetry install --with examples
 ```
+
+## Documentation development
+
+Install the docs dependencies once:
+
+```bash
+make install-docs
+```
+
+To preview uncommitted documentation edits from your live worktree:
+
+```bash
+make docs-preview
+```
+
+Then open <http://localhost:8000/main/>.
+
+If port 8000 is already in use, stop the existing local docs server first.
+
+Use `make docs` or `make docs-serve` when you need to test the multiversion
+documentation shape used by GitHub Pages. Those commands build from Git refs, so
+they are not the right choice for checking dirty worktree edits before commit.

@@ -1,4 +1,4 @@
-# Tuning NVCC compiler controls for a CUDA kernel
+# Tuning NVCC for your CUDA kernel
 
 In this section, we walk through optimizing the runtime of a CUDA reduction kernel by tuning NVCC compiler controls with CompileIQ.
 
@@ -87,3 +87,8 @@ This NVCC example differs from the [PTXAS spill example](ptx_spill_example.md) i
 * **Runtime metric**: The objective minimizes execution time rather than register spills.
 
 Both examples follow the same pattern: define an objective, fetch a compiler search space, and run the evolutionary search.
+
+> **NOTE**: ACFs can contain controls for specific compilers. When using a PTXAS ACF with NVCC, pass it directly to PTXAS via:
+>
+>           nvcc -Xptxas="--apply-controls=best_config.bin" kernel.cu
+>

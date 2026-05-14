@@ -1,8 +1,8 @@
 API Documentation
-=================
+======================================
 
 compileiq.ciq
--------------
+--------------------------------------
 
 .. automodule:: compileiq.ciq
    :members:
@@ -10,7 +10,7 @@ compileiq.ciq
    :show-inheritance:
 
 compileiq.types
----------------
+--------------------------------------
 
 .. automodule:: compileiq.types
    :members:
@@ -18,7 +18,7 @@ compileiq.types
    :show-inheritance:
 
 compileiq.types.Score
----------------------
+--------------------------------------
 
 .. automodule:: compileiq.utils.validation
    :members: Score, SingleScore, MultiScore, INVALID_SCORE, BASELINE_DNA
@@ -26,7 +26,7 @@ compileiq.types.Score
    :show-inheritance:
 
 compileiq.search_spaces
------------------------
+--------------------------------------
 
 .. automodule:: compileiq.search_spaces.base
    :members:
@@ -39,7 +39,7 @@ compileiq.search_spaces
    :show-inheritance:
 
 compileiq.results
------------------
+--------------------------------------
 
 .. automodule:: compileiq.results
    :members:
@@ -47,7 +47,7 @@ compileiq.results
    :show-inheritance:
 
 compileiq.tracker
------------------
+--------------------------------------
 
 .. automodule:: compileiq.tracker
    :members:
@@ -55,7 +55,7 @@ compileiq.tracker
    :show-inheritance:
 
 compileiq.utils.gpu
------------------
+--------------------------------------
 
 .. automodule:: compileiq.utils.gpu
    :members:

@@ -1,4 +1,4 @@
-# First steps to apply compiler controls
+# Tuning PTXAS for your CUDA kernel
 
 In this section, we will walk you through how to set up your first search to tune PTXAS compiler controls.
 
@@ -195,6 +195,11 @@ ptxas info    : Compile time = 369.596 ms
 Our current support extends to PTXAS and NVCC. This option offers the user to tune standalone NVCC, standalone PTXAS or a search space with both combined. 
 
 Other environments like Triton and Helion provide facilities to inject ACFs on the compilation flow, and even to select ACFs for specific kernels or inputs. 
+
+> **NOTE**: ACFs can contain controls for specific compilers. When using a PTXAS ACF with NVCC, pass it directly to PTXAS via:
+>
+>           nvcc -Xptxas="--apply-controls=best_config.bin" kernel.cu
+>
 
 Consult the respective documentations or follow our examples in the next pages of this guide:
 
