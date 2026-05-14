@@ -51,7 +51,7 @@ jobs:
           cache-dependency-path: 'poetry.lock'
       - run: pip install poetry
       - run: poetry install --with typecheck,tracking,unittest
-      - run: poetry run pyright
+      - run: make typecheck
 
   unit-test:
     # Matrix matches `pyproject.toml`'s `python = ">=3.11,<3.14"` and the

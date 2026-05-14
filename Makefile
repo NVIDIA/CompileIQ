@@ -2,8 +2,7 @@
 
 .PHONY: help install install-examples install-docs lint lint-fix format format-check \
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
-        docs docs-serve docs-preview build clean validate
-        docs docs-serve build clean validate check-internal \
+        docs docs-serve docs-preview build clean validate check-internal \
         build-search-space-manifest build-search-space-release-notes \
         build-search-space-release build-search-space-manifest-schema \
         check-search-space-manifest-schema clean-search-cache
