@@ -1,4 +1,4 @@
-# Tuning NVCC Advanced Controls for a CUDA kernel
+# Tuning NVCC for your CUDA kernel
 
 In this section, we walk through optimizing the runtime of a CUDA reduction kernel by tuning NVCC compiler controls with CompileIQ.
 

@@ -1,5 +1,5 @@
 CompileIQ Documentation
-=======================
+======================================
 
 .. toctree::
    :hidden:
@@ -44,11 +44,11 @@ CompileIQ Documentation
    :caption: Developer Resources
 
    api
-   evolutionary
+   Evolutionary Algorithms <evolutionary>
 
 
 What is CompileIQ?
-------------------
+------------------------------------------
 
 CompileIQ is a Hyper-Parameter Optimization Engine (HPO), based on evolutionary algorithms and fine-tuned to work well tuning controls of NVIDIA compilers.
 

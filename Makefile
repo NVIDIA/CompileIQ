@@ -2,7 +2,7 @@
 
 .PHONY: help install install-examples install-docs lint lint-fix format format-check \
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
-        docs docs-serve build clean validate
+        docs docs-serve docs-preview build clean validate
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -52,11 +52,15 @@ test-cov: ## Run tests with coverage report
 test-cov-html: ## Run tests with coverage report
 	poetry run pytest tests/unit tests/integration -vvv --cov=compileiq --cov-report=html
 
-docs: ## Build documentation
+docs: ## Build multiversion documentation
 	CIQ_DOCS_ENV=dev poetry run sphinx-multiversion -E -a docs/ public/
 
-docs-serve: ## Build and serve docs locally
+docs-serve: ## Build and serve multiversion docs locally
 	bash dev/view_docs.sh
+
+docs-preview: ## Build and serve live worktree docs locally
+	CIQ_DOCS_LOCAL_PREVIEW=1 CIQ_DOCS_BASE_URL=http://localhost:8000 poetry run sphinx-build -E -a docs public/main
+	python3 -m http.server 8000 --directory public
 
 build: ## Build wheel and sdist
 	poetry build

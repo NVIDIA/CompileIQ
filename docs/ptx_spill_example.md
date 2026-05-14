@@ -1,4 +1,4 @@
-# Tuning PTXAS Advanced Controls for a CUDA Kernel
+# Tuning PTXAS for your CUDA kernel
 
 In this section, we will walk you through how to set up your first search to tune PTXAS compiler controls.
 

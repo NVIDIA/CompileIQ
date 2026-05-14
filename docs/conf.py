@@ -68,6 +68,8 @@ switcher_version = os.environ.get("SPHINX_MULTIVERSION_VERSION", "main")
 html_context = {
     "base_url": html_baseurl.rstrip("/"),
 }
+local_preview = os.environ.get("CIQ_DOCS_LOCAL_PREVIEW") == "1"
+navbar_end = ["navbar-icon-links"] if local_preview else ["theme-switcher", "navbar-icon-links"]
 
 html_theme_options = {
     "icon_links": [
@@ -81,17 +83,19 @@ html_theme_options = {
     "navigation_depth": 4,
     "show_toc_level": 2,
     "navbar_start": ["navbar-logo"],
-    "navbar_end": ["theme-switcher", "navbar-icon-links"],
-    "switcher": {
-        "json_url": f"{html_baseurl}switcher.json",
-        "version_match": switcher_version,
-    },
+    "navbar_end": navbar_end,
     "check_switcher": False,
     "footer_start": ["copyright"],
     "footer_end": ["sphinx-version"],
     "sidebar_includehidden": True,
     "collapse_navigation": False,
 }
+
+if not local_preview:
+    html_theme_options["switcher"] = {
+        "json_url": f"{html_baseurl}switcher.json",
+        "version_match": switcher_version,
+    }
 
 
 html_static_path = ["_static"] if os.path.exists("_static") else []
@@ -158,9 +162,9 @@ smv_outputdir_format = "{ref.name}"
 smv_latest_version = "main"
 smv_prefer_remote_refs = True
 
-html_additional_pages = {
-    "switcher.json": "switcher.json",
-}
+# Local previews use sphinx-build against the live worktree, where
+# sphinx-multiversion's ``versions`` template variable is unavailable.
+html_additional_pages = {} if local_preview else {"switcher.json": "switcher.json"}
 
 # Set Python domain primary
 primary_domain = "py"
