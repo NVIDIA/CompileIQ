@@ -196,7 +196,7 @@ Our current support extends to PTXAS and NVCC. This option offers the user to tu
 
 Other environments like Triton and Helion provide facilities to inject ACFs on the compilation flow, and even to select ACFs for specific kernels or inputs. 
 
-> **NOTE**: ACFs can contain controls for specific compilres. When using a PTXAS ACF with NVCC pass it directly to PTXAS via:
+> **NOTE**: ACFs can contain controls for specific compilers. When using a PTXAS ACF with NVCC, pass it directly to PTXAS via:
 >
 >           nvcc -Xptxas="--apply-controls=best_config.bin" kernel.cu
 >
