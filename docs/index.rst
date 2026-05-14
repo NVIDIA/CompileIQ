@@ -64,8 +64,8 @@ What can be expected from using CompileIQ?
 
 For highly optimized workloads CompileIQ can find anywhere from 2% to 3% improvements. For sub-optimal workloads one can see upwards of 10% to 15% gains.
 
-* Dive into the :doc:`Getting Started guide <getting_started>` to get started quickly
-* Get extra performance now, with pre-made solutions from our :doc:`Booster Packs <booster_packs>`
-* Learn more about the new Compiler Controls interface by :doc:`Tuning NVIDIA Compilers <compilers_overview>`
-* Peruse our :doc:`API Documentation <api>` to get detailed information about our Python package
+* Dive into the :doc:`Getting Started guide <getting_started>` to get started quickly.
+* Get extra performance now with pre-made solutions from our :doc:`Booster Packs <booster_packs>`.
+* Learn more about the new Compiler Controls interface by :doc:`Tuning NVIDIA Compilers <compilers_overview>`.
+* Peruse our :doc:`API Documentation <api>` to get detailed information about our Python package.
 
