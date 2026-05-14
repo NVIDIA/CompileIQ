@@ -91,22 +91,26 @@ def test_single_objective_min(cache_dir):
     df = result.get_results()
     best = result.get_best_result()
 
-    # Structural: we should have at least pool_size rows (gen 0) and at most
-    # pool_size * generations.  The core's evolutionary algorithm may produce
-    # fewer rows in later generations due to culling and deduplication.
-    assert len(df) >= 8  # at least one full generation
-    assert len(df) <= 8 * 3  # at most pool_size * generations
+    # Structural: we should have results, but deduplication can reduce the
+    # number of scored rows even in the initial generation.
+    assert not df.empty
+    assert len(df) <= SMALL_CONFIG["pool_size"] * SMALL_CONFIG["generations"]
     assert "score_1" in df.columns
     assert "params" in df.columns
     assert "generation" in df.columns
+    assert df["generation"].between(0, SMALL_CONFIG["generations"] - 1).all()
 
     # Best result is a dict with the expected keys
     assert isinstance(best, dict)
     assert "score_1" in best
     assert "params" in best
 
-    # Scores are real numbers (not INVALID_SCORE "*")
+    # Scores are real numbers (not INVALID_SCORE "*") and match the objective
+    # for each scored parameter set.
     assert all(isinstance(s, (int, float)) for s in df["score_1"])
+    for row in df.itertuples():
+        assert isinstance(row.params, dict)
+        assert row.score_1 == pytest.approx(objective_min(row.params))
 
     # Sanity: optimizer found something better than the worst possible
     # (worst = 20.0^2 + 3 = 403)
