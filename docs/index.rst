@@ -54,9 +54,9 @@ CompileIQ is a Hyper-Parameter Optimization Engine (HPO), based on evolutionary 
 
 This documentation portal enables you to:
 
-* Learn about the new Advanced Controls interface of NVIDIA Compilers
-* Make CompileIQ tune Advanced Controls to maximise a metric of interest
-* Use CompileIQ to simultaneously adjust Advanced Controls and application parameters like Block and Batch sizes.
+* Learn about the new Advanced Controls interface of NVIDIA Compilers.
+* Make CompileIQ tune Advanced Controls to maximise a metric of interest.
+* Use CompileIQ to simultaneously adjust Advanced Controls and application parameters like block and batch sizes.
 
 
 What can be expected from using CompileIQ?
