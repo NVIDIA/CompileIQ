@@ -61,12 +61,12 @@ entries:
     compiler_version: "13.3"
     variant: att
     filename: x.bin
-    description: "PTX with attribute-based scheduling"
+    description: "Curated for attention kernels"
 """,
         tmp_path / "manifest-source.yaml",
     )
     manifest = build_manifest.build(src, tmp_path, "tag")
-    assert manifest.entries[0].description == "PTX with attribute-based scheduling"
+    assert manifest.entries[0].description == "Curated for attention kernels"
     assert manifest.entries[0].variant == "att"
 
 
