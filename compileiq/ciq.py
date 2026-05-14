@@ -61,9 +61,14 @@ from compileiq.utils.helpers import (
 )
 
 SearchSpaceInput: TypeAlias = (
-    Dict[str, Any] | pathlib.Path | List[Dict | pathlib.Path] | SearchSpaceProvider
+    Dict[str, Any]
+    | pathlib.Path
+    | List[Dict | pathlib.Path | SearchSpaceProvider]
+    | SearchSpaceProvider
 )
 SearchConfigInput: TypeAlias = Dict[str, Any] | SearchConfiguration | pathlib.Path
+ResolvedSearchSpaceInput: TypeAlias = Dict[str, Any] | pathlib.Path | List[Dict | pathlib.Path]
+SearchSpaceResolutionMetadataDict: TypeAlias = dict[str, str | int | None]
 
 
 def _expand_objective_values(
@@ -173,6 +178,9 @@ class Search(BaseModel):
     _result: SearchResult = PrivateAttr()
     _using_legacy_dna: bool | list[bool] = False
     _multi_config: bool = False
+    _search_space_resolution_metadata: list[SearchSpaceResolutionMetadataDict] | None = (
+        PrivateAttr(default=None)
+    )
 
     # Cache directory management
     _base_cache_dir: Optional[pathlib.Path] = PrivateAttr(default=None)
@@ -248,9 +256,33 @@ class Search(BaseModel):
         required files in `cache_folder`.
         """
 
-        # Preparing search space - resolve SearchSpaceProvider instances
-        if isinstance(self.search_space, SearchSpaceProvider):
-            self.search_space = self.search_space.retrieve()
+        # Preparing search space - resolve SearchSpaceProvider instances.
+        metadata_records: list[SearchSpaceResolutionMetadataDict] = []
+
+        def resolve_provider(
+            search_space: Dict[str, Any] | pathlib.Path | SearchSpaceProvider,
+        ) -> Dict[str, Any] | pathlib.Path:
+            if not isinstance(search_space, SearchSpaceProvider):
+                return search_space
+            resolved = search_space.retrieve()
+            metadata = getattr(search_space, "resolution_metadata", None)
+            if metadata is not None:
+                metadata_records.append(metadata.as_dict())
+            return resolved
+
+        if isinstance(self.search_space, list):
+            # Multi-config searches may mix raw dict/path search spaces with
+            # provider-backed entries. Resolve only the provider entries.
+            self.search_space = [
+                resolve_provider(search_space) for search_space in self.search_space
+            ]
+        else:
+            # Common case: a single raw search space or one provider-backed
+            # search space that resolves to a local binary path.
+            self.search_space = resolve_provider(self.search_space)
+
+        if metadata_records:
+            self._search_space_resolution_metadata = metadata_records
         self._multi_config = isinstance(self.search_space, list)
         if isinstance(self.search_space, list):
             self._using_legacy_dna = [
@@ -333,7 +365,9 @@ class Search(BaseModel):
         hijacked_config.pool_size = max(num_samples, 6)
         hijacked_config.cull_size = 2
         try:
-            hijacked_config.dna_config = setup_search_space(self.search_space, dna_config_filepath)
+            hijacked_config.dna_config = setup_search_space(
+                cast(ResolvedSearchSpaceInput, self.search_space), dna_config_filepath
+            )
             setup_legacy_search_config(hijacked_config, main_config_filepath)
 
             # Starting Core as a subprocess
@@ -441,7 +475,7 @@ class Search(BaseModel):
         try:
             # Configuring `dna.config` & `main.config` legacy file for core
             self._search_config.dna_config = setup_search_space(
-                self.search_space, dna_config_filepath
+                cast(ResolvedSearchSpaceInput, self.search_space), dna_config_filepath
             )
             setup_legacy_search_config(self._search_config, main_config_filepath)
 
@@ -455,7 +489,9 @@ class Search(BaseModel):
             # Wait for core to connect (returns accepted socket and its addr)
             self._core_socket, _ = self._listen_socket.accept()
 
-            self._tracker.search_starts()
+            self._tracker.search_starts(
+                search_space_resolution_metadata=self._search_space_resolution_metadata
+            )
 
             # Executing function throughout the generations
             self._result = self._process_dna(
@@ -472,6 +508,13 @@ class Search(BaseModel):
                 self._clean_files()
 
         return self._result
+
+    @property
+    def search_space_resolution_metadata(self) -> list[SearchSpaceResolutionMetadataDict] | None:
+        """One metadata record per resolved provider, or None if no provider was used."""
+        if self._search_space_resolution_metadata is None:
+            return None
+        return [dict(metadata) for metadata in self._search_space_resolution_metadata]
 
     def _process_dna(
         self,
@@ -644,7 +687,7 @@ class Search(BaseModel):
                 except Exception:
                     return param
 
-            # We only support nested for native CompileIQ format
+            # We only support nested data for the native CompileIQ format
             if not is_legacy and isinstance(param_set, dict):
                 # This if deals with the corner case the user is using legacy dna that
                 # is json-compatible

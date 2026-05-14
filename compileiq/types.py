@@ -659,7 +659,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
             It will ignore all fields that are not available at SearchConfiguration
 
         Warning:
-            It will throw Exceptions if using fields that are unsupported in CompileIQ
+            It will raise exceptions if using fields that are unsupported in CompileIQ
         """
         if legacy.endswith(".config") and pathlib.Path(legacy).exists():
             with open(legacy, "r") as f:
@@ -698,5 +698,4 @@ class InternalSearchConfiguration(SearchConfiguration):
     """
 
     dna_config: str | List[str] = ""
-    experience_mode: str = "solar"
     enable_result_file: bool = False

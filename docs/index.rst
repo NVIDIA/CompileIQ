@@ -15,6 +15,7 @@ CompileIQ Documentation
    :caption: Nvidia Compiler Tuning
 
    compilers_overview
+   search_space_release_testing
    booster_packs
    Tuning PTXAS <ptx_spill_example>
    Tuning NVCC <nvcc_example>

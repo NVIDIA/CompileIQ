@@ -82,6 +82,12 @@ xgboost = "^2.1.2"
 triton = {version = "3.6.0", platform = "linux"}
 torch = "2.10.0"
 
+[tool.poetry.group.release]
+optional = true
+
+[tool.poetry.group.release.dependencies]
+pyyaml = "^6.0.2"
+
 
 [build-system]
 requires = ["poetry-core"]

@@ -109,7 +109,7 @@ def setup_search_space(
 def _setup_dna_with_dict(dna_dict: Mapping[str, ParamConfig]) -> str:
     """
     Creates a JSON string representing the DNA configuration. The JSON
-    follows the compileiq-search-space-v1 schema and is parsed by core.
+    follows the core search-space schema and is parsed by core.
     """
     search_space_list = ["{"] + list(dna_dict.keys()) + ["}"]
     model = SearchSpaceFileModel(classes=dict(dna_dict), dna=search_space_list)

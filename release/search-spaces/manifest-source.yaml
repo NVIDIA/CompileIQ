@@ -1,0 +1,32 @@
+# Source of truth for the search-space release catalog.
+#
+# Each entry describes one .bin file expected in the release artifact staging
+# directory. At release-prep time, `dev/build_manifest.py` reads this file,
+# computes sha256 + size for each staged .bin, and emits manifest.json as the
+# release catalog.
+#
+# To prepare a new catalog locally:
+#   1. Stage the .bin files outside the repo checkout.
+#   2. Add or update entries below (compiler, compiler_version, filename;
+#      variant and description optional).
+#   3. Run `make build-search-space-manifest SS_ARTIFACTS_DIR=/path/to/bins`.
+#
+# Required fields per entry:    compiler, compiler_version, filename.
+# Optional fields per entry:    variant, description, search_space_format.
+
+entries:
+  - compiler: ptxas
+    compiler_version: "13.3"
+    variant: default
+    filename: ptxas13.3_search_space.bin
+
+  - compiler: ptxas
+    compiler_version: "13.3"
+    variant: att
+    filename: ptxas13.3_att_search_space.bin
+    description: "PTX with attribute-based register allocation"
+
+  - compiler: nvcc
+    compiler_version: "13.3"
+    variant: default
+    filename: nvcc13.3_search_space.bin
