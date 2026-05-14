@@ -24,7 +24,7 @@ entries:
     compiler_version: "13.3"
     variant: att
     filename: ptxas13.3_att_search_space.bin
-    description: "PTX with attribute-based register allocation"
+    description: "Curated for attention kernels (FlashAttention, GQA, MHA, MLA, FlashInfer Batch Decode)"
 
   - compiler: nvcc
     compiler_version: "13.3"
