@@ -64,7 +64,8 @@ def diagnose(df: pd.DataFrame) -> Diagnosis:
         if late > early + 10:
             flags.append("INCREASING_INVALID_RATE")
             notes.append(
-                f"invalid_pct rose from ~{early:.1f}% (early gens) to ~{late:.1f}% (late gens)"
+                f"invalid_pct rose from ~{early:.1f}% (early gens) "
+                f"to ~{late:.1f}% (late gens)"
             )
 
     if len(summary) >= 4:
@@ -75,13 +76,16 @@ def diagnose(df: pd.DataFrame) -> Diagnosis:
             improvement = (first - last) / abs(first) if first else 0
             if abs(improvement) < 0.01:
                 flags.append("STALLED_CONVERGENCE")
-                notes.append(f"best score barely moved in last {len(recent_best)} gens "
-                             f"({recent_best.iloc[0]:.4g} → {recent_best.iloc[-1]:.4g})")
+                notes.append(
+                    f"best score barely moved in last {len(recent_best)} gens "
+                    f"({recent_best.iloc[0]:.4g} -> {recent_best.iloc[-1]:.4g})"
+                )
 
     if summary["cv_pct"].dropna().median() > 15:
         flags.append("HIGH_VARIANCE")
         notes.append(
-            f"median per-generation CV% is {summary['cv_pct'].median():.1f}% (>15% = noisy)"
+            f"median per-generation CV% is {summary['cv_pct'].median():.1f}% "
+            "(>15% = noisy)"
         )
 
     if not flags:
