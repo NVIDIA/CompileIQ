@@ -48,6 +48,12 @@ sphinx-multiversion = "^0.2.4"
 autodoc-pydantic = "^2.2.0"
 sphinxcontrib-mermaid = ">=0.9.2"
 
+[tool.poetry.group.agent-skills]
+optional = true
+
+[tool.poetry.group.agent-skills.dependencies]
+scipy = "^1.17.1"
+
 [tool.poetry.group.linter]
 optional = true
 

@@ -102,3 +102,21 @@ Key modules:
 ## CI/CD
 
 GitHub Actions workflows cover validation, testing, and deploy-related tasks. Linting and unit tests run in validation jobs. Integration tests, example runs, fuzz tests, and binary/internal validation run in test jobs. Fuzz tests run last after integration tests pass.
+
+## Available Agent Skills
+
+This repository ships an agent-agnostic skill set under `agent-skills/` that any AGENTS.md-aware coding agent (Claude Code, Codex, Cursor, GitHub Copilot, Aider, Windsurf) can use to drive CompileIQ optimization campaigns. The skills follow the [agentskills.io](https://agentskills.io) `SKILL.md` convention; an installer renders the right format for each agent.
+
+| Skill | Use when |
+| --- | --- |
+| `compileiq-bootstrap` | First-time setup, socket timeout, or before any other compileiq-* skill. |
+| `compileiq-booster-pack` | Try a curated ACF candidate (incl. the Debug pack's O0/O3 injection canary) before paying for a full search. |
+| `compileiq-search-space` | Pick a provider class or pin a release; the `att` variant is curated for **attention** workloads (FA / GQA / MHA / MLA / FlashInfer Batch Decode). |
+| `compileiq-author-objective` | Write or fix the function passed as `objective_function=`; covers PTXAS / NVCC / Triton / Helion / cuTeDSL / FlashInfer injection. |
+| `compileiq-run-search` | Compose `Search(...)`, pick the right Worker, size `SearchConfiguration`. |
+| `compileiq-validate-result` | Welch's t-test + Cohen's d gate before claiming any speedup or shipping an ACF. |
+| `compileiq-debug` | Symptom-indexed cheat sheet for anything unexpected. |
+
+**Recommended order for a fresh project:** `bootstrap → booster-pack → (only if no pack helps) author-objective → run-search → validate-result`. `debug` is available throughout.
+
+To install for your agent: `bash agent-skills/install.sh --agents <claude-code|codex|cursor|copilot|aider|windsurf>` (or run with no `--agents` flag to auto-detect). See [`agent-skills/README.md`](agent-skills/README.md) for the full layout, authoring conventions, and `--check` / `--uninstall`.

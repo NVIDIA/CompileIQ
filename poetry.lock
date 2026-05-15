@@ -2817,7 +2817,7 @@ version = "2.4.4"
 description = "Fundamental package for array computing in Python"
 optional = false
 python-versions = ">=3.11"
-groups = ["main", "examples", "tracking", "typecheck"]
+groups = ["main", "agent-skills", "examples", "tracking", "typecheck"]
 files = [
     {file = "numpy-2.4.4-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:f983334aea213c99992053ede6168500e5f086ce74fbc4acc3f2b00f5762e9db"},
     {file = "numpy-2.4.4-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:72944b19f2324114e9dc86a159787333b77874143efcf89a5167ef83cfee8af0"},
@@ -4727,7 +4727,7 @@ version = "1.17.1"
 description = "Fundamental algorithms for scientific computing in Python"
 optional = false
 python-versions = ">=3.11"
-groups = ["examples", "tracking"]
+groups = ["agent-skills", "examples", "tracking"]
 files = [
     {file = "scipy-1.17.1-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:1f95b894f13729334fb990162e911c9e5dc1ab390c58aa6cbecb389c5b5e28ec"},
     {file = "scipy-1.17.1-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:e18f12c6b0bc5a592ed23d3f7b891f68fd7f8241d69b7883769eb5d5dfb52696"},
@@ -5903,4 +5903,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "1b2b92fd4cf29f9721f4d45bf428a72c68d1ae0a97c048d3042f3c781dfc133a"
+content-hash = "0b53f410e80e833875a9e9eee9413378a9a8dd53002be341ffb4a1f29b273849"
