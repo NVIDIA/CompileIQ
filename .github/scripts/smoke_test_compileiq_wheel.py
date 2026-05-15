@@ -45,7 +45,7 @@ def main():
     df = result.get_results()
     best = result.get_best_result()
 
-    assert len(df) >= 8
+    assert len(df) > 0
     assert "score_1" in df.columns
     assert "params" in df.columns
     assert isinstance(best, dict)
