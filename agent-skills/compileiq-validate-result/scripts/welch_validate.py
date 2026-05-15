@@ -8,6 +8,9 @@ CLI:
         --opt-cmd     "PTXAS_OPTIONS='--apply-controls=best.acf' python bench.py" \
         --trials 100 --warmup 50 \
         --score-regex 'mean: ([0-9.]+)' \
+        --manifest booster-packs-2026.05.14 \
+        --framework "flashinfer 0.x" \
+        --input-shape "batch=1, heads=32, page_size=16" \
         --output validation-log.csv
 
 Importable:
@@ -23,12 +26,72 @@ import argparse
 import csv
 import datetime as dt
 import hashlib
+import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 import numpy as np
+
+ENV_LOG_FIELDS = {
+    "CUDA_VISIBLE_DEVICES": "cuda_visible_devices",
+    "CIQ_SEARCH_SPACES_DIR": "ciq_search_spaces_dir",
+    "CIQ_SEARCH_SPACES_REPO": "ciq_search_spaces_repo",
+    "CIQ_SS_TAG_PREFIX": "ciq_ss_tag_prefix",
+    "FLASHINFER_EXTRA_CUDAFLAGS": "flashinfer_extra_cudaflags",
+    "HELION_SKIP_CACHE": "helion_skip_cache",
+    "PTXAS_OPTIONS": "ptxas_options",
+    "TRITON_ALWAYS_COMPILE": "triton_always_compile",
+    "TRITON_CACHE_DIR": "triton_cache_dir",
+}
+
+
+def _compact(text: str) -> str:
+    return " ".join(text.split())
+
+
+def run_text(cmd: list[str], timeout: int = 5) -> str:
+    """Run a small metadata command and return compact stdout, or empty on failure."""
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+        return ""
+    if proc.returncode != 0:
+        return ""
+    return _compact(proc.stdout)
+
+
+def collect_environment(args: argparse.Namespace) -> dict[str, str]:
+    fields = {
+        "manifest": args.manifest,
+        "framework": args.framework,
+        "input_shape": args.input_shape,
+        "notes": args.notes,
+        "gpu_driver": run_text(
+            [
+                "nvidia-smi",
+                "--query-gpu=name,driver_version",
+                "--format=csv,noheader",
+            ]
+        ),
+        "ctk_version": run_text(["nvcc", "--version"]),
+        "nvcc_path": shutil.which("nvcc") or "",
+        "nvcc_version": run_text(["nvcc", "--version"]),
+        "ptxas_path": shutil.which("ptxas") or "",
+        "ptxas_version": run_text(["ptxas", "--version"]),
+    }
+    fields.update(
+        {field: os.environ.get(env, "") for env, field in ENV_LOG_FIELDS.items()}
+    )
+    return fields
 
 
 def validate_speedup(baseline_ms: np.ndarray, optimized_ms: np.ndarray) -> dict:
@@ -139,11 +202,36 @@ def cli(argv: list[str] | None = None) -> int:
     ap.add_argument("--opt-cmd", help="Shell command for the optimized run.")
     ap.add_argument("--trials", type=int, default=100, help="Trials per side (default 100).")
     ap.add_argument("--warmup", type=int, default=50, help="Warmup runs discarded (default 50).")
-    ap.add_argument("--score-regex", default=r"mean: ([0-9.]+)",
-                    help="Regex with one capture group for the per-run score "
-                         "(default: 'mean: ([0-9.]+)').")
+    ap.add_argument(
+        "--score-regex",
+        default=r"mean: ([0-9.]+)",
+        help=(
+            "Regex with one capture group for the per-run score "
+            "(default: 'mean: ([0-9.]+)')."
+        ),
+    )
     ap.add_argument("--output", default="validation-log.csv",
                     help="CSV file to append the result row to.")
+    ap.add_argument(
+        "--manifest",
+        default="",
+        help="Manifest or release version/tag for the ACF/search space.",
+    )
+    ap.add_argument(
+        "--framework",
+        default="",
+        help="Framework name/version or commit for this benchmark.",
+    )
+    ap.add_argument(
+        "--input-shape",
+        default="",
+        help="Benchmark input shape or workload descriptor.",
+    )
+    ap.add_argument(
+        "--notes",
+        default="",
+        help="Free-form reproducibility notes.",
+    )
     ap.add_argument("--self-test", action="store_true",
                     help="Run unit-test-style synthetic checks and exit.")
     args = ap.parse_args(argv)
@@ -176,8 +264,7 @@ def cli(argv: list[str] | None = None) -> int:
     if result["significant"] and not reasons:
         decision = (
             f"KEPT:speedup={result['speedup_mean']:.4f}x,"
-            f"p={result['p_value']:.4g},"
-            f"d={result['cohens_d']:.3f}"
+            f"p={result['p_value']:.4g},d={result['cohens_d']:.3f}"
         )
         rc = 0
     else:
@@ -196,8 +283,10 @@ def cli(argv: list[str] | None = None) -> int:
     print(f"  optimized: mean={o['mean']:.6f} ± {o['std']:.6f}  "
           f"p5={o['p5']:.6f}  p95={o['p95']:.6f}")
 
-    append_log(args.output, {
-        "timestamp_utc": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
+    log_fields = {
+        "timestamp_utc": dt.datetime.now(dt.UTC)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z"),
         "acf": args.acf,
         "sha256": sha256_of(args.acf),
         "trials": args.trials,
@@ -212,7 +301,9 @@ def cli(argv: list[str] | None = None) -> int:
         "decision":       decision,
         "baseline_cmd":   args.baseline_cmd,
         "opt_cmd":        args.opt_cmd,
-    })
+    }
+    log_fields.update(collect_environment(args))
+    append_log(args.output, log_fields)
     return rc
 
 

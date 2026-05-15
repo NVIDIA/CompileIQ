@@ -164,7 +164,10 @@ Append one row per candidate decision to `validation-log.csv`. Fields, per
 - Cohen's d
 - decision: `KEPT` or `REJECTED:<reason>`
 
-The `scripts/welch_validate.py` helper does this automatically.
+The `scripts/welch_validate.py` helper records the timing/statistical fields,
+ACF hash, benchmark commands, GPU/toolchain metadata, and common environment
+variables automatically. Pass `--manifest`, `--framework`, and `--input-shape`
+for workload-specific fields the helper cannot infer.
 
 ## CLI helper
 
@@ -175,6 +178,9 @@ python scripts/welch_validate.py \
     --opt-cmd "PTXAS_OPTIONS='--apply-controls=best.acf' python bench.py --routine matmul" \
     --trials 100 --warmup 50 \
     --score-regex 'mean: ([0-9.]+)' \
+    --manifest booster-packs-YYYY.MM.DD \
+    --framework "flashinfer <version>" \
+    --input-shape "routine=matmul, M=..., N=..., K=..." \
     --output validation-log.csv
 ```
 
