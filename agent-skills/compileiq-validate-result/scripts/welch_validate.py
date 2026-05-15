@@ -23,7 +23,6 @@ import argparse
 import csv
 import datetime as dt
 import hashlib
-import os
 import re
 import subprocess
 import sys
@@ -141,7 +140,8 @@ def cli(argv: list[str] | None = None) -> int:
     ap.add_argument("--trials", type=int, default=100, help="Trials per side (default 100).")
     ap.add_argument("--warmup", type=int, default=50, help="Warmup runs discarded (default 50).")
     ap.add_argument("--score-regex", default=r"mean: ([0-9.]+)",
-                    help="Regex with one capture group for the per-run score (default: 'mean: ([0-9.]+)').")
+                    help="Regex with one capture group for the per-run score "
+                         "(default: 'mean: ([0-9.]+)').")
     ap.add_argument("--output", default="validation-log.csv",
                     help="CSV file to append the result row to.")
     ap.add_argument("--self-test", action="store_true",
@@ -174,7 +174,11 @@ def cli(argv: list[str] | None = None) -> int:
     reasons = [r for r in (reject_lucky_min(result), reject_higher_variance(result)) if r]
 
     if result["significant"] and not reasons:
-        decision = f"KEPT:speedup={result['speedup_mean']:.4f}x,p={result['p_value']:.4g},d={result['cohens_d']:.3f}"
+        decision = (
+            f"KEPT:speedup={result['speedup_mean']:.4f}x,"
+            f"p={result['p_value']:.4g},"
+            f"d={result['cohens_d']:.3f}"
+        )
         rc = 0
     else:
         if reasons:
@@ -185,10 +189,12 @@ def cli(argv: list[str] | None = None) -> int:
         rc = 1
 
     print(decision)
-    print(f"  baseline: mean={result['baseline']['mean']:.6f} ± {result['baseline']['std']:.6f}  "
-          f"p5={result['baseline']['p5']:.6f}  p95={result['baseline']['p95']:.6f}")
-    print(f"  optimized: mean={result['optimized']['mean']:.6f} ± {result['optimized']['std']:.6f}  "
-          f"p5={result['optimized']['p5']:.6f}  p95={result['optimized']['p95']:.6f}")
+    b = result["baseline"]
+    o = result["optimized"]
+    print(f"  baseline: mean={b['mean']:.6f} ± {b['std']:.6f}  "
+          f"p5={b['p5']:.6f}  p95={b['p95']:.6f}")
+    print(f"  optimized: mean={o['mean']:.6f} ± {o['std']:.6f}  "
+          f"p5={o['p5']:.6f}  p95={o['p95']:.6f}")
 
     append_log(args.output, {
         "timestamp_utc": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
@@ -218,7 +224,10 @@ def _self_test() -> int:
     b = rng.normal(loc=1.0, scale=0.01, size=200)
     r = validate_speedup(a, b)
     assert not r["significant"], f"identical dists should not be significant: {r}"
-    print(f"identical: p={r['p_value']:.4g}  d={r['cohens_d']:.3f}  significant={r['significant']}  OK")
+    print(
+        f"identical: p={r['p_value']:.4g}  d={r['cohens_d']:.3f}  "
+        f"significant={r['significant']}  OK"
+    )
 
     # Optimized clearly faster: expect significant
     a = rng.normal(loc=1.0, scale=0.01, size=200)
@@ -226,7 +235,10 @@ def _self_test() -> int:
     r = validate_speedup(a, b)
     assert r["significant"], f"clear speedup should be significant: {r}"
     assert r["speedup_mean"] > 1.1
-    print(f"speedup: p={r['p_value']:.4g}  d={r['cohens_d']:.3f}  speedup={r['speedup_mean']:.3f}  OK")
+    print(
+        f"speedup: p={r['p_value']:.4g}  d={r['cohens_d']:.3f}  "
+        f"speedup={r['speedup_mean']:.3f}  OK"
+    )
 
     # Lucky-min pattern: optimized has lower min but same mean
     a = rng.normal(loc=1.0, scale=0.01, size=200)

@@ -63,12 +63,16 @@ def diagnose(df: pd.DataFrame) -> Diagnosis:
         late = summary["invalid_pct"].tail(max(1, len(summary) // 3)).mean()
         if late > early + 10:
             flags.append("INCREASING_INVALID_RATE")
-            notes.append(f"invalid_pct rose from ~{early:.1f}% (early gens) to ~{late:.1f}% (late gens)")
+            notes.append(
+                f"invalid_pct rose from ~{early:.1f}% (early gens) to ~{late:.1f}% (late gens)"
+            )
 
     if len(summary) >= 4:
         recent_best = summary["best"].tail(max(2, len(summary) // 4))
         if recent_best.notna().sum() >= 2:
-            improvement = (recent_best.iloc[0] - recent_best.iloc[-1]) / abs(recent_best.iloc[0]) if recent_best.iloc[0] else 0
+            first = recent_best.iloc[0]
+            last = recent_best.iloc[-1]
+            improvement = (first - last) / abs(first) if first else 0
             if abs(improvement) < 0.01:
                 flags.append("STALLED_CONVERGENCE")
                 notes.append(f"best score barely moved in last {len(recent_best)} gens "
@@ -76,7 +80,9 @@ def diagnose(df: pd.DataFrame) -> Diagnosis:
 
     if summary["cv_pct"].dropna().median() > 15:
         flags.append("HIGH_VARIANCE")
-        notes.append(f"median per-generation CV% is {summary['cv_pct'].median():.1f}% (>15% = noisy)")
+        notes.append(
+            f"median per-generation CV% is {summary['cv_pct'].median():.1f}% (>15% = noisy)"
+        )
 
     if not flags:
         flags = ["HEALTHY"]
@@ -98,7 +104,9 @@ def render(diag: Diagnosis) -> str:
 
 
 def cli(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Heuristic diagnostics for a CompileIQ dump_results CSV.")
+    ap = argparse.ArgumentParser(
+        description="Heuristic diagnostics for a CompileIQ dump_results CSV."
+    )
     ap.add_argument("csv", nargs="?", help="Path to results.csv")
     ap.add_argument("--self-test", action="store_true", help="Run synthetic checks and exit.")
     args = ap.parse_args(argv)
