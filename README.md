@@ -1,4 +1,4 @@
-# CompileIQ - Nvidia's Official Compiler HPO
+# CompileIQ - NVIDIA's Official Compiler HPO
 
 CompileIQ is an evolutionary-based hyper-parameter optimizer tailored to tune our internal compiler controls.
 
