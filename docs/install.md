@@ -12,24 +12,37 @@ Or, build from the [repo](https://github.com/NVIDIA/CompileIQ) yourself:
 pip install -e .
 ```
 
-## Managing Searches with Claude Code
+## Managing Searches with Coding Agents
 
-[Claude Code](https://claude.ai/code) can be used as an AI-assisted interface to manage CompileIQ searches interactively. This repository ships a set of slash commands under `.claude/commands/` that cover the full optimization workflow:
+CompileIQ ships an agent-agnostic skill set under `agent-skills/` that any
+AGENTS.md-aware coding agent (Claude Code, Codex, Cursor, GitHub Copilot,
+Aider, Windsurf) can use to drive optimization campaigns. The skills follow the
+[agentskills.io](https://agentskills.io) `SKILL.md` convention.
 
-| Command | Description |
+| Skill | Use when |
 | --- | --- |
-| `/compileiq-bootstrap` | Full stack setup — validates environment, installs dependencies, and configures frameworks |
-| `/compileiq-code` | Generate optimization scripts with properly structured objective functions |
-| `/compileiq-run` | Execute an optimization with GPU management, Ray setup, and progress monitoring |
-| `/compileiq-optimize` | End-to-end pipeline orchestrator that chains all agents |
-| `/compileiq-validate` | Benchmark top solutions against baselines with statistical rigor |
-| `/compileiq-report` | Generate comprehensive reports with results and reproduction instructions |
-| `/compileiq-configs` | Extract and manage optimized configurations from results |
-| `/compileiq-integrate` | Find PTX-to-CUBIN compilation paths and generate integration code |
-| `/compileiq-profile` | Deep kernel analysis using NSight Compute |
-| `/compileiq-debug` | Diagnose convergence issues, invalid configs, and ptxas errors |
+| `compileiq-bootstrap` | First-time setup, socket timeout, or before any other skill |
+| `compileiq-booster-pack` | Try a curated ACF candidate before paying for a full search |
+| `compileiq-search-space` | Choosing a provider class or pinning a search-space release (incl. the `att` variant for attention workloads) |
+| `compileiq-author-objective` | Writing or fixing the function passed as `objective_function=` |
+| `compileiq-run-search` | Composing `Search(...)` and calling `.start()` |
+| `compileiq-validate-result` | Validating a winning ACF with Welch's t-test before shipping |
+| `compileiq-debug` | Any unexpected behavior; symptom-indexed table |
 
-Once Claude Code is installed, clone the repository and these commands will be available automatically in any Claude Code session opened from the project root.
+Install for your agent of choice (auto-detects available agents if `--agents`
+is omitted):
+
+```bash
+bash agent-skills/install.sh                          # auto-detect
+bash agent-skills/install.sh --agents claude-code,codex,cursor,copilot
+bash agent-skills/install.sh --check                   # verify
+bash agent-skills/install.sh --uninstall               # remove mounts
+```
+
+Recommended order for a fresh project: **bootstrap → booster-pack → (only if
+no pack helps) author-objective → run-search → validate-result**, with
+**debug** available throughout. See [`agent-skills/README.md`](../agent-skills/README.md)
+for the full layout and authoring conventions.
 
 ## Environment Configuration Options
 

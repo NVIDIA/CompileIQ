@@ -4727,7 +4727,7 @@ version = "1.17.1"
 description = "Fundamental algorithms for scientific computing in Python"
 optional = false
 python-versions = ">=3.11"
-groups = ["examples", "tracking"]
+groups = ["main", "examples", "tracking"]
 files = [
     {file = "scipy-1.17.1-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:1f95b894f13729334fb990162e911c9e5dc1ab390c58aa6cbecb389c5b5e28ec"},
     {file = "scipy-1.17.1-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:e18f12c6b0bc5a592ed23d3f7b891f68fd7f8241d69b7883769eb5d5dfb52696"},
@@ -5903,4 +5903,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "1b2b92fd4cf29f9721f4d45bf428a72c68d1ae0a97c048d3042f3c781dfc133a"
+content-hash = "3fcf6d598b5e5734a3ef0f19c41a650dd87e4de054bef3d978c081ed0a150301"
