@@ -49,10 +49,10 @@ seeing, follow the first action, then dig into the matching detail section.
 
 ### Socket timeout / hang on first eval
 
-> Not BLAS. Stop sending users to symlink libblas.so.
+> Not BLAS. Do not send users to symlink `libblas.so`.
 
-Current shipped binaries link only `libm`/`libc`/`libstdc++`/`libgcc_s`. The
-old "missing BLAS" fix is from an earlier private build that no longer ships.
+Current shipped binaries link only `libm`/`libc`/`libstdc++`/`libgcc_s` and
+do not require BLAS/LAPACK.
 
 Real causes today, in order of frequency:
 

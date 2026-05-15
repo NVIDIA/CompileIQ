@@ -117,12 +117,8 @@ prints, for each failure, the precise command the user should run next.
 
 ## Gotchas
 
-- **Socket timeout on first eval is *not* BLAS.** Earlier private builds of
-  the core binary linked BLAS/LAPACK and required symlinks into the
-  `compileiq/core/executable/linux/x86_64/lib/` directory. The current
-  shipped binaries do not (`ldd` on `_core` shows only `libm`/`libc`;
-  `libciq.so` links only `libstdc++`/`libgcc_s`/`libc`/`libm`; the lib
-  directory ships only `libciq.so`). If a hang occurs:
+- **Socket timeout on first eval is *not* BLAS.** Current shipped binaries do
+  not require BLAS/LAPACK. If a hang occurs:
   1. Raise `CIQ_SOCKET_TIMEOUT=120` and retry.
   2. If still hangs, mirror search spaces locally and set
      `CIQ_SEARCH_SPACES_DIR=/path/to/mirror`.
