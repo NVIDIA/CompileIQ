@@ -7,6 +7,9 @@ readme = "README.md"
 repository = "https://github.com/NVIDIA/CompileIQ"
 documentation = "https://github.com/NVIDIA/CompileIQ/blob/main/README.md"
 packages = [{ include = "compileiq", format = "wheel" }]
+include = [
+    { path = "compileiq/core/executable/**/*", format = "wheel" },
+]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"

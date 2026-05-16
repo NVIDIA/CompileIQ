@@ -4,6 +4,7 @@ import sys
 import platform
 import os
 import signal
+import warnings
 from pathlib import Path
 from pydantic import TypeAdapter
 from typing import List, Dict
@@ -19,12 +20,17 @@ from compileiq.core.core_types import (
     SingleDNA,
     CompletionMessage,
 )
+from compileiq.core.verify_core import MANIFEST_PATH, verify_binary_platform
 
 
 """
 CompileIQ's core evolutionary algorithm is compiled in binary form.
 For IPC we leverage socket communication through localhost.
 """
+
+CORE_BINARY_ENV_VAR = "CIQ_CORE_BINARY"
+CORE_MANIFEST_ENV_VAR = "CIQ_CORE_MANIFEST"
+EXECUTABLE_DIR = Path(__file__).resolve().parent / "executable"
 
 
 class CoreIPC:
@@ -45,26 +51,10 @@ class CoreIPC:
         Starts a subprocess with the Core. It automatically selects the core binary based
         on your operating system and architecture.
         """
-
-        platform_tuple = (sys.platform, platform.machine().lower())  # OS, aarch
-
-        main_binary = os.path.join("bin", "core") if sys.platform != "win32" else "core.exe"
-        core_binary = (
-            Path(__file__).parent
-            / "executable"
-            / sys.platform
-            / platform.machine().lower()
-            / main_binary
-        )
-
-        if not os.path.isfile(core_binary):
-            raise RuntimeError(
-                "CompileIQ's compiled binaries are not supported for "
-                f"your platform {platform_tuple}."
-            )
+        core_binary = self._resolve_core_binary()
 
         p_core = subprocess.Popen(
-            [core_binary, "-c", main_config_filepath],
+            [str(core_binary), "-c", main_config_filepath],
             env=self.setup_env(server_socket),
             start_new_session=True,
             stdout=subprocess.DEVNULL if silent else sys.stdout,
@@ -74,6 +64,52 @@ class CoreIPC:
         self.core_process = p_core
 
         return p_core
+
+    def _bundled_core_binary(self) -> Path:
+        platform_tuple = (sys.platform, platform.machine().lower())  # OS, arch
+        main_binary = Path("bin") / "core" if sys.platform != "win32" else Path("core.exe")
+        core_binary = EXECUTABLE_DIR / sys.platform / platform.machine().lower() / main_binary
+
+        if not core_binary.is_file():
+            raise RuntimeError(
+                "CompileIQ's compiled binaries are not supported for "
+                f"your platform {platform_tuple}."
+            )
+
+        return core_binary
+
+    def _resolve_core_binary(self) -> Path:
+        override = os.environ.get(CORE_BINARY_ENV_VAR)
+        if override:
+            core_binary = Path(override).expanduser()
+            if not core_binary.is_file():
+                raise RuntimeError(f"{CORE_BINARY_ENV_VAR} points to a missing file: {core_binary}")
+
+            manifest_override = os.environ.get(CORE_MANIFEST_ENV_VAR)
+            if manifest_override:
+                manifest_path = Path(manifest_override).expanduser()
+                verify_binary_platform(
+                    core_binary,
+                    executable_root=manifest_path.parent,
+                    manifest_path=manifest_path,
+                )
+            else:
+                warnings.warn(
+                    f"{CORE_BINARY_ENV_VAR} is set; using developer core override "
+                    "without bundled manifest verification.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+
+            return core_binary
+
+        core_binary = self._bundled_core_binary()
+        verify_binary_platform(
+            core_binary,
+            executable_root=EXECUTABLE_DIR,
+            manifest_path=MANIFEST_PATH,
+        )
+        return core_binary
 
     def stop(self):
         """

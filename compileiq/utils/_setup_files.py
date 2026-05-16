@@ -112,5 +112,5 @@ def _setup_dna_with_dict(dna_dict: Mapping[str, ParamConfig]) -> str:
     follows the core search-space schema and is parsed by core.
     """
     search_space_list = ["{"] + list(dna_dict.keys()) + ["}"]
-    model = SearchSpaceFileModel(classes=dict(dna_dict), dna=search_space_list)
+    model = SearchSpaceFileModel(classes=dict(dna_dict), parameter_layout=search_space_list)
     return model.model_dump_json(exclude_none=True, indent=2, by_alias=True)

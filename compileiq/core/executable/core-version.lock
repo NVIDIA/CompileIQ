@@ -1,0 +1,9 @@
+{
+  "core_commit": "be4da7aaeab2ce5dfc9b3f3efc2fd5f4f3c02c2d",
+  "source_manifest_sha256": "118b6d0f15fc010abdaa615d3becc6f1d08e7871810eacede88fd8c7ad044fd5",
+  "platforms": [
+    "linux/aarch64",
+    "linux/x86_64",
+    "win32/amd64"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "core_commit": "be4da7aaeab2ce5dfc9b3f3efc2fd5f4f3c02c2d",
+  "files": {
+    "linux/aarch64/bin/_core": "sha256:441bfc7cc474a4b9083c3cd6579eb662a51846faed0be8be340596ce1fc0f334",
+    "linux/aarch64/bin/core": "sha256:9fa6463d7210b96d61bc6c1e3a2f7484f2b9b44c5a30a63840c6cd4365baf882",
+    "linux/aarch64/lib/libciq.so": "sha256:2300bd385a0d9d6da62c8b310e390003e80b46943a318edf9db49318a1554a47",
+    "linux/x86_64/bin/_core": "sha256:66ae0843983570cf4984580bf69f329fd889b24337e59ea9994d6d190ee8bde9",
+    "linux/x86_64/bin/core": "sha256:9fa6463d7210b96d61bc6c1e3a2f7484f2b9b44c5a30a63840c6cd4365baf882",
+    "linux/x86_64/lib/libciq.so": "sha256:e69f2012e9accaf5da978966ec41c140e5a7c56220e9a312b3894133f0a6a9d9",
+    "win32/amd64/core.exe": "sha256:13052034a16fe7f8809479887412802e94865986af48380467637086afa0523b",
+    "win32/amd64/libciq.dll": "sha256:d4304cb4d11e4751618a2fd579e42e5009f7952d7e421c3c733a9719f3a97b6f"
+  }
+}
