@@ -11,8 +11,8 @@ from pydantic import (
 from pydantic.functional_validators import AfterValidator
 from typing import Any, Annotated, Tuple, List, Literal
 
-# DNA representing the baseline measurement
-BASELINE_DNA: dict[str, object] = {}
+# Empty-dict sentinel representing the baseline measurement.
+BASELINE_CONFIG: dict[str, object] = {}
 INVALID_SCORE: Literal["*"] = "*"
 
 

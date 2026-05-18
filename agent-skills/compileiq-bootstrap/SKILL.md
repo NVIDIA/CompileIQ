@@ -67,7 +67,7 @@ One shot that covers everything callers will need:
 ```bash
 python -c "
 from compileiq.ciq import Search
-from compileiq.types import INVALID_SCORE, BASELINE_DNA, WorkerTypes, ProblemType, SearchConfiguration
+from compileiq.types import INVALID_SCORE, BASELINE_CONFIG, WorkerTypes, ProblemType, SearchConfiguration
 from compileiq.search_spaces.compilers import PtxasSearchSpace, NvccSearchSpace, LocalSearchSpaceBin
 from compileiq.utils.helpers import save_compiler_config, load_compiler_config
 from compileiq.worker import MultiProcessWorker, IsoMultiProcessWorker, RayWorker, AsyncWorker

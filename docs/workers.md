@@ -7,7 +7,7 @@ from compileiq.worker import MultiProcessWorker
 
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
     worker_type=MultiProcessWorker,
 )
@@ -30,7 +30,7 @@ from compileiq.worker import MultiProcessWorker
 
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
     worker_type=MultiProcessWorker,
 )
@@ -46,7 +46,7 @@ from compileiq.worker import IsoMultiProcessWorker
 
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
     worker_type=IsoMultiProcessWorker,
 )
@@ -67,7 +67,7 @@ async def objective(config):
 
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
     worker_type=AsyncWorker,
 )
@@ -96,7 +96,7 @@ from compileiq.worker import RayWorker
 
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
     worker_type=RayWorker,
 )
@@ -117,7 +117,7 @@ Take a look at all [resource options available for Ray](https://docs.ray.io/en/l
 * Ensure all cluster machines have the necessary environment to run your function (CompileIQ installed plus any other required libraries).
 * A Ray cluster requires a head node, which also executes tasks and may negatively impact sensitive measurements. You can prevent the head node from picking up tasks by starting it with `ray start --head --num-cpus=0`.
 * Specifying `num_cpus` in `tuner.start()` does not pin or limit your function to the specified core. Please refer to [Ray Resources](https://docs.ray.io/en/latest/ray-core/scheduling/resources.htm) for more details.
-* You can find an CompileIQ with Ray [example at our repo](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/distributed.py).
+* You can find a CompileIQ with Ray [example in our repository](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/distributed.py).
 * You can deploy your entire cluster with a `.yml` file using the [Ray Cluster Launcher](https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html#start-ray-with-the-ray-cluster-launcher).
 
 ## Handling a Multi-GPU Environment
@@ -258,12 +258,12 @@ class SequentialWorker(BaseWorker):
         # In this example, we will calculate the baseline score only once for the search
         if self.normalize and self.baseline_score is None:
             logger.info("Calculating Baseline score for normalization.")
-            baseline_score = function(BASELINE_DNA)
+            baseline_score = function(BASELINE_CONFIG)
             # Save the baseline score to reuse in future batches/generations.
             self.baseline_score = Score(
                 score=baseline_score,
                 param_id="baseline",
-                params=BASELINE_DNA,
+                params=BASELINE_CONFIG,
                 norm_score=self.normalize_scores(baseline_score, baseline_score),
                 num_objectives=num_function_returns,
                 is_baseline=True,
@@ -316,7 +316,7 @@ With our worker defined, we can now see how we enable it before starting the sea
 ```python
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
     worker_type=SequentialWorker(
         cache_folder=tuner.cache_folder,

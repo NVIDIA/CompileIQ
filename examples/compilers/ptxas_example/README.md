@@ -22,7 +22,7 @@ python ptx_spill.py --arch sm_90a
 1. CompileIQ generates PTXAS control configurations
 2. Each config compiles `w8_spill.ptx` with `--apply-controls`
 3. Spill bytes are extracted from compiler output
-4. Evolutionary search minimizes spills
+4. CompileIQ search minimizes spills
 
 ## Files
 

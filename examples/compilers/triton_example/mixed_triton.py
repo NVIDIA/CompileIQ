@@ -3,7 +3,7 @@ CompileIQ Triton Example: Mixed search space optimization.
 
 This example searches BOTH:
   - User-defined space: Triton kernel configs (block sizes, warps, stages)
-  - Compiler space: PTXAS internal controls
+  - Compiler space: PTXAS advanced controls
 
 Usage:
     python mixed_triton.py

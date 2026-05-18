@@ -17,14 +17,14 @@ from compileiq.config.const import (
 from compileiq.core.core_types import (
     ResponseTemplate,
     ParameterSet,
-    SingleDNA,
+    SingleCandidate,
     CompletionMessage,
 )
 from compileiq.core.verify_core import MANIFEST_PATH, verify_binary_platform
 
 
 """
-CompileIQ's core evolutionary algorithm is compiled in binary form.
+CompileIQ's optimization core is compiled in binary form.
 For IPC we leverage socket communication through localhost.
 """
 
@@ -169,8 +169,10 @@ class CoreIPC:
         # TODO: Implement a clever identification of message type
         received_msg: ParameterSet | CompletionMessage
         if "generation_num" in params:
-            dna_list = TypeAdapter(List[SingleDNA]).validate_python(params.pop("params"))
-            received_msg = ParameterSet(params=dna_list, **params)
+            candidate_list = TypeAdapter(List[SingleCandidate]).validate_python(
+                params.pop("params")
+            )
+            received_msg = ParameterSet(params=candidate_list, **params)
         else:
             received_msg = CompletionMessage(**params)
 

@@ -76,11 +76,13 @@ def test_start(
         num_objectives=expected_returns,
     )
 
-    dna_config = mock_nested_search_space if func == nested_light_obj_func else mock_search_space
+    search_space_config = (
+        mock_nested_search_space if func == nested_light_obj_func else mock_search_space
+    )
     rfunc = ASYNC_FUNC_MAP[func] if worker_type == WorkerTypes.ASYNC else func
     with Search(
         objective_function=rfunc,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
         worker_type=worker_type,
     ) as tuner:
@@ -102,16 +104,16 @@ def test_legacy_files(
 ):
     """
     Testing if something goes wrong when using legacy files
-    Warning: We need to have the same amount of dna files
+    Warning: We need to keep the same number of legacy search-space files.
     """
     path = LEGACY_DIR / "dna_files"
-    dna_configs = [
+    legacy_configs = [
         str(path / filename) for filename in os.listdir(path) if filename.endswith(".config")
     ]
 
-    random.shuffle(dna_configs)
+    random.shuffle(legacy_configs)
 
-    for dna_config in dna_configs:
+    for legacy_config in legacy_configs:
         # We need to manually get the config to update global mock
         main_config = SearchConfiguration(
             pool_size=8,
@@ -126,7 +128,7 @@ def test_legacy_files(
 
         with Search(
             objective_function=async_light_obj_func,
-            search_space=dna_config,
+            search_space=legacy_config,
             search_config=main_config,
             worker_type=WorkerTypes.ASYNC,
         ) as tuner:
@@ -173,10 +175,12 @@ def test_sample(
         num_objectives=10,
     )
 
-    dna_config = mock_nested_search_space if func == nested_light_obj_func else mock_search_space
+    search_space_config = (
+        mock_nested_search_space if func == nested_light_obj_func else mock_search_space
+    )
     with Search(
         objective_function=func,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
         worker_type=WorkerTypes.ASYNC,
     ) as tuner:
@@ -218,11 +222,11 @@ def test_chaining_calls(
         num_objectives=expected_returns,
     )
 
-    dna_config = mock_nested_search_space
+    search_space_config = mock_nested_search_space
     rfunc = ASYNC_FUNC_MAP[func] if worker_type == WorkerTypes.ASYNC else func
     with Search(
         objective_function=rfunc,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
         worker_type=worker_type,
         tracker_config=_TRACKER_TYPES_TO_CONFIG[tracker_type](),

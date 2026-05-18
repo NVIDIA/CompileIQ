@@ -2,13 +2,13 @@ from pydantic import BaseModel
 from typing import List
 
 
-class SingleDNA(BaseModel):
+class SingleCandidate(BaseModel):
     id: int
     knobs: str
 
 
 class ParameterSet(BaseModel):
-    params: List[SingleDNA]
+    params: List[SingleCandidate]
     invocation_id: int
     generation_num: int
 

@@ -102,14 +102,14 @@ class Search(BaseModel):
             "The user search space for CompileIQ to explore. "
             "The objective function will receive a single set following this declaration. "
             "Accepted values: a dict mapping string keys to compileiq search_spaces functions, "
-            "a path (str) to a legacy .config file, or a SearchSpaceProvider instance."
+            "a path to an existing search-space file, or a SearchSpaceProvider instance."
         )
     )
     search_config: SearchConfigInput = Field(
         description=(
             "Search configuration parameters such as generation number and mutation rate. "
             "Accepted values: a SearchConfiguration object, a dict with SearchConfiguration keys, "
-            "or a path (str) to a legacy .config file."
+            "or a path to an existing .config file."
         )
     )
     worker_type: WorkerTypes | type[Worker] = Field(
@@ -176,7 +176,7 @@ class Search(BaseModel):
     )
     _search_config: InternalSearchConfiguration = PrivateAttr()
     _result: SearchResult = PrivateAttr()
-    _using_legacy_dna: bool | list[bool] = False
+    _using_file_backed_search_space: bool | list[bool] = False
     _multi_config: bool = False
     _search_space_resolution_metadata: list[SearchSpaceResolutionMetadataDict] | None = (
         PrivateAttr(default=None)
@@ -236,13 +236,13 @@ class Search(BaseModel):
         search_config = cast(SearchConfiguration, self.search_config)
         self._search_config = InternalSearchConfiguration(**search_config.model_dump())
 
-        _, dna_config_filepath = get_core_filepaths(str(self.cache_folder))
+        _, search_space_config_filepath = get_core_filepaths(str(self.cache_folder))
 
         # Windows workaround with paths
         if sys.platform == "win32":
-            dna_config_filepath = dna_config_filepath.replace("\\", "\\\\")
+            search_space_config_filepath = search_space_config_filepath.replace("\\", "\\\\")
 
-        self._search_config.dna_config = dna_config_filepath
+        self._search_config.dna_config = search_space_config_filepath
 
     @model_validator(mode="after")
     def _setup_search_config(self):
@@ -285,11 +285,11 @@ class Search(BaseModel):
             self._search_space_resolution_metadata = metadata_records
         self._multi_config = isinstance(self.search_space, list)
         if isinstance(self.search_space, list):
-            self._using_legacy_dna = [
+            self._using_file_backed_search_space = [
                 isinstance(sspace, pathlib.Path) for sspace in self.search_space
             ]
         else:
-            self._using_legacy_dna = isinstance(self.search_space, pathlib.Path)
+            self._using_file_backed_search_space = isinstance(self.search_space, pathlib.Path)
 
         # Initializing Core IPC
         self._core_ipc = CoreIPC()
@@ -358,7 +358,7 @@ class Search(BaseModel):
             parameters sent to the objective function during a normal search.
         """
         assert self.cache_folder is not None
-        main_config_filepath, dna_config_filepath = get_core_filepaths(self.cache_folder)
+        main_config_filepath, search_space_config_filepath = get_core_filepaths(self.cache_folder)
 
         hijacked_config = self._search_config.model_copy(deep=True)
         hijacked_config.num_objectives = 1
@@ -366,7 +366,7 @@ class Search(BaseModel):
         hijacked_config.cull_size = 2
         try:
             hijacked_config.dna_config = setup_search_space(
-                cast(ResolvedSearchSpaceInput, self.search_space), dna_config_filepath
+                cast(ResolvedSearchSpaceInput, self.search_space), search_space_config_filepath
             )
             setup_legacy_search_config(hijacked_config, main_config_filepath)
 
@@ -411,17 +411,18 @@ class Search(BaseModel):
         The CompileIQ core is started as a subprocess through here.
 
         The communication between python process and the subprocess is done through sockets:
-            1. During __init__ we prepare the python socket server for communication with the
-                core subprocess
-            2. The `dna.config` and `main.config` are created inside the cache folder.
-                (Core needs these)
-            3. We start the core process with the correct environment variables and wait
-            for communication
-            4. The core process will start sending 'dna' (parameters) which we will execute
-            using multiprocess
-            5. The python process returns the scores through the socket
-            6. At some point the core process sends a completion flag indicating the end of the
-            tune process.
+
+        1. During __init__ we prepare the python socket server for communication with the
+           core subprocess.
+        2. The `search_space.json` and `main_config.json` files are created inside the cache
+           folder. (Core needs these.)
+        3. We start the core process with the correct environment variables and wait for
+           communication.
+        4. The core process will start sending parameter candidates which we will execute
+           using multiprocess.
+        5. The Python process returns the scores through the socket.
+        6. At some point the core process sends a completion flag indicating the end of the
+           tune process.
 
         Args:
             num_workers:
@@ -438,11 +439,12 @@ class Search(BaseModel):
             **additional_worker_kwargs:
                 Additional keyword arguments forwarded to the worker's ``run()`` method.
                 Each worker accepts the kwargs it cares about. For example:
-                    - RayWorker: accepts Ray task resource options
-                    - Custom workers: accept any kwargs they define
+
+                - RayWorker: accepts Ray task resource options
+                - Custom workers: accept any kwargs they define
 
         Returns (`SearchResult`):
-            A Object with the search results.
+            An object with the search results.
         """
 
         if num_workers is not None:
@@ -471,11 +473,11 @@ class Search(BaseModel):
             norm_scores=self._search_config.normalize,
         )
 
-        main_config_filepath, dna_config_filepath = get_core_filepaths(self.cache_folder)
+        main_config_filepath, search_space_config_filepath = get_core_filepaths(self.cache_folder)
         try:
-            # Configuring `dna.config` & `main.config` legacy file for core
+            # Configure the core input files.
             self._search_config.dna_config = setup_search_space(
-                cast(ResolvedSearchSpaceInput, self.search_space), dna_config_filepath
+                cast(ResolvedSearchSpaceInput, self.search_space), search_space_config_filepath
             )
             setup_legacy_search_config(self._search_config, main_config_filepath)
 
@@ -494,7 +496,7 @@ class Search(BaseModel):
             )
 
             # Executing function throughout the generations
-            self._result = self._process_dna(
+            self._result = self._process_candidates(
                 worker_count,
                 task_timeout=task_timeout,
                 **additional_worker_kwargs,
@@ -516,7 +518,7 @@ class Search(BaseModel):
             return None
         return [dict(metadata) for metadata in self._search_space_resolution_metadata]
 
-    def _process_dna(
+    def _process_candidates(
         self,
         num_workers: int,
         task_timeout: Optional[int | float] = None,
@@ -676,7 +678,7 @@ class Search(BaseModel):
         manage the string at its own objective function.
         """
 
-        def handle_phenotype(param: str, is_legacy: bool = False):
+        def parse_param_payload(param: str, is_file_backed: bool = False):
             try:
                 param_set = json.loads(param)
             except (ValueError, json.JSONDecodeError):
@@ -687,10 +689,9 @@ class Search(BaseModel):
                 except Exception:
                     return param
 
-            # We only support nested data for the native CompileIQ format
-            if not is_legacy and isinstance(param_set, dict):
-                # This if deals with the corner case the user is using legacy dna that
-                # is json-compatible
+            # We only support nested data for dictionary-defined search spaces.
+            if not is_file_backed and isinstance(param_set, dict):
+                # Nested restoration only applies to dictionary-defined search spaces.
                 param_set = restore_nested_search_space(param_set)
 
             return param_set
@@ -698,18 +699,20 @@ class Search(BaseModel):
         params_from_generation: List[ParamArg] = []
         for param in parameter_sets.params:
             if self._multi_config:
-                assert isinstance(self._using_legacy_dna, list)
+                assert isinstance(self._using_file_backed_search_space, list)
                 # When specifying multiple configs, a list of base64 strings is returned
                 # Each string is the representation from one config (in the same order as
                 # provided by the user)
                 decoded_param = list(map(_decode_from_core, json.loads(param.knobs)))
                 single_pset = [
-                    handle_phenotype(single_param, self._using_legacy_dna[i])
+                    parse_param_payload(single_param, self._using_file_backed_search_space[i])
                     for i, single_param in enumerate(decoded_param)
                 ]
             else:
-                assert isinstance(self._using_legacy_dna, bool)
-                single_pset = handle_phenotype(param.knobs, self._using_legacy_dna)
+                assert isinstance(self._using_file_backed_search_space, bool)
+                single_pset = parse_param_payload(
+                    param.knobs, self._using_file_backed_search_space
+                )
 
             params_from_generation.append(cast(ParamArg, single_pset))
 

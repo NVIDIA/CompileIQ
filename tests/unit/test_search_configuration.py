@@ -237,7 +237,7 @@ class TestJsonDict:
         assert d["mutate_rate"] == 0.15
 
     def test_internal_config_excludes_removed_legacy_field(self):
-        cfg = InternalSearchConfiguration(generations=1, dna_config="dna.config")
+        cfg = InternalSearchConfiguration(generations=1, dna_config="search_space.json")
         d = cfg.to_json_dict()
         removed_field = "experience" + "_mode"
 
@@ -254,7 +254,7 @@ class TestSearchConfigConstraints:
     failures deep in the search loop."""
 
     def test_pool_size_must_be_gt_5(self):
-        """The evolutionary algorithm needs a minimum viable population."""
+        """The optimizer needs a minimum viable candidate pool."""
         with pytest.raises(Exception):
             SearchConfiguration(generations=1, pool_size=4, cull_size=2)
 

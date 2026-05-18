@@ -13,7 +13,7 @@ def objective(config):
 
 
 def main():
-    dna_config = {
+    search_space_config = {
         "x": {
             "xx1": ss.range(start=1.0, end=20.0, step=0.5),
             "xx2": ss.range(start=5.0, end=11.0, step=0.5),
@@ -38,7 +38,7 @@ def main():
 
     tuner = Search(
         objective_function=objective,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
     )
 

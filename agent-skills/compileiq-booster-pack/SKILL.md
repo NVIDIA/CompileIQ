@@ -13,7 +13,7 @@ when_to_use: |
   - Workload is close to a published pack (Helion FP8 quant / causal
     depthwise conv / Gated DeltaNet fwd; FlashInfer BatchDecode is a known
     related workload).
-  - User wants a fast shortcut before paying for a full evolutionary search.
+  - User wants a fast shortcut before paying for a full CompileIQ search.
   - User asks "is there a known-good config for X?"
   Don't use when:
   - User lacks a stable baseline, correctness check, or benchmark setup.
@@ -30,7 +30,7 @@ paths: ["**/*.cu", "**/*.cuh", "**/*.acf", "**/*.py", "**/*.sh"]
 
 # compileiq-booster-pack
 
-Try curated `.acf` candidates *before* running a full evolutionary search.
+Try curated `.acf` candidates *before* running a full CompileIQ search.
 A Booster Pack is a zip of ACFs that NVIDIA validated against a specific
 workload family. They are not guaranteed speedups; treat every candidate
 as workload-specific and validate it on your own benchmark.
@@ -181,6 +181,6 @@ misconfigured script invocations before they pollute the reproducibility log.
 ## Next
 
 - If no pack candidate helps your workload, go to `compileiq-run-search` for a
-  full evolutionary search over `PtxasSearchSpace()`.
+  full CompileIQ search over `PtxasSearchSpace()`.
 - For attention workloads specifically, also see
   `compileiq-search-space` (variant="att").

@@ -1,6 +1,6 @@
 # Experiment Tracking with CompileIQ
 
-CompileIQ provides comprehensive facilities for tracking your experiments through an event-driven architecture. Experiment tracking, also known as logging, is an invaluable tool that provides you with insights into your evolutionary searches, allowing you to monitor progress, debug issues, and analyze performance patterns.
+CompileIQ provides comprehensive facilities for tracking your experiments through an event-driven architecture. Experiment tracking, also known as logging, is an invaluable tool that provides insight into your searches, allowing you to monitor progress, debug issues, and analyze performance patterns.
 
 ## How Tracking Works
 
@@ -43,7 +43,7 @@ from compileiq.types import LoguruTrackerConfig
 # Using default tracker (Loguru)
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
     tracker_config=TrackerTypes.LOGURU
 )
@@ -51,7 +51,7 @@ tuner = Search(
 # Explicit Loguru tracker
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
     tracker_config=LoguruTrackerConfig(sink="search.log"),
 )

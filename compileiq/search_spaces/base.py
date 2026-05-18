@@ -39,25 +39,25 @@ def range(
             being dropped and not forwarded to the user objective function.
 
         seed_low:
-            Range genes can also specify some secondary subset through `seed_low` and `seed_high`
+            Range parameters can also specify a secondary subset through `seed_low` and `seed_high`.
             Instead of sampling from the full range, CompileIQ will initialize with values
             inside this smaller range. This can speed your search if your problem has too many
-            failures in a specific range. The percentage of DNA strands user would like to be
-            initialized this way is determined by the `SearchConfiguration` parameter
+            failures in a specific range. The percentage of candidates initialized this way
+            is determined by the `SearchConfiguration` parameter
             `init_with_true_random_threshold`.
 
         seed_high:
-            Range genes can also specify some secondary subset through `seed_low` and `seed_high`
+            Range parameters can also specify a secondary subset through `seed_low` and `seed_high`.
             Instead of sampling from the full range, CompileIQ will initialize with values
             inside this smaller range. This can speed your search if your problem has too many
-            failures in a specific range. The percentage of DNA strands user would like to be
-            initialized this way is determined by the `SearchConfiguration` parameter
+            failures in a specific range. The percentage of candidates initialized this way
+            is determined by the `SearchConfiguration` parameter
             `init_with_true_random_threshold`.
     """
 
     # Workaround: Core Limitations
     if step < 0:
-        raise ValueError("Core only accepts positive step sizes for range genes")
+        raise ValueError("Core only accepts positive step sizes for range parameters")
 
     if end <= start:
         raise ValueError("Please provide a proper range value where start < end.")
@@ -68,7 +68,7 @@ def range(
     if seed_low is not None and seed_high is not None:
         if seed_low < start or seed_high > end or seed_high < seed_low:
             raise ValueError(
-                "`seed_low` and `seed_high` is falling outside the correct range."
+                "`seed_low` and `seed_high` fall outside the correct range."
                 " Make sure low > start, high < end and high > low."
             )
 

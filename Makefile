@@ -2,7 +2,7 @@
 
 .PHONY: help install install-examples install-docs lint lint-fix format format-check \
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
-        docs docs-serve docs-preview build clean validate check-internal \
+        docs docs-serve docs-preview build clean validate \
         verify-core update-core \
         build-search-space-manifest build-search-space-release-notes \
         build-search-space-release build-search-space-manifest-schema \
@@ -19,9 +19,6 @@ install-examples: ## Install dev dependencies + examples
 
 install-docs: ## Install docs dependencies
 	poetry install --with docs
-
-check-internal: ## Check for internal-only keywords in source
-	poetry run python tests/validate_internal.py
 
 lint: ## Run linter
 	poetry run ruff check

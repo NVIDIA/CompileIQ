@@ -84,11 +84,13 @@ def test_start_fuzz(
         num_objectives=expected_returns,
     )
 
-    dna_config = mock_nested_search_space if func == nested_light_obj_func else mock_search_space
+    search_space_config = (
+        mock_nested_search_space if func == nested_light_obj_func else mock_search_space
+    )
     rfunc = ASYNC_FUNC_MAP[func] if worker_type == WorkerTypes.ASYNC else func
     with Search(
         objective_function=rfunc,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
         worker_type=worker_type,
         tracker_config=_TRACKER_TYPES_TO_CONFIG[tracker_type](),
@@ -132,14 +134,15 @@ def test_sample_fuzz(
     pytest.nested_test = func == nested_light_obj_func
     pytest.encoded_knobs = True
 
-    dna_config = mock_nested_search_space if func == nested_light_obj_func else mock_search_space
+    search_space_config = (
+        mock_nested_search_space if func == nested_light_obj_func else mock_search_space
+    )
     with Search(
         objective_function=func,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
     ) as tuner:
         results = tuner.sample(num_samples)
         assert len(results) == num_samples
-
 
 

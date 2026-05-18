@@ -167,8 +167,8 @@ class TestMLflowTracker:
         from compileiq.tracker import MLflowTracker
 
         tracker = MLflowTracker(MLflowTrackerConfig(log_config=False))
-        tracker.pre_objective(config="/some/dna.config")
-        mock_mlflow.log_params.assert_called_with({"dna_path": "/some/dna.config"})
+        tracker.pre_objective(config="/some/search_space.json")
+        mock_mlflow.log_params.assert_called_with({"config_path": "/some/search_space.json"})
 
     def test_list_config_flattens_with_index_prefix(self, mock_mlflow):
         from compileiq.tracker import MLflowTracker
@@ -179,13 +179,13 @@ class TestMLflowTracker:
             {"config_0.a": 1, "config_0.b": 2, "config_1.c": 3}
         )
 
-    def test_list_config_with_str_entry_flattens_as_dna_path(self, mock_mlflow):
+    def test_list_config_with_str_entry_flattens_as_config_path(self, mock_mlflow):
         from compileiq.tracker import MLflowTracker
 
         tracker = MLflowTracker(MLflowTrackerConfig(log_config=False))
-        tracker.pre_objective(config=[{"a": 1}, "/legacy/dna.cfg"])
+        tracker.pre_objective(config=[{"a": 1}, "/legacy/search_space.config"])
         mock_mlflow.log_params.assert_called_with(
-            {"config_0.a": 1, "config_1.dna_path": "/legacy/dna.cfg"}
+            {"config_0.a": 1, "config_1.config_path": "/legacy/search_space.config"}
         )
 
 

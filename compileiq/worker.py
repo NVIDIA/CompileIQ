@@ -23,7 +23,7 @@ from ray.util.scheduling_strategies import (
 )
 import sys
 from compileiq.utils.validation import Score
-from compileiq.types import INVALID_SCORE, BASELINE_DNA, ParamArg, Worker, BaseTracker
+from compileiq.types import INVALID_SCORE, BASELINE_CONFIG, ParamArg, Worker, BaseTracker
 
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     # This makes sure when using pyinstaller nothing breaks and the executable works properly
@@ -49,7 +49,7 @@ else:
 class MultiProcessWorker(Worker):
     """
     Worker that uses only existing python primitives.
-    Deployes a fixed amount of processes to run the objective functions.
+    Deploys a fixed number of processes to run the objective functions.
     Does not have distributed machine support, only local parallelism
     """
 
@@ -101,7 +101,7 @@ class MultiProcessWorker(Worker):
     ) -> List[Score]:
         """
         Executes the objective function (`function`) for every parameter in `params_pool`.
-        It levereges python multiprocess and a job/result queues where
+        It leverages Python multiprocessing and job/result queues where
         subprocesses pick up additional work.
 
         The return is a list with the return of `function` for every param inside `param_pool`.
@@ -131,7 +131,7 @@ class MultiProcessWorker(Worker):
         # Adding baseline measurement (only for the first run) at the
         # start of the queue.
         if self.normalize and self.baseline_score is None:
-            job_queue.put(("baseline", BASELINE_DNA))
+            job_queue.put(("baseline", BASELINE_CONFIG))
 
         for i, param in enumerate(params_pool):
             job_queue.put((params_ids[i], param))
@@ -382,7 +382,7 @@ class IsoMultiProcessWorker(Worker):
         """
         tasks: list[tuple[int | str, ParamArg]] = []
         if self.normalize and self.baseline_score is None:
-            tasks.append(("baseline", BASELINE_DNA))
+            tasks.append(("baseline", BASELINE_CONFIG))
         for i, param in enumerate(params_pool):
             tasks.append((params_ids[i], param))
 
@@ -517,7 +517,7 @@ class IsoMultiProcessWorker(Worker):
                                 f"Task {param_id} failed with exit code {p.exitcode}. "
                                 "Make sure the declared num_objectives matches the number of "
                                 "returns from your objective function. If normalization is "
-                                "enabled, make sure your function supports BASELINE_DNA "
+                                "enabled, make sure your function supports BASELINE_CONFIG "
                             )
                         elif not done_event.is_set():
                             # Process exited cleanly without signalling — should not happen
@@ -772,7 +772,7 @@ class RayWorker(Worker):
                             **user_ray_resources,
                         ).remote(
                             function,
-                            BASELINE_DNA,
+                            BASELINE_CONFIG,
                             "baseline",
                             num_function_returns,
                             tracker=self.tracker,  # pyright: ignore[reportCallIssue]
@@ -795,7 +795,7 @@ class RayWorker(Worker):
                         **user_ray_resources,
                     ).remote(
                         function,
-                        BASELINE_DNA,
+                        BASELINE_CONFIG,
                         "baseline",
                         num_function_returns,
                         tracker=self.tracker,  # pyright: ignore[reportCallIssue]
@@ -890,10 +890,10 @@ class RayWorker(Worker):
                     # Because ray is dynamic we can have nodes come in and out at any time
                     # this works as a failsafe to still normalize in case we are at one of
                     # the nodes that joined after we did the initial baseline measurements
-                    current_baseline = objective_func(BASELINE_DNA)
+                    current_baseline = objective_func(BASELINE_CONFIG)
                     current_baseline = Score(
                         score=current_baseline,
-                        params=BASELINE_DNA,
+                        params=BASELINE_CONFIG,
                         metadata="",
                         param_id="baseline",
                         norm_score=None,
@@ -1005,10 +1005,10 @@ class AsyncWorker(Worker):
         task_timeout: Optional[int | float] = None,
         **kwargs,
     ) -> List[Score]:
-        # Adding baseline measurement at the beggining
+        # Adding baseline measurement at the beginning
         params_to_run = list(params_pool)
         if self.normalize and self.baseline_score is None:
-            params_to_run = [BASELINE_DNA] + params_to_run
+            params_to_run = [BASELINE_CONFIG] + params_to_run
 
         futures = []
         async with asyncio.TaskGroup() as tg:
@@ -1067,7 +1067,7 @@ class AsyncWorker(Worker):
         and score validation.
 
         `norm_enabled` safeguards a corner case where normalization is
-        disabled, but knockout causes CompileIQ to produce BASELINE_DNA ({})
+        disabled, but knockout causes CompileIQ to produce BASELINE_CONFIG ({})
         """
 
         task_id = str(uuid4().hex)

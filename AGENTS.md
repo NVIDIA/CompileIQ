@@ -4,7 +4,7 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Project Overview
 
-CompileIQ is NVIDIA's evolutionary-based hyperparameter optimizer for tuning compiler controls. It wraps an evolutionary core (precompiled binaries in `compileiq/core/executable/`) with a Python API, communicating via socket-based IPC.
+CompileIQ is NVIDIA's hyperparameter optimizer for tuning compiler controls. It wraps a precompiled optimization core in `compileiq/core/executable/` with a Python API, communicating via socket-based IPC.
 
 ## Build & Development Commands
 
@@ -71,7 +71,7 @@ tests/
 
 ## Architecture
 
-**Core flow:** User defines an objective function and search space → `Search` (ciq.py) serializes config and launches the core subprocess → core generates parameter candidates via evolutionary algorithms → Python workers evaluate the objective function in parallel → scores are sent back to core via socket IPC → repeat for N generations.
+**Core flow:** User defines an objective function and search space → `Search` (ciq.py) serializes config and launches the core subprocess → core generates parameter candidates → Python workers evaluate the objective function in parallel → scores are sent back to core via socket IPC → repeat for N generations.
 
 Key modules:
 
@@ -79,7 +79,7 @@ Key modules:
 - **`compileiq/worker.py`** — Worker backends: `MultiProcessWorker` (default, local), `IsoMultiProcessWorker` (one process per task, kill-safe on timeout), `RayWorker` (distributed), `AsyncWorker` (asyncio).
 - **`compileiq/types.py`** — All configuration types and enums (ProblemType, SearchConfiguration, WorkerType, etc.). Uses Pydantic models.
 - **`compileiq/core/core_comms.py`** — `CoreIPC` class handling socket-based message exchange with the core.
-- **`compileiq/core/core_types.py`** — Pydantic models for core IPC messages (ParameterSet, EvaluatedDnaResponse).
+- **`compileiq/core/core_types.py`** — Pydantic models for core IPC messages.
 - **`compileiq/tracker.py`** — Pluggable experiment tracking (LoguruTracker, MLflowTracker, DisabledTracker).
 - **`compileiq/results.py`** — `SearchResult` wrapping pandas DataFrame with optimization-specific methods (get_best_result, pareto_front).
 - **`compileiq/search_spaces/`** — Search space definitions; `base.py` has primitives (range, choice, literal, log_sampling), `compilers.py` has NVIDIA compiler-specific spaces.

@@ -1,5 +1,5 @@
 """
-Tests for phenotype parsing edge cases in ciq.py _load_params / handle_phenotype.
+Tests for parameter parsing edge cases in ciq.py _load_params / parse_param_payload.
 Covers: json5 fallback, raw-string fallback, non-dict JSON, and nested restoration.
 """
 
@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 from compileiq.ciq import Search
 from compileiq.search_spaces import base as ss
 from compileiq.types import SearchConfiguration
-from compileiq.core.core_types import ParameterSet, SingleDNA
+from compileiq.core.core_types import ParameterSet, SingleCandidate
 
 
 def _make_search(mocker, tmp_path):
@@ -33,7 +33,7 @@ def _b64(s: str) -> str:
 def _param_set(*knobs_list):
     """Build a ParameterSet with the given knobs strings."""
     return ParameterSet(
-        params=[SingleDNA(id=i, knobs=k) for i, k in enumerate(knobs_list)],
+        params=[SingleCandidate(id=i, knobs=k) for i, k in enumerate(knobs_list)],
         invocation_id=0,
         generation_num=0,
     )

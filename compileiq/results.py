@@ -262,7 +262,7 @@ class SearchResult:
         Args:
             scores:
                 An (n_params, n_scores) array with the scores.
-                Position [i,j] is the jth score for ith dna
+                Position [i,j] is the jth score for the ith parameter set.
 
         Returns:
             A mask (boolean array) of size (n_params) indicating which rows from

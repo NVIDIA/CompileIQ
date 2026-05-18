@@ -6,7 +6,7 @@ import warnings
 from types import ModuleType
 from typing import Any, Optional
 from compileiq.types import (
-    BASELINE_DNA,
+    BASELINE_CONFIG,
     INVALID_SCORE,
     BaseTracker,
     ParamArg,
@@ -230,7 +230,7 @@ class MLflowTracker(BaseTracker):
             flat_params = config
             structured = config
         elif isinstance(config, str):
-            flat_params = {"dna_path": config}
+            flat_params = {"config_path": config}
             structured = flat_params
         else:
             flat_params = {}
@@ -239,10 +239,10 @@ class MLflowTracker(BaseTracker):
                     for key, value in entry.items():
                         flat_params[f"config_{i}.{key}"] = value
                 else:
-                    flat_params[f"config_{i}.dna_path"] = entry
+                    flat_params[f"config_{i}.config_path"] = entry
             structured = {f"config_{i}": entry for i, entry in enumerate(config)}
 
-        tag_type = "baseline" if config == BASELINE_DNA else "evaluation"
+        tag_type = "baseline" if config == BASELINE_CONFIG else "evaluation"
         _mlflow.start_run(experiment_id=self.experiment_id, parent_run_id=self.run_id, nested=True)
         child_run = _mlflow.active_run()
         assert child_run is not None, "start_run() above guarantees an active run"

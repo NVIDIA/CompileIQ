@@ -2,7 +2,7 @@ import time
 import string
 import random
 import pytest
-from compileiq.types import Worker, WorkerTypes, BASELINE_DNA, INVALID_SCORE
+from compileiq.types import Worker, WorkerTypes, BASELINE_CONFIG, INVALID_SCORE
 from compileiq.worker import MultiProcessWorker, RayWorker, AsyncWorker, IsoMultiProcessWorker
 import pandas as pd
 from typing import Callable
@@ -40,7 +40,7 @@ def generate_params(num: int = 32, nested: bool = False, duration: float | int =
 
 
 def light_obj_func(config):
-    if config == BASELINE_DNA:
+    if config == BASELINE_CONFIG:
         score = 2.0
     else:
         score = config["x"] ** 2 + config["y"]
@@ -61,7 +61,7 @@ async def async_light_obj_func(config):
 
 
 def nested_light_obj_func(config):
-    if config == BASELINE_DNA:
+    if config == BASELINE_CONFIG:
         score = 2.0
     else:
         score = config["x"]["xx1"] ** 2 + config["z"]["zz1"]["zzz1"]
@@ -90,7 +90,7 @@ async def async_fail_obj_func(config):
 
 
 def multi_light_obj_func(config):
-    if config == BASELINE_DNA:
+    if config == BASELINE_CONFIG:
         score_1, score_2, score_3, score_4, score_5 = [1, 2, 3, 4, 5]
     else:
         score_1 = config["x"] ** 2 + config["y"]
@@ -107,7 +107,7 @@ async def async_multi_light_obj_func(config):
 
 def heavy_obj_func(config):
     score = 0.0
-    if config == BASELINE_DNA:
+    if config == BASELINE_CONFIG:
         score = 2.0
     else:
         st = time.time()
@@ -139,14 +139,14 @@ def validate_scores(
     else:
         score_cols = df.columns[df.columns.str.contains(pat=r"\bscore_\d+\b")].to_list()
 
-    measured_baseline = df[df["params"] == BASELINE_DNA]
+    measured_baseline = df[df["params"] == BASELINE_CONFIG]
     df["val_score"] = df["params"].apply(lambda x: [func(x)] if num_returns == 1 else list(func(x)))
     df["combined"] = df[score_cols].values.tolist()
     if normalize:
         assert len(measured_baseline) > 0, "Missing baseline measurement from df"
         df = df.drop(measured_baseline.index, axis="index")
         # Recalc baseline here
-        baseline_score = func(BASELINE_DNA)
+        baseline_score = func(BASELINE_CONFIG)
         if num_returns == 1:
             baseline_score = [baseline_score]
 

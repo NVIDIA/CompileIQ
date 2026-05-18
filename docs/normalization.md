@@ -41,15 +41,15 @@ Normalization behavior is worker-specific (details below).
 
 ### Step 2: Make your objective baseline-safe
 
-When normalization is enabled, CompileIQ will sometimes call your objective with an empty dictionary (`BASELINE_DNA`) instead of a sampled configuration. Your objective must treat this as “run the baseline” and return a valid measurement.
+When normalization is enabled, CompileIQ will sometimes call your objective with an empty dictionary (`BASELINE_CONFIG`) instead of a sampled configuration. Your objective must treat this as “run the baseline” and return a valid measurement.
 
 Below you can find a sample pseudo code with an example on how to handle baseline runs:
 
 ```python
-from compileiq.types import BASELINE_DNA
+from compileiq.types import BASELINE_CONFIG
 
 def objective(sample: dict | str | list):
-    if sample == BASELINE_DNA:
+    if sample == BASELINE_CONFIG:
         # Run your reference configuration (the "no-tuning" setup)
         return run_benchmark_reference()
 
@@ -112,8 +112,8 @@ In this setup, CompileIQ receives normalized scores and does not need to know ho
 # pseudo code
 BASELINE = 300
 
-def objective(dna):
-    score = run_benchmark(dna)
+def objective(config):
+    score = run_benchmark(config)
     return norm(score, BASELINE)
 ```
 
@@ -124,9 +124,9 @@ This can improve robustness to machine drift, but it increases overall search ti
 
 ```python
 # pseudo code
-def objective(dna):
+def objective(config):
     baseline_score = run_benchmark_reference()
-    score = run_benchmark(dna)
+    score = run_benchmark(config)
     return norm(score, baseline_score)
 ```
 

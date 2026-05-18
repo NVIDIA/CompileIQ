@@ -15,18 +15,18 @@ class TestMultiConfigFilenames:
             src.write_text(f"; test config {i}\n")
             sources.append(src)
 
-        target = tmp_path / "dna.config"
+        target = tmp_path / "search_space.json"
         result = setup_search_space(sources, str(target))
 
         assert isinstance(result, list)
         names = [pathlib.Path(path).name for path in result]
-        assert names == ["0_dna.config", "1_dna.config", "2_dna.config"]
+        assert names == ["0_search_space.json", "1_search_space.json", "2_search_space.json"]
 
     def test_single_config_uses_base_filename(self, tmp_path):
         src = tmp_path / "source.config"
         src.write_text("; test\n")
 
-        target = tmp_path / "dna.config"
+        target = tmp_path / "search_space.json"
         result = setup_search_space([src], str(target))
 
         assert result == str(target)

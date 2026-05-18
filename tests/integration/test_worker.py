@@ -1,4 +1,4 @@
-from compileiq.types import BASELINE_DNA, INVALID_SCORE
+from compileiq.types import BASELINE_CONFIG, INVALID_SCORE
 from compileiq.worker import MultiProcessWorker, AsyncWorker
 import multiprocessing
 import pytest
@@ -232,7 +232,7 @@ def test_baseline(worker_class, tmp_path):
             baseline = [score.score] if score.num_objectives == 1 else score.score
             break
     assert baseline is not None
-    validate_scores(light_obj_func, [baseline], [BASELINE_DNA])
+    validate_scores(light_obj_func, [baseline], [BASELINE_CONFIG])
 
 
 @pytest.mark.parametrize("worker_class", TEST_WORKER_CLASSES)

@@ -18,12 +18,12 @@ def main():
 
     for config in os.listdir(CONFIG_FOLDER):
         logger.info(f"Processing config file: {config}")
-        dna_config = Path(CONFIG_FOLDER) / config
+        search_space_config = Path(CONFIG_FOLDER) / config
 
         try:
             tuner = Search(
                 objective_function=lambda _: None,
-                search_space=dna_config,
+                search_space=search_space_config,
                 search_config=main_config,
             )
             tuner.sample(32)

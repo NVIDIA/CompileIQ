@@ -11,7 +11,7 @@ from compileiq.search_spaces.models import (
     LiteralParamConfig,
 )
 from compileiq.utils.helpers import _literal_dive
-from compileiq.utils._setup_files import _setup_dna_with_dict
+from compileiq.utils._setup_files import _setup_search_space_with_dict
 
 
 # ---------------------------------------------------------------------------
@@ -219,18 +219,18 @@ class TestLogSampling:
 
 
 # ---------------------------------------------------------------------------
-# JSON DNA serialization — _setup_dna_with_dict
+# JSON search-space serialization, _setup_search_space_with_dict
 # ---------------------------------------------------------------------------
 
 
-def test_setup_dna_with_dict_produces_valid_json():
+def test_setup_search_space_with_dict_produces_valid_json():
     search_space = {
         "x": ss.range(start=1.0, end=20.0, step=0.5),
         "y": ss.choice([1, 2, 3]),
         "z": ss.literal(const_value=42),
         "flag": ss.choice(["O0", "O1", "O2"]),
     }
-    result = _setup_dna_with_dict(search_space)
+    result = _setup_search_space_with_dict(search_space)
 
     # Must be valid JSON
     parsed = json.loads(result)
@@ -257,11 +257,11 @@ def test_setup_dna_with_dict_produces_valid_json():
     assert isinstance(x_class["step"], (int, float))
 
 
-def test_setup_dna_with_dict_seed_uses_hyphens():
+def test_setup_search_space_with_dict_seed_uses_hyphens():
     search_space = {
         "x": ss.range(start=0, end=100, step=1, seed_low=10, seed_high=50),
     }
-    result = _setup_dna_with_dict(search_space)
+    result = _setup_search_space_with_dict(search_space)
     parsed = json.loads(result)
 
     x_class = parsed["classes"]["x"]

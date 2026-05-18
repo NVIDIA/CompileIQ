@@ -2,9 +2,9 @@
 """
 CompileIQ NVBench Example: Optimize CUDA reduction kernel with PTXAS controls.
 
-Uses NVBench for statistically rigorous benchmarking and CompileIQ's
-evolutionary search over the PTXAS search space to find optimal compiler
-configurations for a CUDA reduction kernel.
+Uses NVBench for statistically rigorous benchmarking and CompileIQ search
+over the PTXAS search space to find compiler configurations for a CUDA
+reduction kernel.
 
 Usage:
     python optimize_reduction.py --nvbench-path /path/to/nvbench/install
@@ -189,7 +189,7 @@ def run_benchmark_only(args):
 
 
 def run_optimization(args, cuda_version: str):
-    """Run evolutionary optimization to find best PTXAS compiler config."""
+    """Run optimization to find the best PTXAS compiler config."""
     nvbench_path = args.nvbench_path
 
     # Run baseline (no compiler controls)

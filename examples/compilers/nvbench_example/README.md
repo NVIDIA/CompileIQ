@@ -24,7 +24,7 @@ and should be preferred to naive use of cudaEvent timing (as used in
 The existing `ptxas_example/` applies PTXAS controls to pre-compiled `.ptx`
 files. This example shows that PTXAS controls also work on `.cu` source files
 compiled through `nvcc` — using `-Xptxas --apply-controls=<file>` to forward
-controls to the internal PTXAS invocation. This opens up PTXAS-level tuning
+controls to the PTXAS invocation. This opens up PTXAS-level tuning
 for any CUDA kernel without requiring a separate PTX compilation step.
 
 ## Prerequisites
