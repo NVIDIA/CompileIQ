@@ -17,10 +17,10 @@ class CompletionMessage(BaseModel):
     complete: bool
 
 
-class EvaluatedDnaResponse(BaseModel):
+class EvaluatedParamResponse(BaseModel):
     id: int
     scores: List[int | float | str]
 
 
 class ResponseTemplate(BaseModel):
-    evaluated_dna: List[EvaluatedDnaResponse] | CompletionMessage
+    evaluated_params: List[EvaluatedParamResponse] | CompletionMessage

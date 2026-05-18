@@ -53,3 +53,5 @@ for the full layout and authoring conventions.
 | CIQ_PROCESS_MODE | "forkserver" | str | User can set this to "fork" to better separate processes and deal with threads. `IsoMultiProcessWorker` uses `spawn` as the default.
 | CIQ_SEARCH_SPACES_DIR | unset | path | Reads compiler search-space `manifest.json` and `.bin` files from a local mirror instead of GitHub.
 | CIQ_SEARCH_SPACES_REPO | NVIDIA/CompileIQ | str | GitHub repository used for search-space release lookups, useful for staging or a future dedicated asset repo.
+| CIQ_CORE_BINARY | unset | path | Uses an explicit core executable for local core development instead of the bundled binary.
+| CIQ_CORE_MANIFEST | unset | path | Optionally verifies `CIQ_CORE_BINARY` against a local core manifest rooted next to the platform directories.

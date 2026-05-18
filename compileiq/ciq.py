@@ -47,7 +47,7 @@ from compileiq.core.core_comms import CoreIPC, initialize_socket
 from compileiq.core.core_types import (
     ParameterSet,
     CompletionMessage,
-    EvaluatedDnaResponse,
+    EvaluatedParamResponse,
     ResponseTemplate,
 )
 from compileiq.utils._setup_files import (
@@ -625,8 +625,8 @@ class Search(BaseModel):
                     )
 
                 # Storing worker results and preparing response to Core
-                scores_response = ResponseTemplate(evaluated_dna=[])
-                assert isinstance(scores_response.evaluated_dna, list)
+                scores_response = ResponseTemplate(evaluated_params=[])
+                assert isinstance(scores_response.evaluated_params, list)
                 num_objectives = self._search_config.num_objectives
                 for score in scores:
                     self._result.add_result(
@@ -646,15 +646,15 @@ class Search(BaseModel):
                             f"{type(score.param_id).__name__}"
                         )
 
-                        response = EvaluatedDnaResponse(id=score.param_id, scores=score_value)
-                        scores_response.evaluated_dna.append(response)
+                        response = EvaluatedParamResponse(id=score.param_id, scores=score_value)
+                        scores_response.evaluated_params.append(response)
 
                 # Verifying all scores are returned
-                if len(param_ids) != len(scores_response.evaluated_dna):
+                if len(param_ids) != len(scores_response.evaluated_params):
                     raise RuntimeError(
                         "Worker did not return all scores passed down for calculation."
                         f"Sent {len(param_ids)} and only returned "
-                        f"{len(scores_response.evaluated_dna)}"
+                        f"{len(scores_response.evaluated_params)}"
                     )
 
                 # Checkpointing intermediate results every batch

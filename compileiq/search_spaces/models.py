@@ -44,4 +44,4 @@ ParamConfig = Union[RangeParamConfig, ChoiceParamConfig, LiteralParamConfig]
 class SearchSpaceFileModel(BaseModel, populate_by_name=True):
     format: str = "compileiq-search-space-v1"
     classes: dict[str, ParamConfig]
-    dna: list[str]
+    parameter_layout: list[str]
