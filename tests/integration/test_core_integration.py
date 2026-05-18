@@ -409,8 +409,8 @@ def test_complex_literal_strings_with_real_core(cache_dir):
         objective_function=objective_complex_literal,
         search_space={
             "x": ss.range(start=1.0, end=20.0, step=0.5),
-            "json_param": ss.literal('{"key": 10}', knockout_prob=0.5),
-            "plain_str": ss.literal("this is a constant", knockout_prob=0.5),
+            "json_param": ss.literal('{"key": 10}'),
+            "plain_str": ss.literal("this is a constant"),
         },
         search_config=SearchConfiguration(
             **SMALL_CONFIG,
@@ -422,24 +422,13 @@ def test_complex_literal_strings_with_real_core(cache_dir):
     ).start()
 
     df = result.get_results()
-    assert len(df) >= 1  # knockout can reduce rows below pool_size
+    assert len(df) >= 1
 
-    # Verify at least one row has the literal values intact
-    found_json_literal = False
-    found_plain_literal = False
+    # Verify literal string values survive as values inside the native config dict.
     for params in df["params"]:
-        if isinstance(params, dict):
-            if "json_param" in params:
-                assert params["json_param"] == '{"key": 10}'
-                found_json_literal = True
-            if "plain_str" in params:
-                assert params["plain_str"] == "this is a constant"
-                found_plain_literal = True
-
-    # Knockout may remove some params, but at least some rows should have them
-    assert (
-        found_json_literal or found_plain_literal
-    ), "No row contained the literal parameters — they may not be round-tripping"
+        assert isinstance(params, dict)
+        assert params["json_param"] == '{"key": 10}'
+        assert params["plain_str"] == "this is a constant"
 
 
 # ---------------------------------------------------------------------------
