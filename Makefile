@@ -3,6 +3,7 @@
 .PHONY: help install install-examples install-docs lint lint-fix format format-check \
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
         docs docs-serve docs-preview build clean validate check-internal \
+        verify-core update-core \
         build-search-space-manifest build-search-space-release-notes \
         build-search-space-release build-search-space-manifest-schema \
         check-search-space-manifest-schema clean-search-cache
@@ -79,7 +80,18 @@ clean: ## Remove build artifacts and caches
 	find . -name '.cache' -exec rm -rf {} + 2>/dev/null || true
 	find . -name '.testmondata' -exec rm -rf {} + 2>/dev/null || true
 
-validate: lint typecheck test-unit ## Quick validation (lint + typecheck + unit tests)
+validate: lint typecheck verify-core test-unit ## Quick validation (lint + typecheck + core verification + unit tests)
+
+verify-core: ## Verify bundled core binaries against core-manifest.json
+	poetry run python -m compileiq.core.verify_core
+
+update-core: ## Update bundled core binaries from CORE_MANIFEST_URL and CORE_TARBALL_URL
+	@test -n "$(CORE_MANIFEST_URL)" || (echo "ERROR: set CORE_MANIFEST_URL" >&2; exit 1)
+	@test -n "$(CORE_TARBALL_URL)" || (echo "ERROR: set CORE_TARBALL_URL" >&2; exit 1)
+	bash dev/update-core-binaries.sh \
+		--manifest-url "$(CORE_MANIFEST_URL)" \
+		--tarball-url "$(CORE_TARBALL_URL)" \
+		$(if $(CORE_MANIFEST_SHA256),--expected-manifest-sha256 "$(CORE_MANIFEST_SHA256)",)
 
 # ── Search-space release targets ─────────────────────────────────────────────
 

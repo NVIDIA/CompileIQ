@@ -238,13 +238,14 @@ def test_setup_dna_with_dict_produces_valid_json():
     assert parsed["format"] == "compileiq-search-space-v1"
     assert "search_space_format" not in parsed
     assert "classes" in parsed
-    assert "dna" in parsed
+    assert "parameter_layout" in parsed
+    assert "dna" not in parsed
 
-    # DNA section has braces and all keys
-    assert parsed["dna"][0] == "{"
-    assert parsed["dna"][-1] == "}"
-    assert "x" in parsed["dna"]
-    assert "y" in parsed["dna"]
+    # Parameter layout section has braces and all keys
+    assert parsed["parameter_layout"][0] == "{"
+    assert parsed["parameter_layout"][-1] == "}"
+    assert "x" in parsed["parameter_layout"]
+    assert "y" in parsed["parameter_layout"]
 
     # String vals are plain strings (no embedded quotes in JSON)
     flag_vals = parsed["classes"]["flag"]["vals"]
