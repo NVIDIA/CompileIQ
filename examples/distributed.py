@@ -21,7 +21,7 @@ def objective(config):
 
 
 def main():
-    dna_config = {
+    search_space_config = {
         "x": ss.range(start=1.0, end=20.0, step=0.5),
         "y": ss.choice([1, 2, 3]),
         "z": ss.log_sampling(start=1e-4, end=1.0, knockout_prob=0.2),
@@ -37,12 +37,12 @@ def main():
 
     # Ray workers can run locally or distributed,
     # A ray dashboard is brought up for resource visualization and task progress
-    # For a distributed deployment it is your responsability to configure your Ray Cluster
+    # For a distributed deployment it is your responsibility to configure your Ray cluster
     #   https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html
     # For Local deployment, nothing needs to be done, this code will run in parallel by itself
     tuner = Search(
         objective_function=objective,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
         worker_type=RayWorker,
     )

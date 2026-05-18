@@ -8,7 +8,7 @@ description: >
   correctness-before-timing, INVALID_SCORE handling, and the Debug-pack
   O0/O3 ACF-injection canary that must pass before launching a search.
   Triggers on "objective function", "apply-controls", "INVALID_SCORE",
-  "save_compiler_config", "baseline knockout", "BASELINE_DNA", "every config
+  "save_compiler_config", "baseline knockout", "BASELINE_CONFIG", "every config
   returns the same score", "TypeError fromhex".
 when_to_use: |
   - About to write or modify the function passed as objective_function=.
@@ -56,14 +56,14 @@ For multi-objective, return `tuple[float, ...]` of length `num_objectives`.
 ## Canonical imports
 
 ```python
-from compileiq.types import INVALID_SCORE, BASELINE_DNA
+from compileiq.types import INVALID_SCORE, BASELINE_CONFIG
 from compileiq.utils.helpers import save_compiler_config
 ```
 
 `INVALID_SCORE` is CompileIQ's sentinel — return it on any failure (compile,
 hang, wrong answer, exception). Do **not** redefine it as `float('inf')`.
 
-`BASELINE_DNA` is the empty-dict sentinel CompileIQ passes when a knockout
+`BASELINE_CONFIG` is the empty-dict sentinel CompileIQ passes when a knockout
 knocks out every parameter (typically with `normalize=True`).
 
 `save_compiler_config(path, hex_str)` writes the binary blob to disk; it
@@ -106,7 +106,7 @@ absent — `flashinfer_cubin` and `flashinfer_jit_cache`. See
 
 ```python
 def objective(config):
-    if isinstance(config, dict) and not config:   # config == BASELINE_DNA
+    if isinstance(config, dict) and not config:   # config == BASELINE_CONFIG
         return measure_without_acf()              # establish baseline run
     # config is a hex string (or list with hex tail) — apply ACF
     ...
@@ -114,7 +114,7 @@ def objective(config):
 
 ## Correctness-before-timing (mandatory)
 
-The genetic algorithm optimizes whatever you give it. If you only measure
+The optimizer rewards whatever you measure. If you only measure
 latency, the algorithm will happily reward configs that compile faster by
 producing wrong answers. **Always** verify against a reference first:
 
@@ -135,7 +135,7 @@ except (subprocess.TimeoutExpired, RuntimeError, FileNotFoundError, ValueError, 
     return INVALID_SCORE
 ```
 
-When in doubt, catch broadly. CompileIQ's evolutionary loop expects
+When in doubt, catch broadly. CompileIQ expects
 `INVALID_SCORE` as the "this config is broken" signal — re-raising means the
 entire search fails.
 
@@ -155,7 +155,7 @@ from compileiq.utils.helpers import load_compiler_config
 O0_HEX = load_compiler_config("debug-pack/O0.acf")
 O3_HEX = load_compiler_config("debug-pack/O3.acf")
 
-baseline = objective({})                  # BASELINE_DNA path
+baseline = objective({})                  # BASELINE_CONFIG path
 score_O0 = objective(O0_HEX)
 score_O3 = objective(O3_HEX)
 
@@ -170,7 +170,7 @@ print("ACF injection canary PASSED — safe to start the search.")
 ```
 
 If either assertion fails, **stop** and fix the cache-bust before launching
-evolution. Otherwise every generation's score is measurement noise on a stale
+the search. Otherwise every generation's score is measurement noise on a stale
 binary.
 
 ## Self-test

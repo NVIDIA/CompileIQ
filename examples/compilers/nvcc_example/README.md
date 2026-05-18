@@ -1,6 +1,6 @@
 # NVCC Optimization Example
 
-Optimize a CUDA reduction kernel with CompileIQ's evolutionary search.
+Optimize a CUDA reduction kernel with CompileIQ.
 
 ## Quick Start
 

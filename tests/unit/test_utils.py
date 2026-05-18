@@ -84,7 +84,7 @@ class TestFlattenRestoreEdgeCases:
     or boundary bugs."""
 
     def test_empty_dict(self):
-        """Empty dict is the baseline measurement (BASELINE_DNA = {}).
+        """Empty dict is the baseline measurement (BASELINE_CONFIG = {}).
         It flows through the same pipeline, so it must survive."""
         flat = flatten_nested_dict({})
         assert flat == {}

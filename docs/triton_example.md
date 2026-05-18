@@ -121,7 +121,7 @@ with gpu_benchmark_mode(clock_mhz=1965, raise_on_failure=False):
     results = tuner.start()
 ```
 
-Because we are using the multiprocess worker that only works locally, we can lock the clocks once before starting the search. If you are using Ray on multiple machines, you may want to either lock the clocks beforehand or use `gpu_benchmark_mode` inside the objective function to make sure the clocks are locked for each individual evaluation independent on where it will execute.
+Because we are using the multiprocessing worker that only works locally, we can lock the clocks once before starting the search. If you are using Ray on multiple machines, you may want to either lock the clocks beforehand or use `gpu_benchmark_mode` inside the objective function to make sure the clocks are locked for each individual evaluation regardless of where it will execute.
 
 ## Expanding to Mixed-Search Spaces
 
@@ -157,16 +157,16 @@ We can now define a mixed search space containing the user space and PTX space.
 user_space = {"config_idx": ss.range(0, len(TRITON_CONFIGS) - 1)}
 ptx_space = PtxasSearchSpace(version=cuda_version)
 
-dna_config = [user_space, ptx_space]
+search_space_config = [user_space, ptx_space]
 
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
 )
 ```
 
-Here we create a range gene that will have the index to access `TRITON_CONFIGS`.
+Here we create a range parameter that indexes into `TRITON_CONFIGS`.
 
 In the objective function, we now receive a list with the user space and PTX space sampled separately. We adjust the objective to read the index and pass the selected config to the kernel:
 
@@ -204,7 +204,7 @@ user_space = {
 
 ptx_space = PtxasSearchSpace(version=cuda_version)
 
-dna_config = [user_space, ptx_space]
+search_space_config = [user_space, ptx_space]
 
 ```
 

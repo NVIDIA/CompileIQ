@@ -87,7 +87,7 @@ When selecting a successful sample from the search, test it in the target deploy
 
 ## Standalone Examples
 
-Each example below follows this pattern: define an objective function, fetch a compiler search space, and run the evolutionary search.
+Each example below follows this pattern: define an objective function, fetch a compiler search space, and run a CompileIQ search.
 
 | Example | Compiler | Metric | Docs |
 |---------|----------|--------|------|

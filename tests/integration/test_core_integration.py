@@ -204,7 +204,7 @@ def test_multi_objective(cache_dir):
 
 def objective_with_baseline(config):
     """Objective that handles the baseline measurement (empty dict).
-    When normalize=True, the worker sends BASELINE_DNA={} as the first
+    When normalize=True, the worker sends BASELINE_CONFIG={} as the first
     evaluation.  The function must return a valid score for it."""
     if not config:
         # Baseline: return a reference score for normalization
@@ -248,7 +248,7 @@ def test_normalization(cache_dir):
 def test_sample(cache_dir):
     """sample() lets users preview what parameter sets look like before
     committing to a full search.  It still needs the core binary to generate
-    the DNA samples."""
+    the candidate samples."""
     tuner = Search(
         objective_function=objective_min,
         search_space={
@@ -346,7 +346,7 @@ def test_exit_on_failure(cache_dir):
 
 
 # ---------------------------------------------------------------------------
-# JSON serde — string choices (dna-issues.md bug)
+# JSON serde - string choices
 # ---------------------------------------------------------------------------
 
 
@@ -359,9 +359,8 @@ def objective_string_choice(config):
 
 
 def test_string_choices_with_real_core(cache_dir):
-    """String values in choice() previously broke the S-expression parser.
-    Verify they round-trip correctly through JSON serialization to the core
-    and back."""
+    """String values in choice() catch regressions in IPC parsing.
+    Verify they round-trip correctly through JSON serialization to the core and back."""
     valid_boosters = {"gbtree", "gblinear", "dart"}
     valid_flags = {"O0", "O1", "O2"}
 
@@ -392,7 +391,7 @@ def test_string_choices_with_real_core(cache_dir):
 
 
 # ---------------------------------------------------------------------------
-# JSON serde — complex literal strings (dna-issues.md bug)
+# JSON serde - complex literal strings
 # ---------------------------------------------------------------------------
 
 
@@ -404,8 +403,7 @@ def objective_complex_literal(config):
 
 
 def test_complex_literal_strings_with_real_core(cache_dir):
-    """Literal genes with JSON-like string values (e.g. '{"key": 10}') broke
-    the old S-expression parser.  This is the primary bug from dna-issues.md.
+    """Literal parameters with JSON-like string values catch regressions in IPC parsing.
     Verify they survive the JSON round-trip through the core."""
     result = Search(
         objective_function=objective_complex_literal,
@@ -458,7 +456,7 @@ def objective_log_sampled(config):
 def test_log_sampling_with_real_core(cache_dir):
     """log_sampling() uses np.geomspace which can produce scientific notation
     floats (e.g. 1e-08).  Verify the core binary handles these correctly in
-    the JSON DNA config."""
+    the JSON search-space config."""
     result = Search(
         objective_function=objective_log_sampled,
         search_space={

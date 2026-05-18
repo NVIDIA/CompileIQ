@@ -3,13 +3,13 @@ This example uses shows the implications of setting normalize=True in the Search
 """
 
 from compileiq.ciq import Search
-from compileiq.types import SearchConfiguration, BASELINE_DNA
+from compileiq.types import SearchConfiguration, BASELINE_CONFIG
 from compileiq.worker import MultiProcessWorker
 import compileiq.search_spaces.base as ss
 
 
 def objective(config):
-    if config == BASELINE_DNA:
+    if config == BASELINE_CONFIG:
         # Returning a constant score for demonstration purposes.
         score = 0.001
     elif "z" in config:
@@ -21,14 +21,14 @@ def objective(config):
 
 
 def main():
-    dna_config = {
+    search_space_config = {
         "x": ss.range(start=1.0, end=20.0, step=0.5),
         "y": ss.choice([1, 2, 3]),
         "z": ss.literal("this is a constant", knockout_prob=0.5),
     }
 
     # When `normalize` is set to `True`, CompileIQ will normalize all output scores from your
-    # objective using a baseline. Your function needs to be prepared for accept `BASELINE_DNA`
+    # objective using a baseline. Your function needs to be prepared for accept `BASELINE_CONFIG`
     main_config = SearchConfiguration(
         normalize=True,
         pool_size=12,
@@ -43,7 +43,7 @@ def main():
     # When using NATIVE/DEFAULT, the baseline will be measured once by a single process
     tuner = Search(
         objective_function=objective,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
         worker_type=MultiProcessWorker,
     )

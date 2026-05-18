@@ -7,7 +7,7 @@ import json
 from uuid import uuid4
 from tests.utils import generate_params
 from compileiq.ciq import Search
-from compileiq.core.core_types import ParameterSet, CompletionMessage, SingleDNA
+from compileiq.core.core_types import ParameterSet, CompletionMessage, SingleCandidate
 from compileiq.utils.helpers import _encode_for_core
 import compileiq.search_spaces.base as ss
 
@@ -85,7 +85,7 @@ def mock_receive_from_core(monkeypatch):
         # `pool_size`, `max_gen` and `current_gen` come from `pytest_namespace()`
         # and are updated at the test function
         if pytest.current_gen < pytest.max_gen:
-            dna_list = []
+            candidate_list = []
             params = generate_params(pytest.pool_size, nested=pytest.nested_test)
             for knob in params:
                 encoded_knob = (
@@ -96,14 +96,14 @@ def mock_receive_from_core(monkeypatch):
                     if isinstance(knob, dict) and pytest.encoded_knobs
                     else knob
                 )
-                dna_list.append(
-                    SingleDNA(
+                candidate_list.append(
+                    SingleCandidate(
                         id=random.randint(1, 1000000),
                         knobs=json.dumps(encoded_knob),
                     )
                 )
             param_set = ParameterSet(
-                params=dna_list,
+                params=candidate_list,
                 generation_num=pytest.current_gen,
                 invocation_id=uuid4().int,
             )

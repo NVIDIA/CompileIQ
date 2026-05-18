@@ -34,13 +34,13 @@ def get_core_filepaths(folder: str | os.PathLike) -> tuple[str, str]:
     All filenames where core reads or writes from/to
     """
     main_config_filepath = os.path.join(folder, MAIN_CONFIG_FILENAME)
-    dna_config_filepath = os.path.join(folder, SEARCH_SPACE_CONFIG_FILENAME)
+    search_space_config_filepath = os.path.join(folder, SEARCH_SPACE_CONFIG_FILENAME)
 
     if sys.platform == "win32":
-        dna_config_filepath = dna_config_filepath.replace("\\", "/")
+        search_space_config_filepath = search_space_config_filepath.replace("\\", "/")
         main_config_filepath = main_config_filepath.replace("\\", "/")
 
-    return main_config_filepath, dna_config_filepath
+    return main_config_filepath, search_space_config_filepath
 
 
 def setup_legacy_search_config(
@@ -55,27 +55,27 @@ def setup_legacy_search_config(
 
 
 def setup_search_space(
-    dna_search_space: (
+    search_space_input: (
         Dict[str, Any] | pathlib.Path | List[Dict | pathlib.Path] | SearchSpaceProvider
     ),
-    dna_config_filepath: str,
+    search_space_config_filepath: str,
 ) -> str | List[str]:
     """
-    CompileIQ's Core expects a dna config file following the main.config.
-    This function converts a dictionary-style config into JSON and copies into `folder`.
-    Legacy .config files (S-expression format) are copied as-is for backward compatibility.
+    CompileIQ's core expects a search-space config file referenced by main_config.json.
+    This function converts a dictionary-style config into JSON and copies it into `folder`.
+    File-backed search spaces are copied into the run cache as-is.
     """
 
     entries: List[Dict[str, Any] | pathlib.Path | SearchSpaceProvider]
-    if isinstance(dna_search_space, list):
-        entries = list(dna_search_space)
+    if isinstance(search_space_input, list):
+        entries = list(search_space_input)
     else:
-        entries = [dna_search_space]
+        entries = [search_space_input]
 
     search_files = []
-    base_path = pathlib.Path(dna_config_filepath)
+    base_path = pathlib.Path(search_space_config_filepath)
 
-    # Setting up dna.config files
+    # Set up one core search-space file per input.
     for i, search_space in enumerate(entries):
         # Renaming in case we have multiple configs
         if len(entries) > 1:
@@ -86,18 +86,17 @@ def setup_search_space(
         if isinstance(search_space, dict):
             flat_search_space = flatten_nested_dict(search_space)
 
-            # Converting Dictionary DNA into JSON format
-            search_space_json = _setup_dna_with_dict(flat_search_space)
+            # Convert dictionary search spaces into the core JSON format.
+            search_space_json = _setup_search_space_with_dict(flat_search_space)
             with open(current_path, "w") as fp:
                 fp.write(search_space_json)
 
         elif isinstance(search_space, pathlib.Path) and search_space.exists():
-            # Expects a lisp-like format used on Legacy CompileIQ
-            # Copying the dna to the cache folder for usage
+            # File-backed search spaces are already in a core-readable format.
             shutil.copy(search_space, current_path)
 
         elif isinstance(search_space, pathlib.Path) and not search_space.exists():
-            raise FileNotFoundError(f"Dna config file not found: {search_space}")
+            raise FileNotFoundError(f"Search-space config file not found: {search_space}")
         else:
             raise ValueError("CompileIQ Search Spaces need to be of type dict or path to a file")
 
@@ -106,11 +105,13 @@ def setup_search_space(
     return search_files if len(search_files) > 1 else search_files[0]
 
 
-def _setup_dna_with_dict(dna_dict: Mapping[str, ParamConfig]) -> str:
+def _setup_search_space_with_dict(search_space_dict: Mapping[str, ParamConfig]) -> str:
     """
-    Creates a JSON string representing the DNA configuration. The JSON
+    Creates a JSON string representing the search-space configuration. The JSON
     follows the core search-space schema and is parsed by core.
     """
-    search_space_list = ["{"] + list(dna_dict.keys()) + ["}"]
-    model = SearchSpaceFileModel(classes=dict(dna_dict), parameter_layout=search_space_list)
+    search_space_list = ["{"] + list(search_space_dict.keys()) + ["}"]
+    model = SearchSpaceFileModel(
+        classes=dict(search_space_dict), parameter_layout=search_space_list
+    )
     return model.model_dump_json(exclude_none=True, indent=2, by_alias=True)

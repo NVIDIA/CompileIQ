@@ -189,7 +189,7 @@ except Exception as e:
   in this same branch. When recommending the variant to a user, say
   "attention" explicitly.
 - **Providers vs Booster Packs are different things.** Providers return one
-  binary search space the evolutionary core consumes during a search; Booster
+  binary search space the optimization core consumes during a search; Booster
   Packs are pre-built `.acf` candidates to apply *outside* a search. Don't
   feed a `.acf` from a Booster Pack to `PtxasSearchSpace(...)`.
 - **`LocalSearchSpaceBin` doesn't validate `.bin` contents.** It only

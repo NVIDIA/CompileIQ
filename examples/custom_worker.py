@@ -1,4 +1,4 @@
-from compileiq.types import Worker, SearchConfiguration, INVALID_SCORE, BASELINE_DNA
+from compileiq.types import Worker, SearchConfiguration, INVALID_SCORE, BASELINE_CONFIG
 from compileiq.utils.validation import Score
 from loguru import logger
 from compileiq.ciq import Search
@@ -23,33 +23,32 @@ class SequentialWorker(Worker):
         logger.debug(f"Here is your additional param: `{kwargs.get('dummy_arg', None)}`")
         scores = []
 
-        # It is your responsability to handle baseline score and normalization.
+        # It is your responsibility to handle baseline score and normalization.
         # In this example, we will calculate the baseline score only once for the search
         if self.normalize and self.baseline_score is None:
             logger.info("Calculating Baseline score for normalization.")
-            baseline_score = function(BASELINE_DNA)
+            baseline_score = function(BASELINE_CONFIG)
             # Here we save the baseline score to reuse on future batches/generations.
             self.baseline_score = Score(
                 score=baseline_score,
                 param_id="baseline",
-                params=BASELINE_DNA,
+                params=BASELINE_CONFIG,
                 norm_score=self.normalize_scores(baseline_score, baseline_score),
                 num_objectives=num_function_returns,
                 is_baseline=True,
             )
             scores.append(self.baseline_score)
 
-        # Here is the algorithm to execute the user-provided objective.
-        # A Simple sequential execution for this worker.
+        # Simple sequential execution for this worker.
         # `Worker` provides you with utilities to handle normalization and validation.
         for i, param in enumerate(params_pool):
             try:
                 func_return = function(param)
             except Exception as e:
-                # Make sure to handle any uncatched exceptions or the search will be interrupted.
+                # Make sure to handle any uncaught exceptions or the search will be interrupted.
                 logger.warning(
-                    f"Unhandled exception {e} on your objective function with params {param}"
-                    "We will return a invalid score."
+                    f"Unhandled exception {e} on your objective function with params {param}. "
+                    "We will return an invalid score."
                 )
                 func_return = (
                     [INVALID_SCORE] * num_function_returns
@@ -86,7 +85,7 @@ def objective(params):
 
 
 if __name__ == "__main__":
-    dna_config = {
+    search_space_config = {
         "x": ss.range(start=1.0, end=20.0, step=0.5),
         "y": ss.choice([1, 2, 3]),
     }
@@ -102,7 +101,7 @@ if __name__ == "__main__":
 
     tuner = Search(
         objective_function=objective,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
         worker_type=SequentialWorker,
     )

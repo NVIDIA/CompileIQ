@@ -1,6 +1,6 @@
 # Getting Started with CompileIQ
 
-This guide walks you through creating your first evolutionary search using CompileIQ. We'll create a simple optimization problem that demonstrates the core concepts.
+This guide walks you through creating your first CompileIQ search. We'll create a simple optimization problem that demonstrates the core concepts.
 
 ## Prerequisites
 
@@ -23,13 +23,13 @@ def objective(config):
     return score
 
 # Define the search space
-dna_config = {
+search_space_config = {
     "x": ss.range(start=1.0, end=20.0, step=0.5),  # Continuous range
     "y": ss.choice([1, 2, 3]),  # Discrete choices
-    "z": ss.literal(const_value="constant", knockable_threshold=0.5),  # Binary parameter
+    "z": ss.literal(const_value="constant", knockout_prob=0.5),  # Binary parameter
 }
 
-# Configure the evolutionary search
+# Configure the search
 main_config = SearchConfiguration(
     pool_size=12,      # Size of population
     generations=3,      # Number of iterations
@@ -41,7 +41,7 @@ main_config = SearchConfiguration(
 # Create and run the search
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
 )
 
@@ -61,7 +61,7 @@ print(f"Best Result: {results.get_best_result()}")
     - `choice`: List of discrete options
     - `literal`: Binary parameter that can be knocked out
 
-3. **Evolution Configuration**
+3. **Search Configuration**
     - `pool_size`: Number of solutions in each generation
     - `generations`: Number of iterations
     - `mutate_rate`: Probability of mutation
@@ -88,10 +88,10 @@ def multiobjective(config):
     return score_1, score_2 # returning two scores
 
 
-dna_config = {
+search_space_config = {
     "x": ss.range(start=1.0, end=20.0, step=0.5),  # Continuous range
     "y": ss.choice([1, 2, 3]),  # Discrete choices
-    "z": ss.literal(const_value="constant", knockable_threshold=0.5),  # Binary parameter
+    "z": ss.literal(const_value="constant", knockout_prob=0.5),  # Binary parameter
 }
 
 main_config = SearchConfiguration(
@@ -104,7 +104,7 @@ main_config = SearchConfiguration(
 
 tuner = Search(
     objective_function=multiobjective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
 )
 
@@ -124,7 +124,7 @@ You can use `Search.sample` to retrieve randomly generated samples from your sea
 # Create and run the search
 tuner = Search(
     objective_function=objective,
-    search_space=dna_config,
+    search_space=search_space_config,
     search_config=main_config,
 )
 

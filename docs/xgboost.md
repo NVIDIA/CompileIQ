@@ -1,4 +1,4 @@
-# Fine-tune a XGBoost ML Model
+# Fine-tune an XGBoost ML Model
 
 Make sure you followed the [Installation Guide](install.md). You can find the source code for [this example here](https://github.com/NVIDIA/CompileIQ/blob/main/examples/ciq_xgboost.py).
 
@@ -12,24 +12,24 @@ The main program follows a standard machine learning flow: it downloads a datase
 
 ## Prepare global variables
 
-You objective function has access to external values from your code. So we can download the dataset and convert their data into the xgboost format.
+Your objective function has access to external values from your code. Here we download the dataset and convert it into the XGBoost format.
 
 ```python
 # We are going to download the dataset and split into a train and validation subset
 (data, target) = sklearn.datasets.load_breast_cancer(return_X_y=True)
 train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.25)
 
-# Converting into Xgboost expected format
+# Converting into XGBoost's expected format
 dtrain = xgb.DMatrix(train_x, label=train_y)
 dvalid = xgb.DMatrix(valid_x, label=valid_y)
 ```
 
-> Warning: CompileIQ uses python multiprocess so each process will receive a copy of the global variables.
+> Warning: CompileIQ uses Python multiprocessing, so each process receives a copy of the global variables.
 
 ## The Search Space
 
 ```python
-dna_config = {
+search_space_config = {
     "booster": ss.choice(["gbtree", "gblinear", "dart"]),
     "lambda": ss.log_sampling(start=1e-8, end=1.0),
     "alpha": ss.log_sampling(start=1e-8, end=1.0),
@@ -48,7 +48,7 @@ dna_config = {
 }
 ```
 
-These are all parameters we want to tune for this xgboost example. Each one of them will come in as a dictionary to your objective function with the defined key and a single value such as `{config['booster']: 'gbtree', config['subsample]: 0.35, ...}`.
+These are the parameters we want to tune for this XGBoost example. Each sampled configuration is passed to your objective function as a dictionary, for example `{"booster": "gbtree", "subsample": 0.35, ...}`.
 
 ## The Search Configuration
 
@@ -62,7 +62,7 @@ main_config = SearchConfiguration(
 )
 ```
 
-These are the CompileIQ specific parameters. A small search should yield good results for this simple dataset. Larger searches should have a bigger pool size (around 128+) and larger generation number (30+).
+These are the CompileIQ-specific parameters. A small search should yield good results for this simple dataset. Larger searches should have a bigger pool size (around 128+) and larger generation count (30+).
 
 ## The Objective
 
@@ -78,16 +78,20 @@ def objective(config: dict):
     return accuracy
 ```
 
-CompileIQ expects a python callable object that will receive a dictionary and return a score of type `int | float | '*'`, where `*` represents an invalid score, like an exception or an error.
+CompileIQ expects a Python callable object that receives a dictionary and returns a score of type `int | float | "*"`, where `*` represents an invalid score, such as an exception or an error.
 
-In this example,  we are simply training and prediction with the given parameters in dict. We than use scikit-learn to measure the accuracy prediction and return that as the score.
+In this example, we train and predict with the sampled parameters. We then use scikit-learn to measure prediction accuracy and return that as the score.
 
 ## Starting the search and the Results
 
-We are now ready to start the search, pass in the configuration, search space and the objective function for Search and hit `start`.
+We are now ready to pass the objective function, search space, and search configuration to `Search` and call `start`.
 
 ```python
-tuner = Search(objective_function=objective, search_space=dna_config, search_config=main_config)
+tuner = Search(
+    objective_function=objective,
+    search_space=search_space_config,
+    search_config=main_config,
+)
 results = tuner.start()
 ```
 

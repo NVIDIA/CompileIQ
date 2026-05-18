@@ -86,7 +86,7 @@ This NVCC example differs from the [PTXAS spill example](ptx_spill_example.md) i
 * **Full compilation**: NVCC compiles `.cu` source to a runnable binary, so each evaluation is slower but measures actual runtime performance.
 * **Runtime metric**: The objective minimizes execution time rather than register spills.
 
-Both examples follow the same pattern: define an objective, fetch a compiler search space, and run the evolutionary search.
+Both examples follow the same pattern: define an objective, fetch a compiler search space, and run a CompileIQ search.
 
 > **NOTE**: ACFs can contain controls for specific compilers. When using a PTXAS ACF with NVCC, pass it directly to PTXAS via:
 >

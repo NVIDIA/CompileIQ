@@ -21,7 +21,7 @@ compileiq.types.Score
 --------------------------------------
 
 .. automodule:: compileiq.utils.validation
-   :members: Score, SingleScore, MultiScore, INVALID_SCORE, BASELINE_DNA
+   :members: Score, SingleScore, MultiScore, INVALID_SCORE, BASELINE_CONFIG
    :undoc-members:
    :show-inheritance:
 

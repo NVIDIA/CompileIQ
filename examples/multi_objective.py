@@ -12,7 +12,7 @@ def multiobjective(config):
 
 
 def main():
-    dna_config = {
+    search_space_config = {
         "x": ss.range(start=1.0, end=20.0, step=0.5),
         "y": ss.choice([1, 2, 3]),
     }
@@ -27,7 +27,7 @@ def main():
 
     tuner = Search(
         objective_function=multiobjective,
-        search_space=dna_config,
+        search_space=search_space_config,
         search_config=main_config,
     )
 

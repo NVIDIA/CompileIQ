@@ -12,7 +12,7 @@ CompileIQ Documentation
 .. toctree::
    :hidden:
    :maxdepth: 3
-   :caption: Nvidia Compiler Tuning
+   :caption: NVIDIA Compiler Tuning
 
    compilers_overview
    search_space_release_testing
@@ -45,18 +45,18 @@ CompileIQ Documentation
    :caption: Developer Resources
 
    api
-   Evolutionary Algorithms <evolutionary>
+   Search Strategy <search_strategy>
 
 
 What is CompileIQ?
 ------------------------------------------
 
-CompileIQ is a Hyper-Parameter Optimization Engine (HPO), based on evolutionary algorithms and fine-tuned to work well tuning controls of NVIDIA compilers.
+CompileIQ is a hyperparameter optimization engine (HPO) designed for tuning NVIDIA compiler controls.
 
 This documentation portal enables you to:
 
 * Learn about the new Advanced Controls interface of NVIDIA Compilers.
-* Make CompileIQ tune Advanced Controls to maximise a metric of interest.
+* Make CompileIQ tune the compiler's Advanced Controls to maximise a metric of interest.
 * Use CompileIQ to simultaneously adjust Advanced Controls and application parameters like block and batch sizes.
 
 
@@ -69,4 +69,3 @@ For highly optimized workloads, CompileIQ has shown 2% to 3% improvements in som
 * Get extra performance now with pre-made solutions from our :doc:`Booster Packs <booster_packs>`.
 * Learn more about the new Compiler Controls interface by :doc:`Tuning NVIDIA Compilers <compilers_overview>`.
 * Peruse our :doc:`API Documentation <api>` to get detailed information about our Python package.
-

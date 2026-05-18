@@ -12,7 +12,7 @@ import compileiq.search_spaces.base as ss
 (data, target) = sklearn.datasets.load_breast_cancer(return_X_y=True)
 train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.25)
 
-# Converting into Xgboost expected format
+# Converting into XGBoost's expected format
 dtrain = xgb.DMatrix(train_x, label=train_y)
 dvalid = xgb.DMatrix(valid_x, label=valid_y)
 
@@ -29,7 +29,7 @@ def objective(config: dict):
 
 
 def main():
-    dna_config = {
+    search_space_config = {
         "booster": ss.choice(["gbtree", "gblinear", "dart"]),
         "lambda": ss.log_sampling(start=1e-8, end=1.0),
         "alpha": ss.log_sampling(start=1e-8, end=1.0),
@@ -55,7 +55,11 @@ def main():
         num_objectives=1,
     )
 
-    tuner = Search(objective_function=objective, search_space=dna_config, search_config=main_config)
+    tuner = Search(
+        objective_function=objective,
+        search_space=search_space_config,
+        search_config=main_config,
+    )
     results = tuner.start()
     print(results.get_best_result())
 

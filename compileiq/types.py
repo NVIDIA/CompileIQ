@@ -24,7 +24,7 @@ from compileiq.utils.validation import (  # noqa: F401 (re-exported)
     MultiScore,
     Score,
     INVALID_SCORE,
-    BASELINE_DNA,
+    BASELINE_CONFIG,
 )
 
 
@@ -356,7 +356,7 @@ class WorkerTypes(StrEnum):
             This is set to be the same as WorkerTypes.NATIVE
 
         NATIVE:
-            Uses the native python multiprocess lib to spawn new processes that will
+            Uses the native Python multiprocessing library to spawn new processes that will
             pick 'work' from a queue until all generations are complete.
             Supports: Only local parallelism
 
@@ -490,15 +490,14 @@ class SearchConfiguration(BaseModel, extra="forbid"):
     )
     generations: int = Field(
         gt=0,
-        description="The number of generations to evolve before halting. "
+        description="The number of search iterations to run before halting. "
         "The larger this value, the more solutions will be evaluated, but it may also lead "
         "to better results.",
     )
     pool_size: int | None = Field(
         default=None,
         gt=5,
-        description="The batch size of evaluations for each generations. "
-        "Also correlated with the population size per generation. "
+        description="The batch size of evaluations for each search iteration. "
         "If set to None, we calculate it based on your number of objectives.",
     )
     cull_size: int | None = Field(
@@ -513,7 +512,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
         default=0.25,
         gt=0.0,
         lt=1.0,
-        description="The chance an individual (DNA) in the gene pool will be mutated.",
+        description="The chance a sampled candidate will be perturbed between iterations.",
     )
     objective_weights: Optional[list[float]] = Field(
         default=None,
@@ -530,7 +529,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
         default=True,
         description="When a generation does not achieve at least 20pct of passing solutions it"
         " will not move into the next. The subsequent sample batch will only contain "
-        "the minimal number of DNAs required for this generation to pass. "
+        "the minimal number of passing samples required for this generation to pass. "
         "If this is set to True, it will resubmit an entire pool size length batch.",
     )
 
@@ -666,7 +665,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
                 legacy_str = f.read()
         else:
             raise ValueError(
-                "Search Configuration file is missing the extension .config or does not exists"
+                "Search Configuration file is missing the extension .config or does not exist"
             )
 
         # Extracting keys and values while ignoring comments
@@ -693,7 +692,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
 
 class InternalSearchConfiguration(SearchConfiguration):
     """
-    Used internally to construct a legacy dna.config
+    Used internally to construct the core search-space config.
     These are fields CompileIQ overwrites and the user should not set by themselves.
     """
 

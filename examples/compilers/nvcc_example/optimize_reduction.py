@@ -2,7 +2,7 @@
 """
 CompileIQ NVCC Example: Optimize CUDA reduction kernel.
 
-Uses evolutionary search to find optimal NVCC compiler configurations
+Uses CompileIQ search to find NVCC compiler configurations
 via the --apply-controls feature.
 
 Usage:
@@ -128,7 +128,7 @@ def run_benchmark(args):
 
 
 def run_optimization(args, cuda_version: str):
-    """Run evolutionary optimization to find best compiler config."""
+    """Run optimization to find the best compiler config."""
     # Run baseline
     print("Running baseline...")
     baseline_result = build_and_run(args.arch, num_runs=args.runs)

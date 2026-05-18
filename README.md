@@ -1,10 +1,10 @@
-# CompileIQ - NVIDIA's Official Compiler HPO
+# CompileIQ - NVIDIA Compiler HPO
 
-CompileIQ is an evolutionary-based hyper-parameter optimizer tailored to tune our internal compiler controls.
+CompileIQ is a hyperparameter optimizer for tuning NVIDIA compiler controls and application parameters.
 
 ## Quick install
 
-You can either install through Pypi:
+You can either install through PyPI:
 
 ```bash
 pip install compileiq

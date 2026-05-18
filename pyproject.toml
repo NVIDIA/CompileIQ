@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "compileiq"
 version = "1.0.0dev1"
-description = "Nvidia's Evolutionary Optimization Engine for tuning Nvidia compilers."
-authors = ["nvidia.com"]
+description = "NVIDIA compiler control optimization engine."
+authors = ["NVIDIA Corporation"]
 readme = "README.md"
 repository = "https://github.com/NVIDIA/CompileIQ"
 documentation = "https://github.com/NVIDIA/CompileIQ/blob/main/README.md"

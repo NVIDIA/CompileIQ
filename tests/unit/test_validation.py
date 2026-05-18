@@ -115,7 +115,7 @@ class TestValidateScoresMultiObjective:
 
 class TestScoreFailed:
     """Score.failed is checked after every evaluation to decide whether a
-    DNA was successful.  If this is wrong, the optimizer either keeps garbage
+    candidate evaluation was successful. If this is wrong, the optimizer either keeps garbage
     solutions or discards valid ones."""
 
     def test_single_objective_invalid_score(self):
