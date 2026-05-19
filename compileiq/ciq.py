@@ -673,9 +673,11 @@ class Search(BaseModel):
 
     def _load_params(self, parameter_sets: ParameterSet) -> List[ParamArg]:
         """
-        We verify if the params (knobs) received from core are json-compatible
-        otherwise we will send them as strings and is the responsibility of the user to
-        manage the string at its own objective function.
+        Parse params received from core.
+
+        File-backed search spaces may return opaque strings for user code to handle.
+        Dictionary-defined search spaces must return JSON objects because those are
+        restored into the user-facing config dictionary.
         """
 
         def parse_param_payload(param: str, is_file_backed: bool = False):
@@ -687,14 +689,25 @@ class Search(BaseModel):
 
                     param_set = json5.loads(param)
                 except Exception:
+                    if not is_file_backed:
+                        raise RuntimeError(
+                            "Core returned an unparseable parameter payload for a "
+                            "dictionary-defined CompileIQ search space. Expected a "
+                            f"JSON object string, got: {param!r}"
+                        ) from None
                     return param
 
-            # We only support nested data for dictionary-defined search spaces.
-            if not is_file_backed and isinstance(param_set, dict):
-                # Nested restoration only applies to dictionary-defined search spaces.
-                param_set = restore_nested_search_space(param_set)
+            if is_file_backed:
+                return param_set
 
-            return param_set
+            if not isinstance(param_set, dict):
+                raise RuntimeError(
+                    "Core returned a non-object parameter payload for a dictionary-defined "
+                    "CompileIQ search space. Expected a JSON object string, got "
+                    f"{type(param_set).__name__}: {param!r}"
+                )
+
+            return restore_nested_search_space(param_set)
 
         params_from_generation: List[ParamArg] = []
         for param in parameter_sets.params:

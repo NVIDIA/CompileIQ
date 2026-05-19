@@ -8,6 +8,8 @@ import json
 import warnings
 from unittest.mock import MagicMock
 
+import pytest
+
 from compileiq.ciq import Search
 from compileiq.search_spaces import base as ss
 from compileiq.types import SearchConfiguration
@@ -52,26 +54,28 @@ def test_valid_json_dict_parsed(mocker, tmp_path):
     assert result == [{"lr": 0.1, "wd": 0.01}]
 
 
-def test_valid_json_returns_numeric_string_as_string(mocker, tmp_path):
-    """A bare JSON string (not a dict) should be returned as-is, not passed
-    to restore_nested_search_space."""
+@pytest.mark.parametrize(
+    "knobs",
+    [
+        '"just a string"',
+        "42",
+        "[1, 2, 3]",
+    ],
+)
+def test_dictionary_search_space_json_non_object_rejected(mocker, tmp_path, knobs):
+    """Dictionary-defined search spaces should always decode to a JSON object."""
     search = _make_search(mocker, tmp_path)
+    with pytest.raises(RuntimeError, match="non-object parameter payload"):
+        search._load_params(_param_set(knobs))
+
+
+def test_file_backed_json_string_returned_as_string(mocker, tmp_path):
+    """File-backed spaces may return scalar JSON strings."""
+    search = _make_search(mocker, tmp_path)
+    search._using_file_backed_search_space = True
+
     result = search._load_params(_param_set('"just a string"'))
     assert result == ["just a string"]
-
-
-def test_valid_json_number_returned_directly(mocker, tmp_path):
-    """A bare JSON number should be returned, not crash in restore_nested."""
-    search = _make_search(mocker, tmp_path)
-    result = search._load_params(_param_set("42"))
-    assert result == [42]
-
-
-def test_valid_json_list_returned_directly(mocker, tmp_path):
-    """A JSON array should be returned, not crash in restore_nested."""
-    search = _make_search(mocker, tmp_path)
-    result = search._load_params(_param_set("[1, 2, 3]"))
-    assert result == [[1, 2, 3]]
 
 
 # ---------------------------------------------------------------------------
@@ -110,10 +114,20 @@ def test_json5_fallback_for_single_quotes(mocker, tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_unparseable_string_returned_raw(mocker, tmp_path):
-    """If neither json nor json5 can parse the string, return it raw."""
+def test_dictionary_search_space_unparseable_string_rejected(mocker, tmp_path):
+    """Dictionary-defined search spaces should receive parseable JSON from core."""
     search = _make_search(mocker, tmp_path)
     raw = "this is not json at all {{{{"
+    with pytest.raises(RuntimeError, match="unparseable parameter payload"):
+        search._load_params(_param_set(raw))
+
+
+def test_file_backed_unparseable_string_returned_raw(mocker, tmp_path):
+    """File-backed spaces may return opaque strings."""
+    search = _make_search(mocker, tmp_path)
+    search._using_file_backed_search_space = True
+    raw = "this is not json at all {{{{"
+
     result = search._load_params(_param_set(raw))
     assert result == [raw]
 
@@ -123,12 +137,11 @@ def test_unparseable_string_returned_raw(mocker, tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_json5_non_dict_result_not_passed_to_restore(mocker, tmp_path):
-    """If json5 parses to a non-dict, restore_nested_search_space should be skipped."""
+def test_json5_non_dict_result_rejected_for_dictionary_search_space(mocker, tmp_path):
+    """If json5 parses dictionary params to a non-dict, reject the core payload."""
     search = _make_search(mocker, tmp_path)
     # json5 can parse bare identifiers like Infinity
     with warnings.catch_warnings(record=True):
         warnings.simplefilter("always")
-        result = search._load_params(_param_set("Infinity"))
-    assert len(result) == 1
-    # Should not crash — the result is a float, not a dict
+        with pytest.raises(RuntimeError, match="non-object parameter payload"):
+            search._load_params(_param_set("Infinity"))
