@@ -8,8 +8,14 @@ mirror used in restricted environments.
 
 These checks do not require GitHub releases or network access.
 
-1. Stage candidate `.bin` files outside the repo checkout.
-2. Build the release catalog:
+1. Install the release-prep helper dependencies:
+
+   ```bash
+   make install-release
+   ```
+
+2. Stage candidate `.bin` files outside the repo checkout.
+3. Build the release catalog:
 
    ```bash
    make build-search-space-manifest \
@@ -17,20 +23,20 @@ These checks do not require GitHub releases or network access.
      SS_TAG=search-spaces-YYYY.MM.DD-rc1
    ```
 
-3. Build release notes from the generated catalog:
+4. Build release notes from the generated catalog:
 
    ```bash
    make build-search-space-release-notes
    ```
 
-4. Validate the manifest schema and Python behavior:
+5. Validate the manifest schema and Python behavior:
 
    ```bash
    make check-search-space-manifest-schema
    poetry run pytest tests/unit/search_spaces tests/integration/test_search_space_resolution.py -vvv
    ```
 
-5. Exercise the offline resolver path by placing `manifest.json` and the
+6. Exercise the offline resolver path by placing `manifest.json` and the
    referenced `.bin` files in one directory and setting:
 
    ```bash
@@ -42,6 +48,22 @@ These checks do not require GitHub releases or network access.
 A live retrieval check validates the same public GitHub path used by online
 clients. The target release must contain `manifest.json` plus every `.bin`
 asset referenced by that manifest.
+
+First, validate the uploaded asset set from a clean download:
+
+```bash
+tmpdir="$(mktemp -d)"
+gh release download search-spaces-YYYY.MM.DD \
+  --repo NVIDIA/CompileIQ \
+  --dir "$tmpdir"
+
+cd "$tmpdir"
+jq -r '.tag' manifest.json
+jq -r '.entries[].filename' manifest.json | sort
+find . -maxdepth 1 -name '*.bin' -exec basename {} \; | sort
+```
+
+The manifest filenames and downloaded `.bin` filenames must match exactly.
 
 Recommended flow:
 

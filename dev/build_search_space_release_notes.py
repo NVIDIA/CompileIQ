@@ -28,6 +28,14 @@ def build_notes(manifest: SearchSpaceManifestModel) -> str:
         f"- Generated at: `{manifest.generated_at}`",
         f"- Entries: {len(manifest.entries)}",
         "",
+        "## Documentation",
+        "",
+        "CompileIQ downloads these search spaces automatically when using the "
+        "release-backed compiler search-space providers. For usage details, see:",
+        "",
+        "- Compiler search spaces: "
+        "https://nvidia.github.io/CompileIQ/stable/compilers_overview.html",
+        "",
         "## Catalog",
         "",
         "| Compiler | Version | Variant | File | Size bytes | SHA256 | Description |",

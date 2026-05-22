@@ -1,11 +1,15 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install install-examples install-docs lint lint-fix format format-check \
+.PHONY: help install install-examples install-docs install-release lint lint-fix format format-check \
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
         docs docs-serve docs-preview build clean validate \
         verify-core update-core \
         build-search-space-manifest build-search-space-release-notes \
         build-search-space-release build-search-space-manifest-schema \
+        setup-booster-pack-release update-booster-pack-catalog \
+        build-booster-pack-release check-booster-pack-staging check-booster-pack-assets \
+        inspect-booster-pack-release publish-booster-pack-release \
+        check-booster-pack-published \
         check-search-space-manifest-schema clean-search-cache
 
 help: ## Show this help message
@@ -19,6 +23,9 @@ install-examples: ## Install dev dependencies + examples
 
 install-docs: ## Install docs dependencies
 	poetry install --with docs
+
+install-release: ## Install release-prep helper dependencies
+	poetry install --with release,unittest
 
 lint: ## Run linter
 	poetry run ruff check
@@ -133,3 +140,130 @@ check-search-space-manifest-schema: ## Verify the checked-in search-space manife
 
 clean-search-cache: ## Clear the local resolver cache (~/.cache/compileiq/)
 	rm -rf $(HOME)/.cache/compileiq/
+
+# Booster Pack release targets.
+
+# Booster Pack release tag being prepared. Advanced override only for backfills
+# or repairs, e.g. BOOSTER_RELEASE_TAG=booster-packs-2026.05.21.
+BOOSTER_RELEASE_TAG ?= booster-packs-$(shell date +%Y.%m.%d)
+
+# Prior Booster Pack release tag used to seed an incremental catalog update.
+# Defaults to the newest published booster-packs-* GitHub release. Advanced
+# override only for backfills or repairs, e.g. BOOSTER_PRIOR_RELEASE_TAG=booster-packs-2026.05.21.
+BOOSTER_PRIOR_RELEASE_TAG ?= $(shell gh release list --repo NVIDIA/CompileIQ --exclude-drafts --exclude-pre-releases --limit 100 --json tagName --jq '.[] | select(.tagName | startswith("booster-packs-")) | .tagName' 2>/dev/null | head -n 1)
+
+# Repo-local working directory for Booster Pack release preparation. This is
+# ignored through the repo's existing **/dist ignore rule.
+BOOSTER_RELEASE_ROOT ?= dist/booster-pack-release/$(BOOSTER_RELEASE_TAG)
+
+# Convenience env file written by setup-booster-pack-release for this shell.
+BOOSTER_ENV_FILE ?= dist/booster-pack-release/current.env
+
+# Required input directory containing a booster-pack-catalog.json plus
+# the pack zip assets named by that catalog.
+BOOSTER_INPUT_DIR ?= $(BOOSTER_RELEASE_ROOT)/release-inputs
+
+# Directory for generated catalog, pack zips, checksums, and release body.
+BOOSTER_OUTPUT_DIR ?= $(BOOSTER_RELEASE_ROOT)/staged-release
+
+# Stable public docs URL written into generated release-body.md.
+BOOSTER_DOCS_URL ?= https://nvidia.github.io/CompileIQ/stable/booster_packs.html
+
+# Prompt for exact-tag confirmation before publishing by default. Set
+# CONFIRM_PUBLISH_RELEASE=false only for controlled noninteractive automation.
+CONFIRM_PUBLISH_RELEASE ?= true
+
+setup-booster-pack-release: ## Seed Booster Pack release inputs from a previous GitHub release
+	@test -n "$(BOOSTER_PRIOR_RELEASE_TAG)" || (echo "ERROR: could not infer BOOSTER_PRIOR_RELEASE_TAG; set BOOSTER_PRIOR_RELEASE_TAG=booster-packs-YYYY.MM.DD[-suffix]" >&2; exit 1)
+	@test "$(BOOSTER_PRIOR_RELEASE_TAG)" != "$(BOOSTER_RELEASE_TAG)" || (echo "ERROR: BOOSTER_RELEASE_TAG matches BOOSTER_PRIOR_RELEASE_TAG; choose a new release tag" >&2; exit 1)
+	@mkdir -p "$(BOOSTER_INPUT_DIR)"
+	@test -z "$$(find "$(BOOSTER_INPUT_DIR)" -mindepth 1 -maxdepth 1 -print -quit)" || (echo "ERROR: BOOSTER_INPUT_DIR is not empty: $(BOOSTER_INPUT_DIR)" >&2; exit 1)
+	@{ \
+		echo 'export BOOSTER_RELEASE_TAG="$(BOOSTER_RELEASE_TAG)"'; \
+		echo 'export BOOSTER_PRIOR_RELEASE_TAG="$(BOOSTER_PRIOR_RELEASE_TAG)"'; \
+		echo 'export BOOSTER_RELEASE_ROOT="$(BOOSTER_RELEASE_ROOT)"'; \
+		echo 'export BOOSTER_INPUT_DIR="$(BOOSTER_INPUT_DIR)"'; \
+		echo 'export BOOSTER_OUTPUT_DIR="$(BOOSTER_OUTPUT_DIR)"'; \
+	} > "$(BOOSTER_ENV_FILE)"
+	gh release download "$(BOOSTER_PRIOR_RELEASE_TAG)" \
+		--repo NVIDIA/CompileIQ \
+		--dir "$(BOOSTER_INPUT_DIR)" \
+		--pattern "booster-pack-catalog.json" \
+		--pattern "booster-pack-*.zip"
+	cp "$(BOOSTER_INPUT_DIR)/booster-pack-catalog.json" "$(BOOSTER_INPUT_DIR)/.booster-pack-catalog.prior-release.json"
+	@echo "Seeded $(BOOSTER_INPUT_DIR) from $(BOOSTER_PRIOR_RELEASE_TAG)."
+	@echo "Saved prior-release comparison catalog in $(BOOSTER_INPUT_DIR)/.booster-pack-catalog.prior-release.json."
+	@echo "Wrote $(BOOSTER_ENV_FILE). Run: source $(BOOSTER_ENV_FILE)"
+	@echo "Review release-inputs as the full catalog contents before building $(BOOSTER_RELEASE_TAG)."
+
+update-booster-pack-catalog: ## Reconcile Booster Pack input catalog with staged zip files
+	@test -n "$(BOOSTER_INPUT_DIR)" || (echo "ERROR: set BOOSTER_INPUT_DIR=/path/to/booster-release-inputs" >&2; exit 1)
+	@test -d "$(BOOSTER_INPUT_DIR)" || (echo "ERROR: BOOSTER_INPUT_DIR does not exist: $(BOOSTER_INPUT_DIR)" >&2; exit 1)
+	poetry run python dev/update_booster_pack_catalog.py "$(BOOSTER_INPUT_DIR)" \
+		--tag "$(BOOSTER_RELEASE_TAG)"
+
+build-booster-pack-release: ## Build Booster Pack catalog + zip assets + checksums + release body
+	@test -n "$(BOOSTER_INPUT_DIR)" || (echo "ERROR: set BOOSTER_INPUT_DIR=/path/to/booster-release-inputs" >&2; exit 1)
+	@test -d "$(BOOSTER_INPUT_DIR)" || (echo "ERROR: BOOSTER_INPUT_DIR does not exist: $(BOOSTER_INPUT_DIR)" >&2; exit 1)
+	poetry run python dev/build_booster_pack_release.py \
+		--source-dir "$(BOOSTER_INPUT_DIR)" \
+		--output-dir "$(BOOSTER_OUTPUT_DIR)" \
+		--tag "$(BOOSTER_RELEASE_TAG)" \
+		--docs-url "$(BOOSTER_DOCS_URL)" \
+		--clean-output
+
+# Validate local staged output before upload. Requires release-body.md because it
+# becomes the GitHub Release notes.
+check-booster-pack-staging: ## Validate local staged Booster Pack release before upload
+	poetry run python dev/verify_booster_pack_release.py \
+		"$(BOOSTER_OUTPUT_DIR)" \
+		--tag "$(BOOSTER_RELEASE_TAG)" \
+		--extra-ok release-body.md \
+		--docs-url "$(BOOSTER_DOCS_URL)" \
+		--require-release-body
+
+# Validate assets downloaded from GitHub. release-body.md is not uploaded as an
+# asset; GitHub stores it as the release notes.
+check-booster-pack-assets: ## Validate Booster Pack assets downloaded from GitHub
+	poetry run python dev/verify_booster_pack_release.py \
+		"$(BOOSTER_OUTPUT_DIR)" \
+		--tag "$(BOOSTER_RELEASE_TAG)" \
+		--extra-ok release-body.md \
+		--docs-url "$(BOOSTER_DOCS_URL)"
+
+# Show draft release metadata for a final read-only human sanity check.
+inspect-booster-pack-release: ## Inspect draft Booster Pack release before publishing
+	gh release view "$(BOOSTER_RELEASE_TAG)" \
+		--repo NVIDIA/CompileIQ \
+		--json tagName,name,isDraft,isPrerelease,targetCommitish,assets,body \
+		--template 'tag: {{.tagName}}{{"\n"}}title: {{.name}}{{"\n"}}draft: {{.isDraft}}{{"\n"}}prerelease: {{.isPrerelease}}{{"\n"}}target: {{.targetCommitish}}{{"\n"}}assets:{{"\n"}}{{range .assets}}  - {{.name}}{{"\n"}}{{end}}{{"\n"}}body:{{"\n"}}{{.body}}{{"\n"}}'
+
+# Publish the validated draft without marking it as GitHub "Latest".
+publish-booster-pack-release: ## Publish draft Booster Pack release with make_latest=false
+	@if [ "$(CONFIRM_PUBLISH_RELEASE)" != "false" ]; then \
+		printf 'Type %s to publish: ' "$(BOOSTER_RELEASE_TAG)"; \
+		read confirmation; \
+		if [ "$$confirmation" != "$(BOOSTER_RELEASE_TAG)" ]; then \
+			echo "ERROR: confirmation did not match $(BOOSTER_RELEASE_TAG); release was not published." >&2; \
+			exit 1; \
+		fi; \
+	fi; \
+	release_id="$$(gh release view "$(BOOSTER_RELEASE_TAG)" --repo NVIDIA/CompileIQ --json databaseId --jq .databaseId)"; \
+	test -n "$$release_id" || (echo "ERROR: could not find release $(BOOSTER_RELEASE_TAG)" >&2; exit 1); \
+	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
+		-F draft=false \
+		-f make_latest=false \
+		--silent; \
+	echo "PASS: Published $(BOOSTER_RELEASE_TAG) with make_latest=false."
+
+# Confirm the published release is no longer a draft and is not GitHub "Latest".
+check-booster-pack-published: ## Confirm published Booster Pack release is not Latest
+	@status="$$(gh release list --repo NVIDIA/CompileIQ --limit 100 --json tagName,isDraft,isLatest --jq '.[] | select(.tagName == "$(BOOSTER_RELEASE_TAG)") | [.isDraft, .isLatest] | @tsv')"; \
+	test -n "$$status" || (echo "ERROR: could not find release $(BOOSTER_RELEASE_TAG)" >&2; exit 1); \
+	set -- $$status; \
+	if [ "$$1" = "false" ] && [ "$$2" = "false" ]; then \
+		echo "PASS: $(BOOSTER_RELEASE_TAG) is published and is not marked Latest."; \
+	else \
+		echo "FAIL: $(BOOSTER_RELEASE_TAG) has isDraft=$$1 isLatest=$$2." >&2; \
+		exit 1; \
+	fi
