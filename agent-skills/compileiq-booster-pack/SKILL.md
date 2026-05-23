@@ -105,7 +105,10 @@ matching `booster-packs-*`, and download the relevant pack zip plus the
 top-level `booster-pack-catalog.json`.
 
 ```bash
-BOOSTER_TAG=booster-packs-YYYY.MM.DD
+BOOSTER_TAG="$(gh release list -R NVIDIA/CompileIQ --limit 100 --json tagName,isDraft \
+  --jq '.[] | select(.isDraft == false) | select(.tagName | startswith("booster-packs-")) | .tagName' \
+  | head -n 1)"
+echo "Using $BOOSTER_TAG"
 gh release download "$BOOSTER_TAG" -R NVIDIA/CompileIQ -p 'booster-pack-helion.zip' -p 'booster-pack-catalog.json' -D ./packs
 unzip ./packs/booster-pack-helion.zip -d ./packs
 cat ./packs/booster-pack-helion/booster-pack-manifest.json
@@ -113,6 +116,7 @@ cat ./packs/booster-pack-helion/booster-pack-manifest.json
 
 Always read the per-pack manifest before applying: it lists the intended
 workload, compiler version, GPU target, validation context, and known caveats.
+For a reproducible rerun, set `BOOSTER_TAG` to the exact tag printed above.
 
 ### 2. Apply one ACF at a time
 

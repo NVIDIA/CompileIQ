@@ -4,12 +4,16 @@
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
         docs docs-serve docs-preview build clean validate \
         verify-core update-core \
+        setup-search-space-release update-search-space-catalog \
+        build-search-space-release check-search-space-staging check-search-space-assets \
+        create-search-space-draft-release inspect-search-space-release \
+        publish-search-space-release clear-search-space-latest check-search-space-published \
         build-search-space-manifest build-search-space-release-notes \
-        build-search-space-release build-search-space-manifest-schema \
+        build-search-space-manifest-schema \
         setup-booster-pack-release update-booster-pack-catalog \
         build-booster-pack-release check-booster-pack-staging check-booster-pack-assets \
         inspect-booster-pack-release publish-booster-pack-release \
-        check-booster-pack-published \
+        clear-booster-pack-latest check-booster-pack-published \
         check-search-space-manifest-schema clean-search-cache
 
 help: ## Show this help message
@@ -97,40 +101,159 @@ update-core: ## Update bundled core binaries from CORE_MANIFEST_URL and CORE_TAR
 		--tarball-url "$(CORE_TARBALL_URL)" \
 		$(if $(CORE_MANIFEST_SHA256),--expected-manifest-sha256 "$(CORE_MANIFEST_SHA256)",)
 
-# ── Search-space release targets ─────────────────────────────────────────────
+# Search Space release targets.
 
-# Release tag written into manifest.json and release notes. Override for RCs or
-# backfilled catalogs, e.g. SS_TAG=search-spaces-2026.05.12-rc1.
-SS_TAG ?= search-spaces-$(shell date +%Y.%m.%d)
+# Compatibility alias for older local commands. Prefer SS_RELEASE_TAG.
+SS_TAG ?=
 
-# Human-authored catalog source. Override to test a draft catalog without
-# editing the checked-in launch source.
+# Search Space release tag being prepared. Advanced override only for backfills
+# or repairs, e.g. SS_RELEASE_TAG=search-spaces-2026.05.21-rev1.
+SS_RELEASE_TAG ?= $(if $(SS_TAG),$(SS_TAG),search-spaces-$(shell date +%Y.%m.%d))
+
+# Prior Search Space release tag used to seed an incremental catalog update.
+# Defaults to the newest published search-spaces-* GitHub release. Empty means
+# first-release bootstrap.
+SS_PRIOR_RELEASE_TAG ?= $(shell gh release list --repo NVIDIA/CompileIQ --exclude-drafts --exclude-pre-releases --limit 100 --json tagName --jq '.[] | select(.tagName | startswith("search-spaces-")) | .tagName' 2>/dev/null | head -n 1)
+
+# Checked-in launch metadata used only when no prior search-spaces-* release exists.
 SS_MANIFEST_SOURCE ?= release/search-spaces/manifest-source.yaml
 
-# Directory for generated manifest and release notes. This is safe to delete.
-SS_OUTPUT_DIR ?= dist/search-space-release
+# Repo-local working directory for Search Space release preparation. This is
+# ignored through the repo's existing **/dist ignore rule.
+SS_RELEASE_ROOT ?= dist/search-space-release/$(SS_RELEASE_TAG)
 
-# Generated release catalog path. Upload this as manifest.json in the GitHub release.
+# Convenience env file written by setup-search-space-release for this shell.
+SS_ENV_FILE ?= dist/search-space-release/current.env
+
+# Required input directory containing manifest-source.yaml plus approved .bin files.
+SS_INPUT_DIR ?= $(SS_RELEASE_ROOT)/release-inputs
+
+# Directory for generated manifest, .bin assets, checksums, and release body.
+SS_OUTPUT_DIR ?= $(SS_RELEASE_ROOT)/staged-release
+
+# Stable public docs URL written into generated release-body.md.
+SS_DOCS_URL ?= https://nvidia.github.io/CompileIQ/stable/compilers_overview.html
+
+# Compatibility paths for older local commands.
+SS_ARTIFACTS_DIR ?= $(SS_INPUT_DIR)
 SS_MANIFEST_OUT ?= $(SS_OUTPUT_DIR)/manifest.json
+SS_RELEASE_NOTES_OUT ?= $(SS_OUTPUT_DIR)/release-body.md
 
-# Generated Markdown release notes path. Paste or upload this with the release.
-SS_RELEASE_NOTES_OUT ?= $(SS_OUTPUT_DIR)/release-notes.md
+setup-search-space-release: ## Seed Search Space release inputs from a previous GitHub release or bootstrap source
+	poetry run python dev/setup_search_space_release.py \
+		--input-dir "$(SS_INPUT_DIR)" \
+		--env-file "$(SS_ENV_FILE)" \
+		--release-tag "$(SS_RELEASE_TAG)" \
+		--manifest-source "$(SS_MANIFEST_SOURCE)" \
+		--output-dir "$(SS_OUTPUT_DIR)" \
+		$(if $(SS_PRIOR_RELEASE_TAG),--prior-tag "$(SS_PRIOR_RELEASE_TAG)",)
 
-# Required input directory containing staged .bin assets named by SS_MANIFEST_SOURCE.
-# Example:
-#   make build-search-space-release SS_ARTIFACTS_DIR=/path/to/bins SS_TAG=search-spaces-YYYY.MM.DD
-build-search-space-manifest: ## Build search-space release catalog manifest.json
+update-search-space-catalog: ## Reconcile Search Space manifest source with staged .bin files
+	@test -n "$(SS_INPUT_DIR)" || (echo "ERROR: set SS_INPUT_DIR=/path/to/search-space-release-inputs" >&2; exit 1)
+	@test -d "$(SS_INPUT_DIR)" || (echo "ERROR: SS_INPUT_DIR does not exist: $(SS_INPUT_DIR)" >&2; exit 1)
+	poetry run python dev/update_search_space_catalog.py "$(SS_INPUT_DIR)" \
+		--tag "$(SS_RELEASE_TAG)"
+
+build-search-space-release: ## Build Search Space manifest + .bin assets + checksums + release body
+	@test -n "$(SS_INPUT_DIR)" || (echo "ERROR: set SS_INPUT_DIR=/path/to/search-space-release-inputs" >&2; exit 1)
+	@test -d "$(SS_INPUT_DIR)" || (echo "ERROR: SS_INPUT_DIR does not exist: $(SS_INPUT_DIR)" >&2; exit 1)
+	poetry run python dev/build_search_space_release.py \
+		--source-dir "$(SS_INPUT_DIR)" \
+		--output-dir "$(SS_OUTPUT_DIR)" \
+		--tag "$(SS_RELEASE_TAG)" \
+		--docs-url "$(SS_DOCS_URL)" \
+		--clean-output
+
+# Validate local staged output before upload. Requires release-body.md because it
+# becomes the GitHub Release notes.
+check-search-space-staging: ## Validate local staged Search Space release before upload
+	poetry run python dev/verify_search_space_release.py \
+		"$(SS_OUTPUT_DIR)" \
+		--tag "$(SS_RELEASE_TAG)" \
+		--extra-ok release-body.md \
+		--docs-url "$(SS_DOCS_URL)" \
+		--require-release-body
+
+# Validate assets downloaded from GitHub. release-body.md is not uploaded as an
+# asset; GitHub stores it as the release notes.
+check-search-space-assets: ## Validate Search Space assets downloaded from GitHub
+	poetry run python dev/verify_search_space_release.py \
+		"$(SS_OUTPUT_DIR)" \
+		--tag "$(SS_RELEASE_TAG)" \
+		--extra-ok release-body.md \
+		--docs-url "$(SS_DOCS_URL)"
+
+create-search-space-draft-release: ## Create draft Search Space release from staged assets
+	gh release create "$(SS_RELEASE_TAG)" \
+		"$(SS_OUTPUT_DIR)/manifest.json" \
+		"$(SS_OUTPUT_DIR)"/*.bin \
+		"$(SS_OUTPUT_DIR)/SHA256SUMS.txt" \
+		--repo NVIDIA/CompileIQ \
+		--target main \
+		--title "Search Space Catalog Release $(SS_RELEASE_TAG)" \
+		--latest=false \
+		--draft \
+		--notes-file "$(SS_OUTPUT_DIR)/release-body.md"
+
+# Show draft release metadata for a final read-only human sanity check.
+inspect-search-space-release: ## Inspect draft Search Space release before publishing
+	gh release view "$(SS_RELEASE_TAG)" \
+		--repo NVIDIA/CompileIQ \
+		--json tagName,name,isDraft,isPrerelease,targetCommitish,assets,body \
+		--template 'tag: {{.tagName}}{{"\n"}}title: {{.name}}{{"\n"}}draft: {{.isDraft}}{{"\n"}}prerelease: {{.isPrerelease}}{{"\n"}}target: {{.targetCommitish}}{{"\n"}}assets:{{"\n"}}{{range .assets}}  - {{.name}}{{"\n"}}{{end}}{{"\n"}}body:{{"\n"}}{{.body}}{{"\n"}}'
+
+# Publish the validated draft, then explicitly clear GitHub "Latest".
+# GitHub ignores make_latest while a release is still a draft, so keep this as
+# two API calls.
+publish-search-space-release: ## Publish draft Search Space release with make_latest=false
+	@if [ "$(CONFIRM_PUBLISH_RELEASE)" != "false" ]; then \
+		printf 'Type %s to publish: ' "$(SS_RELEASE_TAG)"; \
+		read confirmation; \
+		if [ "$$confirmation" != "$(SS_RELEASE_TAG)" ]; then \
+			echo "ERROR: confirmation did not match $(SS_RELEASE_TAG); release was not published." >&2; \
+			exit 1; \
+		fi; \
+	fi; \
+	release_id="$$(gh release view "$(SS_RELEASE_TAG)" --repo NVIDIA/CompileIQ --json databaseId --jq .databaseId)"; \
+	test -n "$$release_id" || (echo "ERROR: could not find release $(SS_RELEASE_TAG)" >&2; exit 1); \
+	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
+		-F draft=false \
+		--silent; \
+	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
+		-f make_latest=false \
+		--silent; \
+	echo "PASS: Published $(SS_RELEASE_TAG) with make_latest=false."
+
+clear-search-space-latest: ## Clear GitHub Latest marker from a Search Space release
+	@release_id="$$(gh release view "$(SS_RELEASE_TAG)" --repo NVIDIA/CompileIQ --json databaseId --jq .databaseId)"; \
+	test -n "$$release_id" || (echo "ERROR: could not find release $(SS_RELEASE_TAG)" >&2; exit 1); \
+	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
+		-f make_latest=false \
+		--silent; \
+	echo "PASS: Cleared GitHub Latest marker for $(SS_RELEASE_TAG)."
+
+# Confirm the published release is no longer a draft and is not GitHub "Latest".
+check-search-space-published: ## Confirm published Search Space release is not Latest
+	@status="$$(gh release list --repo NVIDIA/CompileIQ --limit 100 --json tagName,isDraft,isLatest --jq '.[] | select(.tagName == "$(SS_RELEASE_TAG)") | [.isDraft, .isLatest] | @tsv')"; \
+	test -n "$$status" || (echo "ERROR: could not find release $(SS_RELEASE_TAG)" >&2; exit 1); \
+	set -- $$status; \
+	if [ "$$1" = "false" ] && [ "$$2" = "false" ]; then \
+		echo "PASS: $(SS_RELEASE_TAG) is published and is not marked Latest."; \
+	else \
+		echo "FAIL: $(SS_RELEASE_TAG) has isDraft=$$1 isLatest=$$2." >&2; \
+		exit 1; \
+	fi
+
+build-search-space-manifest: ## Build legacy search-space manifest.json from SS_MANIFEST_SOURCE + SS_ARTIFACTS_DIR
 	@test -n "$(SS_ARTIFACTS_DIR)" || (echo "ERROR: set SS_ARTIFACTS_DIR=/path/to/search-space-bins" >&2; exit 1)
 	@test -d "$(SS_ARTIFACTS_DIR)" || (echo "ERROR: SS_ARTIFACTS_DIR does not exist: $(SS_ARTIFACTS_DIR)" >&2; exit 1)
-	poetry run python dev/build_manifest.py --source "$(SS_MANIFEST_SOURCE)" --artifacts-dir "$(SS_ARTIFACTS_DIR)" --tag "$(SS_TAG)" --out "$(SS_MANIFEST_OUT)"
-	@echo "Wrote $(SS_MANIFEST_OUT) for $(SS_TAG)."
+	poetry run python dev/build_manifest.py --source "$(SS_MANIFEST_SOURCE)" --artifacts-dir "$(SS_ARTIFACTS_DIR)" --tag "$(SS_RELEASE_TAG)" --out "$(SS_MANIFEST_OUT)"
+	@echo "Wrote $(SS_MANIFEST_OUT) for $(SS_RELEASE_TAG)."
 
-build-search-space-release-notes: ## Build Markdown release notes from generated search-space manifest
+build-search-space-release-notes: ## Build legacy Markdown release notes from generated search-space manifest
 	@test -f "$(SS_MANIFEST_OUT)" || (echo "ERROR: missing $(SS_MANIFEST_OUT); run build-search-space-manifest first" >&2; exit 1)
 	poetry run python dev/build_search_space_release_notes.py --manifest "$(SS_MANIFEST_OUT)" --out "$(SS_RELEASE_NOTES_OUT)"
 	@echo "Wrote $(SS_RELEASE_NOTES_OUT)."
-
-build-search-space-release: build-search-space-manifest build-search-space-release-notes ## Build manifest + notes for manual release upload
 
 build-search-space-manifest-schema: ## Regenerate the JSON Schema that validates release catalog manifests
 	poetry run python dev/generate_manifest_schema.py
@@ -238,7 +361,9 @@ inspect-booster-pack-release: ## Inspect draft Booster Pack release before publi
 		--json tagName,name,isDraft,isPrerelease,targetCommitish,assets,body \
 		--template 'tag: {{.tagName}}{{"\n"}}title: {{.name}}{{"\n"}}draft: {{.isDraft}}{{"\n"}}prerelease: {{.isPrerelease}}{{"\n"}}target: {{.targetCommitish}}{{"\n"}}assets:{{"\n"}}{{range .assets}}  - {{.name}}{{"\n"}}{{end}}{{"\n"}}body:{{"\n"}}{{.body}}{{"\n"}}'
 
-# Publish the validated draft without marking it as GitHub "Latest".
+# Publish the validated draft, then explicitly clear GitHub "Latest".
+# GitHub ignores make_latest while a release is still a draft, so keep this as
+# two API calls.
 publish-booster-pack-release: ## Publish draft Booster Pack release with make_latest=false
 	@if [ "$(CONFIRM_PUBLISH_RELEASE)" != "false" ]; then \
 		printf 'Type %s to publish: ' "$(BOOSTER_RELEASE_TAG)"; \
@@ -252,9 +377,19 @@ publish-booster-pack-release: ## Publish draft Booster Pack release with make_la
 	test -n "$$release_id" || (echo "ERROR: could not find release $(BOOSTER_RELEASE_TAG)" >&2; exit 1); \
 	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
 		-F draft=false \
+		--silent; \
+	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
 		-f make_latest=false \
 		--silent; \
 	echo "PASS: Published $(BOOSTER_RELEASE_TAG) with make_latest=false."
+
+clear-booster-pack-latest: ## Clear GitHub Latest marker from a Booster Pack release
+	@release_id="$$(gh release view "$(BOOSTER_RELEASE_TAG)" --repo NVIDIA/CompileIQ --json databaseId --jq .databaseId)"; \
+	test -n "$$release_id" || (echo "ERROR: could not find release $(BOOSTER_RELEASE_TAG)" >&2; exit 1); \
+	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
+		-f make_latest=false \
+		--silent; \
+	echo "PASS: Cleared GitHub Latest marker for $(BOOSTER_RELEASE_TAG)."
 
 # Confirm the published release is no longer a draft and is not GitHub "Latest".
 check-booster-pack-published: ## Confirm published Booster Pack release is not Latest
