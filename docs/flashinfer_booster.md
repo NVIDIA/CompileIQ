@@ -67,10 +67,10 @@ For a clean ACF test, both cache package checks should print `None`.
 
 ## Download the Pack
 
-Download the Helion booster pack `.zip` from the most recent booster pack release in the [CompileIQ GitHub Releases page](https://github.com/NVIDIA/CompileIQ/releases), then unzip it into your workspace.
+Download `booster-pack-helion.zip` from the most recent booster pack release in the [filtered CompileIQ GitHub Releases page](https://github.com/NVIDIA/CompileIQ/releases?q=booster-packs&expanded=true), then unzip it into your workspace.
 
 ```bash
-unzip helion-booster-pack.zip -d helion-booster-pack
+unzip booster-pack-helion.zip -d .
 ```
 
 Read the manifest before running the candidates. The manifest and release notes are the source of truth for the intended workload, compiler version, GPU target, validation context, and known caveats.
@@ -103,7 +103,7 @@ If your benchmark has meaningful variability, run several trials and compare can
 Choose one ACF from the unzipped pack and pass it to PTXAS through NVCC:
 
 ```bash
-export ACF_FILE=/path/to/helion-booster-pack/candidate.acf
+export ACF_FILE=/path/to/booster-pack-helion/candidate.acf
 export FLASHINFER_EXTRA_CUDAFLAGS="--ptxas-options=--apply-controls=$ACF_FILE"
 
 python benchmarks/flashinfer_benchmark.py \

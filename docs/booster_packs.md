@@ -35,27 +35,30 @@ For example, the Helion Booster Pack has shown beneficial impact on FlashInfer's
 
 ## Downloading a Booster Pack
 
-Booster Packs will be published as zip assets on the [CompileIQ GitHub Releases page](https://github.com/NVIDIA/CompileIQ/releases) under a Booster Pack catalog release, tagged with a Booster Pack-specific prefix, for example `booster-packs-*`.
+Booster Packs are published as zip assets on the [CompileIQ GitHub Releases page](https://github.com/NVIDIA/CompileIQ/releases?q=booster-packs&expanded=true) under a Booster Pack catalog release, tagged with a Booster Pack-specific prefix, for example `booster-packs-*`.
 
+Use the filtered releases link as the download entry point:
 
-* Each Booster Pack catalog release will contain the complete set of Booster Pack zip assets that are currently supported for that catalog version, so users can go to one release to find every supported pack.
-* Each Booster Pack catalog release will include a top-level `booster-pack-catalog.json` that describes those release contents.
+* [Download Booster Packs](https://github.com/NVIDIA/CompileIQ/releases?q=booster-packs&expanded=true)
+
+Each Booster Pack catalog release contains the complete set of Booster Pack zip assets that are currently supported for that catalog version, so users can go to one release to find every supported pack.
+
+Each catalog release includes:
+
+* `booster-pack-catalog.json`, which describes the release contents.
+* `SHA256SUMS.txt`, which records checksums for the uploaded catalog and pack zip assets.
+* `booster-pack-debug.zip`, the diagnostic Debug Pack.
+* `booster-pack-helion.zip`, the Helion Booster Pack.
 * Each Booster Pack zip consists of ACFs and a pack-specific `booster-pack-manifest.json` that describes the ACFs for that pack.
 
-
-Until those assets are published, treat these as proposed asset names:
-* `helion-booster-pack.zip`
-* `debug-pack.zip`
-
-
-Each Booster Pack zip should include a pack-specific manifest file, for example `booster-pack-manifest.json`. The release notes, catalog file, and pack manifest are the source of truth for each pack; check them for the intended workload, compiler version and path or compiler stage, GPU target, validation context, and known caveats.
+The release notes, catalog file, and pack manifest are the source of truth for each pack; check them for the intended workload, compiler version and path or compiler stage, GPU target, validation context, and known caveats.
 
 ## Using a Booster Pack
 
 The basic workflow is:
 
 1. Run your workload without an ACF and save the baseline result.
-2. Download the Booster Pack from GitHub Releases.
+2. Download the Booster Pack from the filtered GitHub Releases page.
 3. Unzip the pack.
 4. Apply one ACF at a time through the Controls Interface.
 5. Validate correctness against a known-good reference.

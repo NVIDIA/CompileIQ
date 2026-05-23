@@ -1,15 +1,12 @@
-# Source of truth for the search-space release catalog.
+# Bootstrap metadata for the search-space release catalog.
 #
-# Each entry describes one .bin file expected in the release artifact staging
-# directory. At release-prep time, `dev/build_manifest.py` reads this file,
-# computes sha256 + size for each staged .bin, and emits manifest.json as the
-# release catalog.
+# The Search Space release scripts copy this file into dist/.../release-inputs
+# when there is no prior search-spaces-* release to seed from. Operators then
+# stage the approved .bin files and run `make update-search-space-catalog`.
+# That script treats the staged .bin files as the desired complete catalog and
+# rewrites the copied manifest-source.yaml before release assets are generated.
 #
-# To prepare a new catalog locally:
-#   1. Stage the .bin files outside the repo checkout.
-#   2. Add or update entries below (compiler, compiler_version, filename;
-#      variant and description optional).
-#   3. Run `make build-search-space-manifest SS_ARTIFACTS_DIR=/path/to/bins`.
+# Do not add large release .bin files to this directory or to Git history.
 #
 # Required fields per entry:    compiler, compiler_version, filename.
 # Optional fields per entry:    variant, description, search_space_format.

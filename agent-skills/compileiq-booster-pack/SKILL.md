@@ -49,11 +49,11 @@ Authoritative narrative: `docs/booster_packs.md`, `docs/flashinfer_booster.md`.
 
 | Pack | Workloads it was validated against | Notes |
 |---|---|---|
-| `helion-booster-pack.zip` | Helion FP8 Quantization, Causal Depthwise Convolution, Gated DeltaNet Forward | Has shown benefit on FlashInfer `BatchDecodeWithPagedKVCacheWrapper`; related attention workloads worth testing. |
-| `debug-pack.zip` | Diagnostic ACFs (`O0`, `O3`, others that disable or alter selected optimizations) | Not for speed — for **debugging**. Use the O0/O3 canary below before trusting any other pack. |
+| `booster-pack-helion.zip` | Helion FP8 Quantization, Causal Depthwise Convolution, Gated DeltaNet Forward | Has shown benefit on FlashInfer `BatchDecodeWithPagedKVCacheWrapper`; related attention workloads worth testing. |
+| `booster-pack-debug.zip` | Diagnostic ACFs (`O0`, `O3`, others that disable or alter selected optimizations) | Not for speed; for **debugging**. Use the O0/O3 canary below before trusting any other pack. |
 
-The repo's `release/booster-packs/TODO.md` outlines future pack catalog plus
-manifest schema. There is no runtime download API today. Don't invent one.
+The public release shape is documented in `docs/booster_packs.md`. There is no
+runtime download API today. Don't invent one.
 
 ## Steps
 
@@ -105,13 +105,18 @@ matching `booster-packs-*`, and download the relevant pack zip plus the
 top-level `booster-pack-catalog.json`.
 
 ```bash
-gh release download booster-packs-latest -R NVIDIA/CompileIQ -p '*.zip' -p 'booster-pack-catalog.json' -D ./packs
-unzip ./packs/helion-booster-pack.zip -d ./packs/helion-booster-pack
-cat ./packs/helion-booster-pack/booster-pack-manifest.json
+BOOSTER_TAG="$(gh release list -R NVIDIA/CompileIQ --limit 100 --json tagName,isDraft \
+  --jq '.[] | select(.isDraft == false) | select(.tagName | startswith("booster-packs-")) | .tagName' \
+  | head -n 1)"
+echo "Using $BOOSTER_TAG"
+gh release download "$BOOSTER_TAG" -R NVIDIA/CompileIQ -p 'booster-pack-helion.zip' -p 'booster-pack-catalog.json' -D ./packs
+unzip ./packs/booster-pack-helion.zip -d ./packs
+cat ./packs/booster-pack-helion/booster-pack-manifest.json
 ```
 
 Always read the per-pack manifest before applying: it lists the intended
 workload, compiler version, GPU target, validation context, and known caveats.
+For a reproducible rerun, set `BOOSTER_TAG` to the exact tag printed above.
 
 ### 2. Apply one ACF at a time
 
@@ -170,10 +175,8 @@ misconfigured script invocations before they pollute the reproducibility log.
 - **Pack name is not a hard boundary.** Helion Pack helps some FlashInfer
   cases (`docs/booster_packs.md:34`); test before assuming.
 - **Booster Packs are not search-space inputs.** Don't try to feed an ACF
-  through `PtxasSearchSpace(...)` — packs are pre-built candidates, not
-  search spaces. Per `release/booster-packs/TODO.md`: "Treat Booster Packs
-  as already-generated `.acf` candidate bundles, not inputs to
-  `PtxasSearchSpace` or `NvccSearchSpace`."
+  through `PtxasSearchSpace(...)`; packs are already-generated `.acf`
+  candidate bundles, not inputs to `PtxasSearchSpace` or `NvccSearchSpace`.
 - **Force recompilation.** If you can't *prove* a recompile happened between
   candidates, don't trust the measurement. See the cache-bust hints under the
   pre-flight canary.

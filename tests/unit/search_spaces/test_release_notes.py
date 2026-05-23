@@ -43,6 +43,8 @@ def test_build_notes_lists_catalog_metadata():
 
     assert "# Search spaces 2026.05.08-rc1" in notes
     assert "- Entries: 1" in notes
+    assert "Compiler search spaces" in notes
+    assert "https://nvidia.github.io/CompileIQ/stable/compilers_overview.html" in notes
     assert "| ptxas | 13.3 | att | `ptxas13.3_att_search_space.bin` | 123 |" in notes
     assert "`" + ("a" * 64) + "`" in notes
     assert "CIQ_SEARCH_SPACES_DIR" in notes
