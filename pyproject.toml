@@ -41,14 +41,11 @@ fonttools = "^4.60.1" #mlflow
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-# We are locked out of sphinx 9.0 because of sphinx-multiversion issues.
-# Alternative: https://pypi.org/project/sphinx-multiversion-scylla/ or wait for sphinx-multiversion to be updated.
 sphinx = "8.2.3"
 nvidia-sphinx-theme = ">=0.0.8"
 myst-parser = ">=4.0.1"
 sphinx-copybutton = ">=0.5.2"
 sphinx-design = ">=0.6.1"
-sphinx-multiversion = "^0.2.4"
 autodoc-pydantic = "^2.2.0"
 sphinxcontrib-mermaid = ">=0.9.2"
 

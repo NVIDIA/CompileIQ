@@ -1,0 +1,79 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - main
+      - 'release-[0-9]*.[0-9]*'
+    tags:
+      # GitHub tag globs are not regexes. The plan step below enforces final
+      # vMAJOR.MINOR.PATCH tags and skips pre-release tags that also match.
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: false
+
+jobs:
+  deploy-docs:
+    name: Build and deploy docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      POETRY_VIRTUALENVS_CREATE: "false"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch gh-pages branch
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages:gh-pages
+          else
+            echo "origin has no gh-pages branch yet; this will bootstrap it."
+          fi
+
+      - name: Determine docs deployment
+        id: docs
+        shell: bash
+        run: |
+          python dev/deploy_docs.py plan \
+            --github-ref "$GITHUB_REF" \
+            --github-output "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@v6
+        if: steps.docs.outputs.skip != 'true'
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          cache-dependency-path: 'poetry.lock'
+
+      - name: Install docs dependencies
+        if: steps.docs.outputs.skip != 'true' && steps.docs.outputs.metadata_only != 'true'
+        run: |
+          pip install poetry
+          poetry install --with docs
+
+      - name: Build Sphinx documentation
+        if: steps.docs.outputs.skip != 'true' && steps.docs.outputs.metadata_only != 'true'
+        run: |
+          DOC_VERSION="${{ steps.docs.outputs.version }}" \
+            poetry run sphinx-build -E -a docs public/html
+
+      - name: Deploy to gh-pages
+        if: steps.docs.outputs.skip != 'true'
+        shell: bash
+        run: |
+          flag=""
+          if [[ "${{ steps.docs.outputs.metadata_only }}" == "true" ]]; then
+            flag="--metadata-only"
+          fi
+          python dev/deploy_docs.py deploy \
+            --version "${{ steps.docs.outputs.version }}" \
+            $flag
+          git push origin gh-pages

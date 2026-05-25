@@ -67,14 +67,19 @@ test-cov: ## Run tests with coverage report
 test-cov-html: ## Run tests with coverage report
 	poetry run pytest tests/unit tests/integration -vvv --cov=compileiq --cov-report=html
 
-docs: ## Build multiversion documentation
-	CIQ_DOCS_ENV=dev poetry run sphinx-multiversion -E -a docs/ public/
+DOC_VERSION ?= latest
 
-docs-serve: ## Build and serve multiversion docs locally
+docs: ## Build documentation for DOC_VERSION=latest or MAJOR.MINOR
+	@version="$(DOC_VERSION)"; \
+	folder="latest"; \
+	if [ "$$version" != "latest" ]; then folder="v$$version"; fi; \
+	DOC_VERSION="$$version" poetry run sphinx-build -E -a docs "public/$$folder"
+
+docs-serve: ## Build and serve local docs preview
 	bash dev/view_docs.sh
 
 docs-preview: ## Build and serve live worktree docs locally
-	CIQ_DOCS_LOCAL_PREVIEW=1 CIQ_DOCS_BASE_URL=http://localhost:8000 poetry run sphinx-build -E -a docs public/main
+	CIQ_DOCS_LOCAL_PREVIEW=1 CIQ_DOCS_BASE_URL=http://localhost:8000 DOC_VERSION=latest poetry run sphinx-build -E -a docs public/latest
 	python3 -m http.server 8000 --directory public
 
 build: ## Build wheel and sdist

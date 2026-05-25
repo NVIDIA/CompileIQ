@@ -1,7 +1,6 @@
 # CompileIQ Documentation Configuration File
 
 import os
-import shutil
 import sys
 from datetime import datetime
 
@@ -14,7 +13,7 @@ project = "CompileIQ"
 copyright = f"{datetime.now().year}, NVIDIA Corporation"
 author = "NVIDIA Corporation"
 
-release = os.environ.get("SPHINX_CIQ_VER", "unstable")
+release = os.environ.get("DOC_VERSION", os.environ.get("SPHINX_CIQ_VER", "latest"))
 version = release
 
 # -- General configuration ---------------------------------------------------
@@ -29,7 +28,6 @@ extensions = [
     "myst_parser",
     "sphinx_design",
     "sphinx_copybutton",
-    "sphinx_multiversion",
     "sphinxcontrib.autodoc_pydantic",
     "sphinxcontrib.mermaid",
 ]
@@ -56,7 +54,7 @@ html_theme = "nvidia_sphinx_theme"
 
 html_logo = "_static/nvidia-logo.png"
 
-html_baseurl = (
+docs_root_url = (
     os.environ.get(
         "CIQ_DOCS_BASE_URL",
         "https://nvidia.github.io/CompileIQ/",
@@ -64,7 +62,16 @@ html_baseurl = (
     + "/"
 )
 
-switcher_version = os.environ.get("SPHINX_MULTIVERSION_VERSION", "main")
+switcher_version = os.environ.get("DOC_VERSION", release)
+
+if switcher_version == "latest":
+    docs_version_folder = "latest"
+elif switcher_version.startswith("v"):
+    docs_version_folder = switcher_version
+else:
+    docs_version_folder = f"v{switcher_version}"
+
+html_baseurl = f"{docs_root_url}{docs_version_folder}/"
 html_context = {
     "base_url": html_baseurl.rstrip("/"),
 }
@@ -93,7 +100,7 @@ html_theme_options = {
 
 if not local_preview:
     html_theme_options["switcher"] = {
-        "json_url": f"{html_baseurl}switcher.json",
+        "json_url": f"{docs_root_url}versions.json",
         "version_match": switcher_version,
     }
 
@@ -153,19 +160,6 @@ autodoc_default_options = {
 
 autodoc_type_hints = "description"
 
-# Multiversion configuration
-smv_branch_whitelist = r"^main$"
-smv_tag_whitelist = r"^v?(\d+!)?\d+(\.\d+)*((a|b|rc)\d+)?(\.post\d+)?(\.dev\d+)?$"
-smv_remote_whitelist = r"^origin$"
-smv_released_pattern = r"^refs/tags/.*$"
-smv_outputdir_format = "{ref.name}"
-smv_latest_version = "main"
-smv_prefer_remote_refs = True
-
-# Local previews use sphinx-build against the live worktree, where
-# sphinx-multiversion's ``versions`` template variable is unavailable.
-html_additional_pages = {} if local_preview else {"switcher.json": "switcher.json"}
-
 # Set Python domain primary
 primary_domain = "py"
 
@@ -197,31 +191,7 @@ def autodoc_skip_enum_members(app, what, name, obj, skip, options):
     return skip
 
 
-def on_build_finished(app, exception):
-    if exception:
-        return
-    root = os.path.dirname(app.outdir)
-    src = os.path.join(app.outdir, "switcher.json.html")
-    dst = os.path.join(root, "switcher.json")
-    if os.path.exists(src):
-        shutil.copy2(src, dst)
-
-    # Ensuring the pages root redirects to the latest version
-    index_path = os.path.join(root, "index.html")
-    if not os.path.exists(index_path):
-        with open(index_path, "w") as f:
-            f.write(
-                f"<!DOCTYPE html><html><head>"
-                f'<meta http-equiv="refresh" content="0; url=./{smv_latest_version}/">'
-                f'<link rel="canonical" href="./{smv_latest_version}/">'
-                f"</head><body>"
-                f'<p>Redirecting to <a ""href="./{smv_latest_version}/">{smv_latest_version}</a>...</p>'  # noqa
-                f"</body></html>\n"
-            )
-
-
 def setup(app):
     if os.path.exists("_static/custom.css"):
         app.add_css_file("custom.css")
     app.connect("autodoc-skip-member", autodoc_skip_enum_members)
-    app.connect("build-finished", on_build_finished)
