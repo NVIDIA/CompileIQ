@@ -1,0 +1,722 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Getting Started with CompileIQ &#8212; CompileIQ Documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="_static/documentation_options.js?v=c6e86fd7"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=5ceeb459"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting_started';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://nvidia.github.io/CompileIQ/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+
+    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/latest/getting_started.html" />
+    <link rel="icon" href="_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tuning NVIDIA Compilers" href="compilers_overview.html" />
+    <link rel="prev" title="Install Instructions" href="install.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="latest" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Getting Started with CompileIQ</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">NVIDIA Compiler Tuning</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="compilers_overview.html">Tuning NVIDIA Compilers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_space_release_testing.html">Search-Space Retrieval Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="booster_packs.html">Booster Packs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ptx_spill_example.html">Tuning PTXAS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvcc_example.html">Tuning NVCC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="triton_example.html">Tuning PTXAS in Triton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking Guidelines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="workers.html">Choosing how your application executes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">CompileIQ and Normalization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">More Examples</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="xgboost.html">Fine-tune an XGBoost ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiment_tracking.html">Experiment Tracking with CompileIQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flashinfer_booster.html">Applying a Booster Pack to FlashInfer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Getting Started with CompileIQ</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="getting-started-with-compileiq">
+<h1>Getting Started with CompileIQ<a class="headerlink" href="#getting-started-with-compileiq" title="Link to this heading">#</a></h1>
+<p>This guide walks you through creating your first CompileIQ search. We’ll create a simple optimization problem that demonstrates the core concepts.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">#</a></h2>
+<p>Before starting, make sure you have CompileIQ installed. For detailed installation instructions, see the <a class="reference internal" href="install.html"><span class="std std-doc">Installation Guide</span></a>.</p>
+</section>
+<section id="basic-example-single-objective-optimization">
+<h2>Basic Example: Single Objective Optimization<a class="headerlink" href="#basic-example-single-objective-optimization" title="Link to this heading">#</a></h2>
+<p>In this example, we’ll optimize a simple mathematical function with multiple parameters, showcasing different types of search spaces.</p>
+<section id="create-your-first-search">
+<h3>Create Your First Search<a class="headerlink" href="#create-your-first-search" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.ciq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Search</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SearchConfiguration</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">compileiq.search_spaces.base</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ss</span>
+
+<span class="c1"># Define the objective function to minimize</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">score</span>
+
+<span class="c1"># Define the search space</span>
+<span class="n">search_space_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Continuous range</span>
+    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span>  <span class="c1"># Discrete choices</span>
+    <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">literal</span><span class="p">(</span><span class="n">const_value</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">knockout_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Binary parameter</span>
+<span class="p">}</span>
+
+<span class="c1"># Configure the search</span>
+<span class="n">main_config</span> <span class="o">=</span> <span class="n">SearchConfiguration</span><span class="p">(</span>
+    <span class="n">pool_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>      <span class="c1"># Size of population</span>
+    <span class="n">generations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>      <span class="c1"># Number of iterations</span>
+    <span class="n">mutate_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>   <span class="c1"># Mutation probability</span>
+    <span class="n">problem_type</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="c1"># Minimize objective</span>
+    <span class="n">num_objectives</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>   <span class="c1"># Single objective</span>
+<span class="p">)</span>
+
+<span class="c1"># Create and run the search</span>
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best Result: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">get_best_result</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="understanding-the-code">
+<h3>Understanding the Code<a class="headerlink" href="#understanding-the-code" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Objective Function</strong></p>
+<ul class="simple">
+<li><p>Takes a configuration dictionary as input</p></li>
+<li><p>Returns a score to optimize (minimize in this case)</p></li>
+<li><p>Can include any computation you need to evaluate solutions</p></li>
+</ul>
+</li>
+<li><p><strong>Search Space Definition</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">range</span></code>: Continuous numerical range with step size</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">choice</span></code>: List of discrete options</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">literal</span></code>: Binary parameter that can be knocked out</p></li>
+</ul>
+</li>
+<li><p><strong>Search Configuration</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pool_size</span></code>: Number of solutions in each generation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">generations</span></code>: Number of iterations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mutate_rate</span></code>: Probability of mutation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_type</span></code>: “min” or “max”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_objectives</span></code>: Number of objectives to optimize</p></li>
+</ul>
+</li>
+<li><p><strong>Running the Search</strong></p>
+<ul class="simple">
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">Search</span></code> instance with your configurations</p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">start()</span></code> to run the optimization</p></li>
+<li><p>Access results through the returned Results object</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="multi-objective-searches">
+<h3>Multi-Objective Searches<a class="headerlink" href="#multi-objective-searches" title="Link to this heading">#</a></h3>
+<p>CompileIQ also supports multi-objective searches. Let’s modify the previous example to now return two different results:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.ciq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Search</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SearchConfiguration</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">compileiq.search_spaces.base</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ss</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">multiobjective</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="n">score_1</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span>
+    <span class="n">score_2</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">score_1</span><span class="p">,</span> <span class="n">score_2</span> <span class="c1"># returning two scores</span>
+
+
+<span class="n">search_space_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Continuous range</span>
+    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span>  <span class="c1"># Discrete choices</span>
+    <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">literal</span><span class="p">(</span><span class="n">const_value</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">knockout_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Binary parameter</span>
+<span class="p">}</span>
+
+<span class="n">main_config</span> <span class="o">=</span> <span class="n">SearchConfiguration</span><span class="p">(</span>
+    <span class="n">pool_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">generations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">mutate_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">problem_type</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">,</span>
+    <span class="n">num_objectives</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="c1"># Updating num of objectives</span>
+<span class="p">)</span>
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">multiobjective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">pareto_front</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The two important differences are setting <code class="docutils literal notranslate"><span class="pre">num_objectives=2</span></code> and returning two values from the objective function.</p>
+<p>The return value of <code class="docutils literal notranslate"><span class="pre">results.pareto_front()</span></code> is a list with the Pareto-efficient rows.</p>
+</section>
+<section id="sample-the-search-space">
+<h3>Sample the Search Space<a class="headerlink" href="#sample-the-search-space" title="Link to this heading">#</a></h3>
+<p>You can use <code class="docutils literal notranslate"><span class="pre">Search.sample</span></code> to retrieve randomly generated samples from your search space. This helps you understand what will be forwarded to your objective function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create and run the search</span>
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, we retrieve 5 samples, and you should get a list with 5 sampled values.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mf">17.5</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mf">5.5</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="s1">&#39;constant&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mf">15.0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="s1">&#39;constant&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mf">11.5</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="s1">&#39;constant&#39;</span><span class="p">}]</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>CompileIQ supports more advanced features:</p>
+<ul class="simple">
+<li><p>Multi-objective optimization</p></li>
+<li><p>Distributed computing</p></li>
+<li><p>Checkpointing for long-running searches</p></li>
+<li><p>Custom normalization strategies</p></li>
+</ul>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/NVIDIA/CompileIQ/blob/main/examples">Examples Gallery</a> - More quick examples including:</p>
+<ul>
+<li><p>Multi-objective optimization (<code class="docutils literal notranslate"><span class="pre">multi_objective.py</span></code>)</p></li>
+<li><p>Distributed searches (<code class="docutils literal notranslate"><span class="pre">distributed.py</span></code>)</p></li>
+<li><p>Checkpointing (<code class="docutils literal notranslate"><span class="pre">checkpointing.py</span></code>)</p></li>
+<li><p>XGBoost integration (<code class="docutils literal notranslate"><span class="pre">ciq_xgboost.py</span></code>)</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="install.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Install Instructions</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="compilers_overview.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tuning NVIDIA Compilers</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-example-single-objective-optimization">Basic Example: Single Objective Optimization</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-your-first-search">Create Your First Search</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#understanding-the-code">Understanding the Code</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-objective-searches">Multi-Objective Searches</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-the-search-space">Sample the Search Space</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

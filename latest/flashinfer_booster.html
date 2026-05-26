@@ -1,0 +1,694 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Applying a Booster Pack to FlashInfer &#8212; CompileIQ Documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="_static/documentation_options.js?v=c6e86fd7"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=5ceeb459"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'flashinfer_booster';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://nvidia.github.io/CompileIQ/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+
+    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/latest/flashinfer_booster.html" />
+    <link rel="icon" href="_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Documentation" href="api.html" />
+    <link rel="prev" title="Experiment Tracking with CompileIQ" href="experiment_tracking.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="latest" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">NVIDIA Compiler Tuning</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="compilers_overview.html">Tuning NVIDIA Compilers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_space_release_testing.html">Search-Space Retrieval Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="booster_packs.html">Booster Packs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ptx_spill_example.html">Tuning PTXAS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvcc_example.html">Tuning NVCC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="triton_example.html">Tuning PTXAS in Triton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking Guidelines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="workers.html">Choosing how your application executes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">CompileIQ and Normalization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">More Examples</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="xgboost.html">Fine-tune an XGBoost ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiment_tracking.html">Experiment Tracking with CompileIQ</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Applying a Booster Pack to FlashInfer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Applying a Booster Pack to FlashInfer</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="applying-a-booster-pack-to-flashinfer">
+<h1>Applying a Booster Pack to FlashInfer<a class="headerlink" href="#applying-a-booster-pack-to-flashinfer" title="Link to this heading">#</a></h1>
+<p>This page shows how to try the Helion Booster Pack on FlashInfer’s <code class="docutils literal notranslate"><span class="pre">BatchDecodeWithPagedKVCacheWrapper</span></code> benchmark.</p>
+<p>The Booster Pack contains pre-made Advanced Controls Files (ACFs). Each ACF changes compiler decisions through the NVIDIA Controls Interface, without changing the FlashInfer source code. Even though this Booster Pack was generated using Helion kernels, some cases of FlashInfer do benefit from the same ACFs.</p>
+<blockquote>
+<div><p>Booster Packs are not a replacement for validation. ACFs can cause compilation errors, hangs, crashes, wrong answers, regressions, or noisy measurements.</p>
+</div></blockquote>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">#</a></h2>
+<p>Use an environment that matches the Booster Pack release notes and manifest. At minimum, check:</p>
+<ul class="simple">
+<li><p>GPU model and compute capability.</p></li>
+<li><p>CUDA Toolkit version.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nvcc</span></code> and <code class="docutils literal notranslate"><span class="pre">ptxas</span></code> paths.</p></li>
+<li><p>FlashInfer version or source checkout.</p></li>
+<li><p>Benchmark command and input shape.</p></li>
+</ul>
+<p>For this workflow, use CTK 13.3 or newer so <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> and <code class="docutils literal notranslate"><span class="pre">ptxas</span></code> support the Controls Interface.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CUDA_HOME</span><span class="o">=</span>/path/to/cuda
+<span class="nb">export</span><span class="w"> </span><span class="nv">CUDA_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$CUDA_HOME</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">FLASHINFER_NVCC</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$CUDA_HOME</span><span class="s2">/bin/nvcc&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">FLASHINFER_CUDA_ARCH_LIST</span><span class="o">=</span><span class="m">10</span>.0a
+<span class="nb">export</span><span class="w"> </span><span class="nv">FLASHINFER_NO_DOWNLOAD</span><span class="o">=</span><span class="m">1</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$CUDA_HOME</span><span class="s2">/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>Verify the compiler paths before running the benchmark:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;</span><span class="nv">$FLASHINFER_NVCC</span><span class="s2">&quot;</span><span class="w"> </span>--version
+<span class="s2">&quot;</span><span class="nv">$CUDA_HOME</span><span class="s2">/bin/ptxas&quot;</span><span class="w"> </span>--version
+<span class="s2">&quot;</span><span class="nv">$CUDA_HOME</span><span class="s2">/bin/ptxas&quot;</span><span class="w"> </span>--help<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>apply-controls
+</pre></div>
+</div>
+<p>If your toolkit, GPU, or FlashInfer setup differs from the release notes, you can still test the pack, but treat the result as a new validation target.</p>
+</section>
+<section id="use-source-flashinfer">
+<h2>Use Source FlashInfer<a class="headerlink" href="#use-source-flashinfer" title="Link to this heading">#</a></h2>
+<p>Use a FlashInfer source checkout or an editable install so the benchmark compiles kernels in your current environment. Avoid prebuilt kernel caches when evaluating ACFs.</p>
+<p>Confirm which FlashInfer package Python imports:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+<span class="s">import flashinfer</span>
+<span class="s">print(flashinfer.__file__)</span>
+<span class="s">PY</span>
+</pre></div>
+</div>
+<p>If your environment includes prebuilt FlashInfer cache packages, make sure they are not being used for this experiment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+<span class="s">import importlib.util</span>
+<span class="s">for name in [&quot;flashinfer_cubin&quot;, &quot;flashinfer_jit_cache&quot;]:</span>
+<span class="s">    spec = importlib.util.find_spec(name)</span>
+<span class="s">    print(name, spec)</span>
+<span class="s">    if spec is not None:</span>
+<span class="s">      raise RuntimeError(f&quot;Package {name} is present in the environment. Please remove it before proceeding.&quot;)</span>
+<span class="s">PY</span>
+</pre></div>
+</div>
+<p>For a clean ACF test, both cache package checks should print <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</section>
+<section id="download-the-pack">
+<h2>Download the Pack<a class="headerlink" href="#download-the-pack" title="Link to this heading">#</a></h2>
+<p>Download <code class="docutils literal notranslate"><span class="pre">booster-pack-helion.zip</span></code> from the most recent booster pack release in the <a class="reference external" href="https://github.com/NVIDIA/CompileIQ/releases?q=booster-packs&amp;amp;expanded=true">filtered CompileIQ GitHub Releases page</a>, then unzip it into your workspace.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>unzip<span class="w"> </span>booster-pack-helion.zip<span class="w"> </span>-d<span class="w"> </span>.
+</pre></div>
+</div>
+<p>Read the manifest before running the candidates. The manifest and release notes are the source of truth for the intended workload, compiler version, GPU target, validation context, and known caveats.</p>
+</section>
+<section id="run-a-baseline">
+<h2>Run a Baseline<a class="headerlink" href="#run-a-baseline" title="Link to this heading">#</a></h2>
+<p>Run the benchmark once without an ACF. Save the command, environment, and result; this is the number every candidate must beat.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">unset</span><span class="w"> </span>FLASHINFER_EXTRA_CUDAFLAGS
+
+python<span class="w"> </span>benchmarks/flashinfer_benchmark.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--routine<span class="w"> </span>BatchDecodeWithPagedKVCacheWrapper<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--backends<span class="w"> </span>fa2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--page_size<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch_size<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--s_qo<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--s_kv<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--num_qo_heads<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--num_kv_heads<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--head_dim_qk<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--head_dim_vo<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--q_dtype<span class="w"> </span>bfloat16
+</pre></div>
+</div>
+<p>If your benchmark has meaningful variability, run several trials and compare candidates against the aggregate baseline instead of a single run.</p>
+</section>
+<section id="apply-one-acf">
+<h2>Apply One ACF<a class="headerlink" href="#apply-one-acf" title="Link to this heading">#</a></h2>
+<p>Choose one ACF from the unzipped pack and pass it to PTXAS through NVCC:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">ACF_FILE</span><span class="o">=</span>/path/to/booster-pack-helion/candidate.acf
+<span class="nb">export</span><span class="w"> </span><span class="nv">FLASHINFER_EXTRA_CUDAFLAGS</span><span class="o">=</span><span class="s2">&quot;--ptxas-options=--apply-controls=</span><span class="nv">$ACF_FILE</span><span class="s2">&quot;</span>
+
+python<span class="w"> </span>benchmarks/flashinfer_benchmark.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--routine<span class="w"> </span>BatchDecodeWithPagedKVCacheWrapper<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--backends<span class="w"> </span>fa2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--page_size<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--batch_size<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--s_qo<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--s_kv<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--num_qo_heads<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--num_kv_heads<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--head_dim_qk<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--head_dim_vo<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--q_dtype<span class="w"> </span>bfloat16
+</pre></div>
+</div>
+<p>Apply only one ACF per run. If the benchmark fails to compile, hangs, crashes, returns wrong answers, or regresses, reject that candidate and move to the next one.</p>
+</section>
+<section id="force-recompilation">
+<h2>Force Recompilation<a class="headerlink" href="#force-recompilation" title="Link to this heading">#</a></h2>
+<p>Framework and benchmark caches can hide whether an ACF was actually applied. Use a fresh workspace or clear the relevant cache before each candidate.</p>
+<p>For FlashInfer experiments, make sure the benchmark recompiles kernels after changing <code class="docutils literal notranslate"><span class="pre">FLASHINFER_EXTRA_CUDAFLAGS</span></code>. If you cannot prove recompilation happened, do not trust the measurement.</p>
+</section>
+<section id="validate-the-result">
+<h2>Validate the Result<a class="headerlink" href="#validate-the-result" title="Link to this heading">#</a></h2>
+<p>Treat correctness validation as part of the benchmark workflow. Compare each candidate against a known-good reference, and test multiple input shapes when those shapes matter for your workload.</p>
+<p>Record enough information to reproduce the result:</p>
+<ul class="simple">
+<li><p>ACF filename.</p></li>
+<li><p>Manifest and release version.</p></li>
+<li><p>Benchmark command.</p></li>
+<li><p>GPU model and driver.</p></li>
+<li><p>CTK version.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nvcc</span></code> and <code class="docutils literal notranslate"><span class="pre">ptxas</span></code> paths and versions.</p></li>
+<li><p>FlashInfer version or commit.</p></li>
+<li><p>Input shape.</p></li>
+<li><p>Baseline result.</p></li>
+<li><p>Candidate result.</p></li>
+<li><p>Correctness status.</p></li>
+</ul>
+<p>Keep the ACF only if it compiles, passes correctness checks, and improves the no-ACF baseline.</p>
+</section>
+<section id="results">
+<h2>Results<a class="headerlink" href="#results" title="Link to this heading">#</a></h2>
+<p>Below we show comprehensive results for different cases of <code class="docutils literal notranslate"><span class="pre">BatchDecodeWithPagedKVCacheWrapper</span></code>. This data was generated on a B200 machine.</p>
+<figure>
+  <img src="_static/decode_acf_s_curve_full.svg" alt="FlashInfer Batch Decode ACF S-curve" style="width: 100%;" />
+  <figcaption>FlashInfer <code>BatchDecodeWithPagedKVCacheWrapper</code> results across ACF candidates.</figcaption>
+</figure>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="experiment_tracking.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Experiment Tracking with CompileIQ</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="api.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">API Documentation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-source-flashinfer">Use Source FlashInfer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#download-the-pack">Download the Pack</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-baseline">Run a Baseline</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-one-acf">Apply One ACF</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-recompilation">Force Recompilation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-result">Validate the Result</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#results">Results</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

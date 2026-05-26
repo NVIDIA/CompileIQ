@@ -1,0 +1,879 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Choosing how your application executes &#8212; CompileIQ Documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="_static/documentation_options.js?v=c6e86fd7"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=5ceeb459"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'workers';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://nvidia.github.io/CompileIQ/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+
+    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/latest/workers.html" />
+    <link rel="icon" href="_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CompileIQ and Normalization" href="normalization.html" />
+    <link rel="prev" title="Benchmarking Guidelines" href="benchmarking.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="latest" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">NVIDIA Compiler Tuning</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="compilers_overview.html">Tuning NVIDIA Compilers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_space_release_testing.html">Search-Space Retrieval Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="booster_packs.html">Booster Packs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ptx_spill_example.html">Tuning PTXAS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvcc_example.html">Tuning NVCC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="triton_example.html">Tuning PTXAS in Triton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking Guidelines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Choosing how your application executes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">CompileIQ and Normalization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">More Examples</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="xgboost.html">Fine-tune an XGBoost ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiment_tracking.html">Experiment Tracking with CompileIQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flashinfer_booster.html">Applying a Booster Pack to FlashInfer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Choosing how your application executes</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="choosing-how-your-application-executes">
+<h1>Choosing how your application executes<a class="headerlink" href="#choosing-how-your-application-executes" title="Link to this heading">#</a></h1>
+<p>CompileIQ supports parallel and distributed workload execution through different worker classes. You pass the worker class directly when creating a <code class="docutils literal notranslate"><span class="pre">Search</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiProcessWorker</span>
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">MultiProcessWorker</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Built-in worker classes are available in <code class="docutils literal notranslate"><span class="pre">compileiq.worker</span></code>: <code class="docutils literal notranslate"><span class="pre">MultiProcessWorker</span></code> (default), <code class="docutils literal notranslate"><span class="pre">IsoMultiProcessWorker</span></code>, <code class="docutils literal notranslate"><span class="pre">RayWorker</span></code>, and <code class="docutils literal notranslate"><span class="pre">AsyncWorker</span></code>.</p>
+<section id="native-worker-multiprocessworker">
+<h2>Native Worker (MultiProcessWorker)<a class="headerlink" href="#native-worker-multiprocessworker" title="Link to this heading">#</a></h2>
+<p>The native worker is the default. It uses Python’s native <code class="docutils literal notranslate"><span class="pre">multiprocessing</span></code> library to spin up processes that execute your objective function.</p>
+<blockquote>
+<div><p>Warning: It does not support distributed machines; it only parallelizes task execution locally.</p>
+</div></blockquote>
+<p>You specify the number of processes using the keyword <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> when starting the search. Example:</p>
+<blockquote>
+<div><p>Note: CompileIQ defaults to the <code class="docutils literal notranslate"><span class="pre">forkserver</span></code> start method for multiprocessing (configurable via <code class="docutils literal notranslate"><span class="pre">CIQ_PROCESS_MODE</span></code>). When running from a script, keep your entry point under <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">&quot;__main__&quot;:</span></code> to avoid issues on some platforms.</p>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiProcessWorker</span>
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">MultiProcessWorker</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">num_workers</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="isolated-worker-isomultiprocessworker">
+<h2>Isolated Worker (IsoMultiProcessWorker)<a class="headerlink" href="#isolated-worker-isomultiprocessworker" title="Link to this heading">#</a></h2>
+<p>Like <code class="docutils literal notranslate"><span class="pre">MultiProcessWorker</span></code>, but spawns one fresh process per task instead of reusing a pool. Useful when your objective function tends to hang, leak resources, or otherwise needs to be killed cleanly on timeout — each task is fully isolated, and the parent enforces <code class="docutils literal notranslate"><span class="pre">task_timeout</span></code> by killing the process.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsoMultiProcessWorker</span>
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">IsoMultiProcessWorker</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">num_workers</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">task_timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Note: <code class="docutils literal notranslate"><span class="pre">IsoMultiProcessWorker</span></code> defaults to the <code class="docutils literal notranslate"><span class="pre">fork</span></code> start method (overridable via <code class="docutils literal notranslate"><span class="pre">CIQ_PROCESS_MODE</span></code>).</p>
+</div></blockquote>
+</section>
+<section id="async-worker">
+<h2>Async Worker<a class="headerlink" href="#async-worker" title="Link to this heading">#</a></h2>
+<p>The async worker leverages Python concurrency through async calls. It is your responsibility to <a class="reference external" href="https://docs.python.org/3/library/asyncio.html">enable asynchronous capabilities</a> inside the asynchronous function; otherwise, the worker will not take advantage of any concurrency and will execute sequentially.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncWorker</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="o">...</span>
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">AsyncWorker</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Note: The objective function must be declared as an <code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">def</span></code>.</p>
+</div></blockquote>
+</section>
+<section id="ray-worker">
+<h2>Ray Worker<a class="headerlink" href="#ray-worker" title="Link to this heading">#</a></h2>
+<p>A Ray worker type leverages a Ray cluster to parallelize your objective function locally or in a distributed environment. It is the user’s responsibility to configure the cluster and set the correct resources for the task.</p>
+<p>We recommend reading Ray’s <a class="reference external" href="https://docs.ray.io/en/latest/cluster/getting-started.html">official documentation</a> if you are interested in performing a distributed search.</p>
+<blockquote>
+<div><p><a class="reference external" href="https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html">On-premise deployment</a> is specifically useful when you have full SSH access to all machines.</p>
+</div></blockquote>
+<p>All Ray workers must have CompileIQ installed, as well as any other required libraries for your run.
+All Ray workers must have CompileIQ installed, as well as any other required libraries for your run.</p>
+<p>You also need to run the script that starts the search on a machine that is attached to the cluster (a head or worker).</p>
+<p>You can leverage the Ray worker as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayWorker</span>
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">RayWorker</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>If your objective is to use Ray but run locally, you don’t need to set up a cluster; the code runs as shown above.</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">tuner.start()</span></code> accepts Ray task options (for example, <code class="docutils literal notranslate"><span class="pre">num_cpus</span></code>, <code class="docutils literal notranslate"><span class="pre">num_gpus</span></code>, <code class="docutils literal notranslate"><span class="pre">resources</span></code>, <code class="docutils literal notranslate"><span class="pre">scheduling_strategy</span></code>). These should reflect how many resources a single run of your objective function consumes; this impacts how Ray schedules workers for your execution. Unrecognized options are ignored.</p>
+<p>Take a look at all <a class="reference external" href="https://docs.ray.io/en/latest/ray-core/api/doc/ray.remote_function.RemoteFunction.options.html#ray.remote_function.RemoteFunction.options">resource options available for Ray</a>.</p>
+<blockquote>
+<div><p>Tip: For a distributed cluster, initialize Ray before calling <code class="docutils literal notranslate"><span class="pre">tuner.start()</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">ray.init(address=&quot;auto&quot;)</span></code>).</p>
+</div></blockquote>
+<section id="tips-when-using-ray">
+<h3>Tips when using Ray<a class="headerlink" href="#tips-when-using-ray" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Ensure all cluster machines have the necessary environment to run your function (CompileIQ installed plus any other required libraries).</p></li>
+<li><p>Ensure all cluster machines have the necessary environment to run your function (CompileIQ installed plus any other required libraries).</p></li>
+<li><p>A Ray cluster requires a head node, which also executes tasks and may negatively impact sensitive measurements. You can prevent the head node from picking up tasks by starting it with <code class="docutils literal notranslate"><span class="pre">ray</span> <span class="pre">start</span> <span class="pre">--head</span> <span class="pre">--num-cpus=0</span></code>.</p></li>
+<li><p>Specifying <code class="docutils literal notranslate"><span class="pre">num_cpus</span></code> in <code class="docutils literal notranslate"><span class="pre">tuner.start()</span></code> does not pin or limit your function to the specified core. Please refer to <a class="reference external" href="https://docs.ray.io/en/latest/ray-core/scheduling/resources.htm">Ray Resources</a> for more details.</p></li>
+<li><p>You can find a CompileIQ with Ray <a class="reference external" href="https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/distributed.py">example in our repository</a>.</p></li>
+<li><p>You can deploy your entire cluster with a <code class="docutils literal notranslate"><span class="pre">.yml</span></code> file using the <a class="reference external" href="https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html#start-ray-with-the-ray-cluster-launcher">Ray Cluster Launcher</a>.</p></li>
+</ul>
+</section>
+</section>
+<section id="handling-a-multi-gpu-environment">
+<h2>Handling a Multi-GPU Environment<a class="headerlink" href="#handling-a-multi-gpu-environment" title="Link to this heading">#</a></h2>
+<p>Ray is the only supported worker that automatically assigns/schedules GPU IDs to your objective function. Therefore, if you have a multi-machine and/or multi-GPU environment, you must use a <code class="docutils literal notranslate"><span class="pre">RayWorker</span></code> or create your own custom worker.</p>
+<p>Ray will automatically assign nodes and GPU resources based on the parameters passed through <code class="docutils literal notranslate"><span class="pre">.start()</span></code>. To know which GPU was assigned to the current task/objective, you can check the <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> environment variable or use <code class="docutils literal notranslate"><span class="pre">ray.get_gpu_ids()</span></code>.</p>
+<blockquote>
+<div><p>Note that it is the user’s responsibility to retrieve the GPU IDs and configure execution so this is the only GPU being used. Some existing applications will already leverage <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> and set things behind the scenes, while others will require you to explicitly specify the ID through a different API.</p>
+</div></blockquote>
+<p>Below is an example in a Ray Cluster with a head node without GPUs and a single worker with 2 GPUs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;My Visible devices are: </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;CUDA_VISIBLE_DEVICES&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="mi">0</span>
+
+<span class="o">...</span>
+
+<span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">num_gpus</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">2025</span>-01-27<span class="w"> </span><span class="m">20</span>:01:18,507<span class="w"> </span>INFO<span class="w"> </span>worker.py:1636<span class="w"> </span>--<span class="w"> </span>Connecting<span class="w"> </span>to<span class="w"> </span>existing<span class="w"> </span>Ray<span class="w"> </span>cluster<span class="w"> </span>at<span class="w"> </span>address:<span class="w"> </span>xxxxxx:6379...
+<span class="m">2025</span>-01-27<span class="w"> </span><span class="m">20</span>:01:18,518<span class="w"> </span>INFO<span class="w"> </span>worker.py:1812<span class="w"> </span>--<span class="w"> </span>Connected<span class="w"> </span>to<span class="w"> </span>Ray<span class="w"> </span>cluster.<span class="w"> </span>View<span class="w"> </span>the<span class="w"> </span>dashboard<span class="w"> </span>at<span class="w"> </span>http://127.0.0.1:8265
+<span class="o">(</span>objective<span class="w"> </span><span class="nv">pid</span><span class="o">=</span><span class="m">32341</span>,<span class="w"> </span><span class="nv">ip</span><span class="o">=</span>xxxxx<span class="o">)</span><span class="w"> </span>My<span class="w"> </span>Visible<span class="w"> </span>devices<span class="w"> </span>are:<span class="w"> </span><span class="m">0</span>
+<span class="o">(</span>objective<span class="w"> </span><span class="nv">pid</span><span class="o">=</span><span class="m">32774</span>,<span class="w"> </span><span class="nv">ip</span><span class="o">=</span>xxxxx<span class="o">)</span><span class="w"> </span>My<span class="w"> </span>Visible<span class="w"> </span>devices<span class="w"> </span>are:<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<p>Notice how each objective function was assigned a different GPU ID.</p>
+</section>
+<section id="create-your-own-custom-worker">
+<h2>Create your own Custom Worker<a class="headerlink" href="#create-your-own-custom-worker" title="Link to this heading">#</a></h2>
+<p>Although the existing workers cover the most common cases, CompileIQ also offers a way for the user to extend the existing worker infrastructure and create something custom.</p>
+<p>A custom worker can help you parallelize your workload, save states between generations, and have more fine-grained control over logging and debugging information.</p>
+<p>In this section, we create a sequential worker. The sequential worker takes each parameter CompileIQ provides and runs the user’s objective function sequentially until all scores are collected.</p>
+<p>To create a custom worker, we can inherit from the most basic worker class called <code class="docutils literal notranslate"><span class="pre">BaseWorker</span></code> defined in <code class="docutils literal notranslate"><span class="pre">compileiq.worker</span></code>.</p>
+<section id="base-worker">
+<h3>Base Worker<a class="headerlink" href="#base-worker" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Worker</span></code> class is simple and only requires you to implement the <code class="docutils literal notranslate"><span class="pre">run()</span></code> method. It also maintains a few pieces of state and provides a few utilities, like a very basic normalization function.</p>
+<blockquote>
+<div><p>You can find detailed information about <code class="docutils literal notranslate"><span class="pre">Worker</span></code> in our <a class="reference internal" href="api.html#compileiq.types.Worker"><span class="std std-ref">api documentation</span></a></p>
+</div></blockquote>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> method will receive:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code> is the user-defined objective function</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params_pool</span></code> is a list (usually of size <code class="docutils literal notranslate"><span class="pre">pool_size</span></code>) with all parameters CompileIQ sampled for this generation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params_ids</span></code> is a list of IDs (one per element in <code class="docutils literal notranslate"><span class="pre">params_pool</span></code>) used to uniquely identify each evaluation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_function_returns</span></code> is the number of expected returns, i.e., the number of objectives defined by the user</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> these are any additional keyword parameters you pass to <code class="docutils literal notranslate"><span class="pre">.start()</span></code></p></li>
+</ul>
+<p>It expects a list of <code class="docutils literal notranslate"><span class="pre">Score</span></code> objects as a return. <code class="docutils literal notranslate"><span class="pre">Score</span></code> contains metadata so we can associate the parameters with their scores.</p>
+<blockquote>
+<div><p>You can find detailed information about <code class="docutils literal notranslate"><span class="pre">Score</span></code> in our <a class="reference internal" href="api.html#compileiq.utils.validation.Score"><span class="std std-ref">api documentation</span></a></p>
+</div></blockquote>
+</section>
+<section id="sequential-worker">
+<h3>Sequential Worker<a class="headerlink" href="#sequential-worker" title="Link to this heading">#</a></h3>
+<p>Now that we know what we can receive and what we should return, let’s create a worker that sequentially calls the user’s objective function with each parameter in <code class="docutils literal notranslate"><span class="pre">params_pool</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SequentialWorker</span><span class="p">(</span><span class="n">BaseWorker</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">function</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span>
+        <span class="n">params_pool</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">params_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">num_function_returns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="c1"># These are additional parameters passed in to `.start()`</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Score</span><span class="p">]:</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Simple sequential execution for this worker.</span>
+        <span class="c1"># `Score` class provides you with utilities to handle validation.</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">params_pool</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">func_return</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Make sure to handle any uncaught exceptions, or the search will be interrupted.</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unhandled exception </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> on your objective function with params </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="s2">&quot;We will return an invalid score.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">func_return</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">[</span><span class="n">INVALID_SCORE</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_function_returns</span>
+                    <span class="k">if</span> <span class="n">num_function_returns</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                    <span class="k">else</span> <span class="n">INVALID_SCORE</span>
+                <span class="p">)</span>
+
+            <span class="n">valid_score</span> <span class="o">=</span> <span class="n">Score</span><span class="p">(</span>
+                <span class="n">score</span><span class="o">=</span><span class="n">func_return</span><span class="p">,</span>
+                <span class="n">param_id</span><span class="o">=</span><span class="n">params_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">params</span><span class="o">=</span><span class="n">param</span><span class="p">,</span>
+                <span class="n">num_objectives</span><span class="o">=</span><span class="n">num_function_returns</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">valid_score</span><span class="p">)</span>
+
+        <span class="c1"># Return the list of all scores measured this round (including baseline if calculated)</span>
+        <span class="k">return</span> <span class="n">scores</span>
+</pre></div>
+</div>
+<p>Besides looping over the sampled parameters, notice how we also encapsulate execution to handle any errors within the objective. A warning is issued back to the user so they are aware that something went wrong, but in many use cases, failures and bad combinations are expected so we prefer not to exit early and cancel a potentially already long-running search midway through.</p>
+<p>Another thing happening behind the scenes here is that, by instantiating the <code class="docutils literal notranslate"><span class="pre">Score</span></code> class, it performs a few validations on the score to make sure the value returned by the function adheres to the number of expected objectives and expected types.</p>
+<blockquote>
+<div><p>Note: The <code class="docutils literal notranslate"><span class="pre">Score</span></code> class also accepts a metadata field that can store additional information forwarded to the final <code class="docutils literal notranslate"><span class="pre">SearchResult</span></code> dataframe. <code class="docutils literal notranslate"><span class="pre">RayWorker</span></code>, for example, will store <code class="docutils literal notranslate"><span class="pre">node_id</span></code> and <code class="docutils literal notranslate"><span class="pre">gpu_id</span></code> information so the user can track where things executed.</p>
+</div></blockquote>
+<section id="supporting-built-in-normalization">
+<h4>Supporting Built-in Normalization<a class="headerlink" href="#supporting-built-in-normalization" title="Link to this heading">#</a></h4>
+<p>Because we are trying to create something generic, we also want to be able to handle the built-in <a class="reference internal" href="normalization.html"><span class="std std-doc">normalization feature</span></a>.</p>
+<p>For that, we need to calculate a baseline and add the normalized scores to the returned <code class="docutils literal notranslate"><span class="pre">Score</span></code> list.</p>
+<p>To simplify our baselining, let’s calculate it once at the first generation and use this value as the reference value to normalize all subsequent runs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SequentialWorker</span><span class="p">(</span><span class="n">BaseWorker</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">function</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span>
+        <span class="n">params_pool</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">params_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">num_function_returns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Score</span><span class="p">]:</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># It is your responsibility to handle baseline score and normalization.</span>
+        <span class="c1"># In this example, we will calculate the baseline score only once for the search</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_score</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating Baseline score for normalization.&quot;</span><span class="p">)</span>
+            <span class="n">baseline_score</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">BASELINE_CONFIG</span><span class="p">)</span>
+            <span class="c1"># Save the baseline score to reuse in future batches/generations.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_score</span> <span class="o">=</span> <span class="n">Score</span><span class="p">(</span>
+                <span class="n">score</span><span class="o">=</span><span class="n">baseline_score</span><span class="p">,</span>
+                <span class="n">param_id</span><span class="o">=</span><span class="s2">&quot;baseline&quot;</span><span class="p">,</span>
+                <span class="n">params</span><span class="o">=</span><span class="n">BASELINE_CONFIG</span><span class="p">,</span>
+                <span class="n">norm_score</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_scores</span><span class="p">(</span><span class="n">baseline_score</span><span class="p">,</span> <span class="n">baseline_score</span><span class="p">),</span>
+                <span class="n">num_objectives</span><span class="o">=</span><span class="n">num_function_returns</span><span class="p">,</span>
+                <span class="n">is_baseline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline_score</span><span class="p">)</span>
+
+        <span class="c1"># Simple sequential execution for this worker.</span>
+        <span class="c1"># `BaseWorker` provides you with utilities to handle normalization and validation.</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">params_pool</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">func_return</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Make sure to handle any uncaught exceptions, or the search will be interrupted.</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unhandled exception </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> on your objective function with params </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="s2">&quot;We will return an invalid score.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">func_return</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">[</span><span class="n">INVALID_SCORE</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_function_returns</span>
+                    <span class="k">if</span> <span class="n">num_function_returns</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                    <span class="k">else</span> <span class="n">INVALID_SCORE</span>
+                <span class="p">)</span>
+
+            <span class="n">valid_score</span> <span class="o">=</span> <span class="n">Score</span><span class="p">(</span>
+                <span class="n">score</span><span class="o">=</span><span class="n">func_return</span><span class="p">,</span>
+                <span class="n">param_id</span><span class="o">=</span><span class="n">params_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">params</span><span class="o">=</span><span class="n">param</span><span class="p">,</span>
+                <span class="n">num_objectives</span><span class="o">=</span><span class="n">num_function_returns</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Apply normalization if enabled. If you don&#39;t plan to use normalization,</span>
+            <span class="c1"># you can skip this step.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">:</span>
+                <span class="n">valid_score</span><span class="o">.</span><span class="n">norm_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_scores</span><span class="p">(</span>
+                    <span class="n">valid_score</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_score</span><span class="o">.</span><span class="n">score</span>
+                <span class="p">)</span>
+
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">valid_score</span><span class="p">)</span>
+
+        <span class="c1"># Return the list of all scores measured this round (including baseline if calculated)</span>
+        <span class="k">return</span> <span class="n">scores</span>
+</pre></div>
+</div>
+<p>Notice how we check if there is already a baseline available in <code class="docutils literal notranslate"><span class="pre">self.baseline_score</span></code> before calculating it. Afterwards, we leverage the <code class="docutils literal notranslate"><span class="pre">BaseWorker.normalize_scores</span></code> method to find the normalized value and update the <code class="docutils literal notranslate"><span class="pre">Score.norm_score</span></code> attribute. The normalized scores will be the ones used by CompileIQ to traverse the search space smartly, while the non-normalized scores are only used for tracking purposes and dumped in the resulting dataframe on <code class="docutils literal notranslate"><span class="pre">SearchResult</span></code>.</p>
+</section>
+<section id="bringing-it-all-together">
+<h4>Bringing it all together<a class="headerlink" href="#bringing-it-all-together" title="Link to this heading">#</a></h4>
+<p>With our worker defined, we can now see how we enable it before starting the search:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">SequentialWorker</span><span class="p">(</span>
+        <span class="n">cache_folder</span><span class="o">=</span><span class="n">tuner</span><span class="o">.</span><span class="n">cache_folder</span><span class="p">,</span>
+        <span class="n">normalize</span><span class="o">=</span><span class="n">main_config</span><span class="o">.</span><span class="n">normalize</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Any arguments passed to <code class="docutils literal notranslate"><span class="pre">.start()</span></code> are accessible through <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> for the <code class="docutils literal notranslate"><span class="pre">.run</span></code> method</p>
+</div></blockquote>
+<blockquote>
+<div><p>You can find an updated running example in <a class="reference external" href="https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/ptx_spill.py/custom_worker.py">our repository</a>.</p>
+</div></blockquote>
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="benchmarking.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Benchmarking Guidelines</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="normalization.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">CompileIQ and Normalization</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#native-worker-multiprocessworker">Native Worker (MultiProcessWorker)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#isolated-worker-isomultiprocessworker">Isolated Worker (IsoMultiProcessWorker)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#async-worker">Async Worker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ray-worker">Ray Worker</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tips-when-using-ray">Tips when using Ray</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-a-multi-gpu-environment">Handling a Multi-GPU Environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-your-own-custom-worker">Create your own Custom Worker</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-worker">Base Worker</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sequential-worker">Sequential Worker</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#supporting-built-in-normalization">Supporting Built-in Normalization</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#bringing-it-all-together">Bringing it all together</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
