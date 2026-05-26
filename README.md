@@ -2,15 +2,21 @@
 
 CompileIQ is a hyperparameter optimizer for tuning NVIDIA compiler controls and application parameters.
 
+[Documentation](https://nvidia.github.io/CompileIQ/stable/) |
+[PyPI](https://pypi.org/project/compileiq/) |
+[Latest Release](https://github.com/NVIDIA/CompileIQ/releases/latest) |
+[Search Space Catalog Releases](https://github.com/NVIDIA/CompileIQ/releases?q=Search+Space+Catalog+Release&expanded=true) |
+[Booster Pack Catalog Releases](https://github.com/NVIDIA/CompileIQ/releases?q=Booster+Pack+Catalog+Release&expanded=true)
+
 ## Quick install
 
-You can either install through PyPI:
+You can either install through [PyPI](https://pypi.org/project/compileiq/):
 
 ```bash
 pip install compileiq
 ```
 
-Or, build from the [repo](https://github.com/NVIDIA/CompileIQ) yourself:
+Or, build from the the source in this repository yourself:
 
 ```bash
 pip install -e .
@@ -43,6 +49,8 @@ search_space = PtxasSearchSpace(version="13.3", tag="search-spaces-2026.05.05")
 
 Set `CIQ_SEARCH_SPACES_DIR` to use a local mirror containing `manifest.json` plus the referenced `.bin` files. Set `CIQ_SEARCH_SPACES_REPO` to test or use a different release repository.
 
+Browse the published [Search Space Catalog Releases](https://github.com/NVIDIA/CompileIQ/releases?q=Search+Space+Catalog+Release&expanded=true) to inspect available catalog assets and release notes.
+
 ## Environment Configuration Options
 
 | Environment Variable | Default Value | Type | Description
@@ -56,6 +64,8 @@ Set `CIQ_SEARCH_SPACES_DIR` to use a local mirror containing `manifest.json` plu
 ## Examples
 
 The `examples/` folder has simple examples for you to get started on using CompileIQ.
+
+For the full user guide, see the [CompileIQ documentation](https://nvidia.github.io/CompileIQ/stable/).
 
 If you are planning on running examples, you may need additional dependencies:
 
