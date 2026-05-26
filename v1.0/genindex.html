@@ -1,0 +1,1565 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; CompileIQ Documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=5ceeb459"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}`;
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        all_mermaids.forEach((el) => {
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+        await mermaid.run();
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+const load = async () => {
+    initStyles();
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...JSON.parse(
+                    `{"startOnLoad": false}`
+                ),
+                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...JSON.parse(
+        `{"startOnLoad": false}`
+    ),
+    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://nvidia.github.io/CompileIQ/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+
+    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/v1.0/genindex.html" />
+    <link rel="icon" href="_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">NVIDIA Compiler Tuning</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="compilers_overview.html">Tuning NVIDIA Compilers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_space_release_testing.html">Search-Space Retrieval Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="booster_packs.html">Booster Packs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ptx_spill_example.html">Tuning PTXAS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvcc_example.html">Tuning NVCC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="triton_example.html">Tuning PTXAS in Triton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking Guidelines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="workers.html">Choosing how your application executes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">CompileIQ and Normalization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">More Examples</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="xgboost.html">Fine-tune an XGBoost ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiment_tracking.html">Experiment Tracking with CompileIQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flashinfer_booster.html">Applying a Booster Pack to FlashInfer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ 
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.results.SearchResult.__init__">__init__() (compileiq.results.SearchResult method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.search_spaces.compilers.CompilerSearchSpaceBase.__init__">(compileiq.search_spaces.compilers.CompilerSearchSpaceBase method)</a>
+</li>
+        <li><a href="api.html#compileiq.search_spaces.compilers.LocalSearchSpaceBin.__init__">(compileiq.search_spaces.compilers.LocalSearchSpaceBin method)</a>
+</li>
+        <li><a href="api.html#compileiq.search_spaces.compilers.SearchSpaceProvider.__init__">(compileiq.search_spaces.compilers.SearchSpaceProvider method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.DisabledTracker.__init__">(compileiq.tracker.DisabledTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.__init__">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.__init__">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.__init__">(compileiq.types.BaseTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.Worker.__init__">(compileiq.types.Worker method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.results.SearchResult.add_result">add_result() (compileiq.results.SearchResult method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.WorkerTypes.ASYNC">ASYNC (compileiq.types.WorkerTypes attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.MultiScoreComparison.AVERAGE">AVERAGE (compileiq.types.MultiScoreComparison attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.Worker.baseline_score">baseline_score (compileiq.types.Worker property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.BaseTracker">BaseTracker (class in compileiq.types)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.Worker.cache_dir">cache_dir (compileiq.types.Worker property)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.cache_folder">cache_folder (compileiq.ciq.Search attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.calculate_pareto_front">calculate_pareto_front() (compileiq.results.SearchResult method)</a>
+</li>
+      <li><a href="api.html#compileiq.search_spaces.base.choice">choice() (in module compileiq.search_spaces.base)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker.cleanup">cleanup() (compileiq.tracker.DisabledTracker method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.cleanup">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.cleanup">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.cleanup">(compileiq.types.BaseTracker method)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.results.SearchResult.clear_duplicates">clear_duplicates() (compileiq.results.SearchResult method)</a>
+</li>
+      <li>
+    compileiq.ciq
+
+      <ul>
+        <li><a href="api.html#module-compileiq.ciq">module</a>
+</li>
+      </ul></li>
+      <li>
+    compileiq.results
+
+      <ul>
+        <li><a href="api.html#module-compileiq.results">module</a>
+</li>
+      </ul></li>
+      <li>
+    compileiq.search_spaces.base
+
+      <ul>
+        <li><a href="api.html#module-compileiq.search_spaces.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    compileiq.search_spaces.compilers
+
+      <ul>
+        <li><a href="api.html#module-compileiq.search_spaces.compilers">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    compileiq.tracker
+
+      <ul>
+        <li><a href="api.html#module-compileiq.tracker">module</a>
+</li>
+      </ul></li>
+      <li>
+    compileiq.types
+
+      <ul>
+        <li><a href="api.html#module-compileiq.types">module</a>
+</li>
+      </ul></li>
+      <li>
+    compileiq.utils.gpu
+
+      <ul>
+        <li><a href="api.html#module-compileiq.utils.gpu">module</a>
+</li>
+      </ul></li>
+      <li>
+    compileiq.utils.validation
+
+      <ul>
+        <li><a href="api.html#module-compileiq.utils.validation">module</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.search_spaces.compilers.CompilerSearchSpaceBase.compiler">compiler (compileiq.search_spaces.compilers.CompilerSearchSpaceBase attribute)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.search_spaces.compilers.NvccSearchSpace.compiler">(compileiq.search_spaces.compilers.NvccSearchSpace attribute)</a>
+</li>
+        <li><a href="api.html#compileiq.search_spaces.compilers.PtxasSearchSpace.compiler">(compileiq.search_spaces.compilers.PtxasSearchSpace attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.search_spaces.compilers.CompilerSearchSpaceBase">CompilerSearchSpaceBase (class in compileiq.search_spaces.compilers)</a>
+</li>
+      <li><a href="api.html#compileiq.types.Worker.create">create() (compileiq.types.Worker class method)</a>
+</li>
+      <li><a href="api.html#compileiq.utils.gpu.ctk_supports_compileiq">ctk_supports_compileiq() (in module compileiq.utils.gpu)</a>
+</li>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.cull_size">cull_size (compileiq.types.SearchConfiguration attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.current_generation">current_generation (compileiq.ciq.Search attribute)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.types.Worker.current_generation">(compileiq.types.Worker property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.ciq.Search.debug">debug (compileiq.ciq.Search attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.WorkerTypes.DEFAULT">DEFAULT (compileiq.types.WorkerTypes attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.MLflowTrackerConfig.description">description (compileiq.types.MLflowTrackerConfig attribute)</a>, <a href="api.html#id6">[1]</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.df_results">df_results (compileiq.results.SearchResult attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.ciq.Search.disable_progress_bar">disable_progress_bar (compileiq.ciq.Search attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.TrackerTypes.DISABLED">DISABLED (compileiq.types.TrackerTypes attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker">DisabledTracker (class in compileiq.tracker)</a>
+</li>
+      <li><a href="api.html#compileiq.types.InternalSearchConfiguration.dna_config">dna_config (compileiq.types.InternalSearchConfiguration attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.dump_results">dump_results (compileiq.ciq.Search attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.enable_large_fail_pool">enable_large_fail_pool (compileiq.types.SearchConfiguration attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.InternalSearchConfiguration.enable_result_file">enable_result_file (compileiq.types.InternalSearchConfiguration attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.LoguruTrackerConfig.enqueue">enqueue (compileiq.types.LoguruTrackerConfig attribute)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.types.TrackerConfig.enqueue">(compileiq.types.TrackerConfig attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.ciq.Search.exit_on_failure">exit_on_failure (compileiq.ciq.Search attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.MLflowTrackerConfig.experiment_name">experiment_name (compileiq.types.MLflowTrackerConfig attribute)</a>, <a href="api.html#id3">[1]</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.utils.validation.Score.failed">failed (compileiq.utils.validation.Score property)</a>
+</li>
+      <li><a href="api.html#compileiq.types.LoguruTrackerConfig.format">format (compileiq.types.LoguruTrackerConfig attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.results.SearchResult.from_csv">from_csv() (compileiq.results.SearchResult class method)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.from_dataframe">from_dataframe() (compileiq.results.SearchResult class method)</a>
+</li>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.from_legacy">from_legacy() (compileiq.types.SearchConfiguration class method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker.generation_ends">generation_ends() (compileiq.tracker.DisabledTracker method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.generation_ends">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.generation_ends">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.generation_ends">(compileiq.types.BaseTracker method)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker.generation_starts">generation_starts() (compileiq.tracker.DisabledTracker method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.generation_starts">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.generation_starts">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.generation_starts">(compileiq.types.BaseTracker method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.generations">generations (compileiq.types.SearchConfiguration attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.get_best_result">get_best_result() (compileiq.results.SearchResult method)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.MLflowTracker.get_date_string">get_date_string() (compileiq.tracker.MLflowTracker static method)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.get_results">get_results() (compileiq.results.SearchResult method)</a>
+</li>
+      <li><a href="api.html#compileiq.utils.gpu.gpu_benchmark_mode">gpu_benchmark_mode() (in module compileiq.utils.gpu)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.utils.gpu.has_nvidia_smi">has_nvidia_smi() (in module compileiq.utils.gpu)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.init_with_true_random_threshold">init_with_true_random_threshold (compileiq.types.SearchConfiguration attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.Worker.invalidate_score">invalidate_score() (compileiq.types.Worker static method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.utils.validation.Score.is_baseline">is_baseline (compileiq.utils.validation.Score attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.is_normalized">is_normalized (compileiq.results.SearchResult property)</a>
+</li>
+      <li><a href="api.html#compileiq.types.WorkerTypes.ISOLATED">ISOLATED (compileiq.types.WorkerTypes attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.BaseTracker.kwargs">kwargs (compileiq.types.BaseTracker attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.LoguruTrackerConfig.level">level (compileiq.types.LoguruTrackerConfig attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.search_spaces.base.literal">literal() (in module compileiq.search_spaces.base)</a>
+</li>
+      <li><a href="api.html#compileiq.search_spaces.compilers.LocalSearchSpaceBin">LocalSearchSpaceBin (class in compileiq.search_spaces.compilers)</a>
+</li>
+      <li><a href="api.html#compileiq.types.MLflowTrackerConfig.log_config">log_config (compileiq.types.MLflowTrackerConfig attribute)</a>, <a href="api.html#id8">[1]</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.search_spaces.base.log_sampling">log_sampling() (in module compileiq.search_spaces.base)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.logging_exception">logging_exception() (in module compileiq.tracker)</a>
+</li>
+      <li><a href="api.html#compileiq.types.TrackerTypes.LOGURU">LOGURU (compileiq.types.TrackerTypes attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.LoguruTracker">LoguruTracker (class in compileiq.tracker)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.utils.validation.Score.metadata">metadata (compileiq.utils.validation.Score attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.TrackerTypes.MLFLOW">MLFLOW (compileiq.types.TrackerTypes attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.MLflowTracker">MLflowTracker (class in compileiq.tracker)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.model_post_init">model_post_init() (compileiq.ciq.Search method)</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="api.html#module-compileiq.ciq">compileiq.ciq</a>
+</li>
+        <li><a href="api.html#module-compileiq.results">compileiq.results</a>
+</li>
+        <li><a href="api.html#module-compileiq.search_spaces.base">compileiq.search_spaces.base</a>
+</li>
+        <li><a href="api.html#module-compileiq.search_spaces.compilers">compileiq.search_spaces.compilers</a>
+</li>
+        <li><a href="api.html#module-compileiq.tracker">compileiq.tracker</a>
+</li>
+        <li><a href="api.html#module-compileiq.types">compileiq.types</a>
+</li>
+        <li><a href="api.html#module-compileiq.utils.gpu">compileiq.utils.gpu</a>
+</li>
+        <li><a href="api.html#module-compileiq.utils.validation">compileiq.utils.validation</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.MultiScoreComparison">MultiScoreComparison (class in compileiq.types)</a>
+</li>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.mutate_rate">mutate_rate (compileiq.types.SearchConfiguration attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.WorkerTypes.NATIVE">NATIVE (compileiq.types.WorkerTypes attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.utils.validation.Score.norm_score">norm_score (compileiq.utils.validation.Score attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.normalize">normalize (compileiq.types.SearchConfiguration attribute)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.types.Worker.normalize">(compileiq.types.Worker property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.Worker.normalize_scores">normalize_scores() (compileiq.types.Worker static method)</a>
+</li>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.num_objectives">num_objectives (compileiq.types.SearchConfiguration attribute)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.utils.validation.Score.num_objectives">(compileiq.utils.validation.Score attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.results.SearchResult.num_scores">num_scores (compileiq.results.SearchResult attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.search_spaces.compilers.NvccSearchSpace">NvccSearchSpace (class in compileiq.search_spaces.compilers)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.ciq.Search.objective_function">objective_function (compileiq.ciq.Search attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.objective_weights">objective_weights (compileiq.types.SearchConfiguration attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.utils.validation.Score.param_id">param_id (compileiq.utils.validation.Score attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.utils.validation.Score.params">params (compileiq.utils.validation.Score attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.MultiScoreComparison.PARETO">PARETO (compileiq.types.MultiScoreComparison attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.pareto_front">pareto_front() (compileiq.results.SearchResult method)</a>
+</li>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.pool_size">pool_size (compileiq.types.SearchConfiguration attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker.post_objective">post_objective() (compileiq.tracker.DisabledTracker method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.post_objective">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.post_objective">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.post_objective">(compileiq.types.BaseTracker method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker.pre_objective">pre_objective() (compileiq.tracker.DisabledTracker method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.pre_objective">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.pre_objective">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.pre_objective">(compileiq.types.BaseTracker method)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.results.SearchResult.problem_type">problem_type (compileiq.results.SearchResult attribute)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.types.SearchConfiguration.problem_type">(compileiq.types.SearchConfiguration attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.types.ProblemType">ProblemType (class in compileiq.types)</a>
+</li>
+      <li><a href="api.html#compileiq.search_spaces.compilers.PtxasSearchSpace">PtxasSearchSpace (class in compileiq.search_spaces.compilers)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.search_spaces.base.range">range() (in module compileiq.search_spaces.base)</a>
+</li>
+      <li><a href="api.html#compileiq.types.WorkerTypes.RAY">RAY (compileiq.types.WorkerTypes attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.Worker.respects_num_workers">respects_num_workers (compileiq.types.Worker property)</a>
+</li>
+      <li><a href="api.html#compileiq.search_spaces.compilers.CompilerSearchSpaceBase.retrieve">retrieve() (compileiq.search_spaces.compilers.CompilerSearchSpaceBase method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.search_spaces.compilers.LocalSearchSpaceBin.retrieve">(compileiq.search_spaces.compilers.LocalSearchSpaceBin method)</a>
+</li>
+        <li><a href="api.html#compileiq.search_spaces.compilers.SearchSpaceProvider.retrieve">(compileiq.search_spaces.compilers.SearchSpaceProvider method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.Worker.run">run() (compileiq.types.Worker method)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.run_id">run_id (compileiq.ciq.Search attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.MLflowTrackerConfig.run_name">run_name (compileiq.types.MLflowTrackerConfig attribute)</a>, <a href="api.html#id4">[1]</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.ciq.Search.sample">sample() (compileiq.ciq.Search method)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.save">save() (compileiq.results.SearchResult method)</a>
+</li>
+      <li><a href="api.html#compileiq.utils.validation.Score.score">score (compileiq.utils.validation.Score attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult.score_columns">score_columns (compileiq.results.SearchResult attribute)</a>
+
+      <ul>
+        <li><a href="api.html#id9">(compileiq.results.SearchResult property)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.types.MLflowTrackerConfig.score_names">score_names (compileiq.types.MLflowTrackerConfig attribute)</a>, <a href="api.html#id7">[1]</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.search_config">search_config (compileiq.ciq.Search attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker.search_ends">search_ends() (compileiq.tracker.DisabledTracker method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.search_ends">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.search_ends">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.search_ends">(compileiq.types.BaseTracker method)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.ciq.Search.search_space">search_space (compileiq.ciq.Search attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.search_space_resolution_metadata">search_space_resolution_metadata (compileiq.ciq.Search property)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker.search_starts">search_starts() (compileiq.tracker.DisabledTracker method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.search_starts">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.search_starts">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.search_starts">(compileiq.types.BaseTracker method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.BaseTracker.search_title">search_title (compileiq.types.BaseTracker attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.results.SearchResult">SearchResult (class in compileiq.results)</a>
+</li>
+      <li><a href="api.html#compileiq.search_spaces.compilers.SearchSpaceProvider">SearchSpaceProvider (class in compileiq.search_spaces.compilers)</a>
+</li>
+      <li><a href="api.html#compileiq.tracker.DisabledTracker.setup">setup() (compileiq.tracker.DisabledTracker method)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.setup">(compileiq.tracker.LoguruTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.setup">(compileiq.tracker.MLflowTracker method)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.setup">(compileiq.types.BaseTracker method)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#compileiq.types.LoguruTrackerConfig.sink">sink (compileiq.types.LoguruTrackerConfig attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.start">start() (compileiq.ciq.Search method)</a>
+</li>
+      <li><a href="api.html#compileiq.types.MultiScoreComparison.STDDEV">STDDEV (compileiq.types.MultiScoreComparison attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.Worker.supports_timeout">supports_timeout (compileiq.types.Worker property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.to_json_dict">to_json_dict() (compileiq.types.SearchConfiguration method)</a>
+</li>
+      <li><a href="api.html#compileiq.types.SearchConfiguration.to_legacy">to_legacy() (compileiq.types.SearchConfiguration method)</a>
+</li>
+      <li><a href="api.html#compileiq.types.Worker.tracker">tracker (compileiq.types.Worker property)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.tracker_config">tracker_config (compileiq.ciq.Search attribute)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.tracker.LoguruTracker.tracker_config">(compileiq.tracker.LoguruTracker attribute)</a>
+</li>
+        <li><a href="api.html#compileiq.tracker.MLflowTracker.tracker_config">(compileiq.tracker.MLflowTracker attribute)</a>
+</li>
+        <li><a href="api.html#compileiq.types.BaseTracker.tracker_config">(compileiq.types.BaseTracker attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.BaseTracker.tracker_type">tracker_type (compileiq.types.BaseTracker attribute)</a>
+</li>
+      <li><a href="api.html#compileiq.types.TrackerTypes">TrackerTypes (class in compileiq.types)</a>
+</li>
+      <li><a href="api.html#compileiq.types.MLflowTrackerConfig.tracking_uri">tracking_uri (compileiq.types.MLflowTrackerConfig attribute)</a>, <a href="api.html#id5">[1]</a>
+</li>
+      <li><a href="api.html#compileiq.types.DefaultTrackerConfig.type">type (compileiq.types.DefaultTrackerConfig attribute)</a>
+
+      <ul>
+        <li><a href="api.html#compileiq.types.DisabledTrackerConfig.type">(compileiq.types.DisabledTrackerConfig attribute)</a>, <a href="api.html#id0">[1]</a>
+</li>
+        <li><a href="api.html#compileiq.types.LoguruTrackerConfig.type">(compileiq.types.LoguruTrackerConfig attribute)</a>, <a href="api.html#id1">[1]</a>
+</li>
+        <li><a href="api.html#compileiq.types.MLflowTrackerConfig.type">(compileiq.types.MLflowTrackerConfig attribute)</a>, <a href="api.html#id2">[1]</a>
+</li>
+        <li><a href="api.html#compileiq.types.TrackerConfig.type">(compileiq.types.TrackerConfig attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.utils.validation.validate_inf_nan">validate_inf_nan() (in module compileiq.utils.validation)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.utils.validation.validate_scores">validate_scores() (in module compileiq.utils.validation)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.Worker">Worker (class in compileiq.types)</a>
+</li>
+      <li><a href="api.html#compileiq.ciq.Search.worker_type">worker_type (compileiq.ciq.Search attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#compileiq.types.WorkerTypes.worker_type">worker_type() (compileiq.types.WorkerTypes method)</a>
+</li>
+      <li><a href="api.html#compileiq.types.WorkerTypes">WorkerTypes (class in compileiq.types)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+<div class="bd-sidebar-secondary"></div>
+
+
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

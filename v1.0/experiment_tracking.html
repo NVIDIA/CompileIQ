@@ -1,0 +1,879 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Experiment Tracking with CompileIQ &#8212; CompileIQ Documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+
+
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=5ceeb459"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'experiment_tracking';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://nvidia.github.io/CompileIQ/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+
+    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/v1.0/experiment_tracking.html" />
+    <link rel="icon" href="_static/favicon.png"/>
+
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Applying a Booster Pack to FlashInfer" href="flashinfer_booster.html" />
+    <link rel="prev" title="Fine-tune an XGBoost ML Model" href="xgboost.html" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0" />
+
+
+  </head>
+
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="CompileIQ Documentation - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="CompileIQ Documentation - Home"/>
+  
+  
+    <p class="title logo__title">CompileIQ Documentation</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NVIDIA/CompileIQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">NVIDIA Compiler Tuning</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="compilers_overview.html">Tuning NVIDIA Compilers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_space_release_testing.html">Search-Space Retrieval Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="booster_packs.html">Booster Packs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ptx_spill_example.html">Tuning PTXAS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvcc_example.html">Tuning NVCC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="triton_example.html">Tuning PTXAS in Triton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking Guidelines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="workers.html">Choosing how your application executes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">CompileIQ and Normalization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">More Examples</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="xgboost.html">Fine-tune an XGBoost ML Model</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Experiment Tracking with CompileIQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flashinfer_booster.html">Applying a Booster Pack to FlashInfer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Experiment Tracking with CompileIQ</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="experiment-tracking-with-compileiq">
+<h1>Experiment Tracking with CompileIQ<a class="headerlink" href="#experiment-tracking-with-compileiq" title="Link to this heading">#</a></h1>
+<p>CompileIQ provides comprehensive facilities for tracking your experiments through an event-driven architecture. Experiment tracking, also known as logging, is an invaluable tool that provides insight into your searches, allowing you to monitor progress, debug issues, and analyze performance patterns.</p>
+<section id="how-tracking-works">
+<h2>How Tracking Works<a class="headerlink" href="#how-tracking-works" title="Link to this heading">#</a></h2>
+<p>CompileIQ uses an event-driven tracking system that captures important moments during your search process. Events are automatically generated at key points and processed by your chosen tracking backend. This design allows for:</p>
+<ul class="simple">
+<li><p><strong>Real-time monitoring</strong> of your search progress</p></li>
+<li><p><strong>Distributed tracking</strong> across multiple workers and nodes</p></li>
+<li><p><strong>Rich contextual information</strong> including worker types, node IDs, and performance metrics</p></li>
+</ul>
+</section>
+<section id="tracker-events">
+<h2>Tracker Events<a class="headerlink" href="#tracker-events" title="Link to this heading">#</a></h2>
+<p>CompileIQ automatically generates tracking events at these key moments in your search lifecycle:</p>
+<section id="search-lifecycle-events">
+<h3>Search Lifecycle Events<a class="headerlink" href="#search-lifecycle-events" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Search starts</strong>: When <code class="docutils literal notranslate"><span class="pre">.start()</span></code> is called, includes run metadata</p></li>
+<li><p><strong>Search ends</strong>: When the search completes or is terminated</p></li>
+<li><p><strong>Generation starts</strong>: At the beginning of each new generation</p></li>
+<li><p><strong>Generation ends</strong>: When all evaluations in a generation complete</p></li>
+</ul>
+</section>
+<section id="objective-function-events">
+<h3>Objective Function Events<a class="headerlink" href="#objective-function-events" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Pre-objective</strong>: Before each objective function call, includes parameter configuration</p></li>
+<li><p><strong>Post-objective</strong>: After each objective function call, includes scores and execution metadata</p></li>
+</ul>
+</section>
+</section>
+<section id="tracker-types">
+<h2>Tracker Types<a class="headerlink" href="#tracker-types" title="Link to this heading">#</a></h2>
+<p>You select the tracker used during the search by means of defining a <code class="docutils literal notranslate"><span class="pre">TrackerConfig</span></code> object, and then passing this as the <code class="docutils literal notranslate"><span class="pre">tracker_config</span></code> parameter to the <code class="docutils literal notranslate"><span class="pre">Search</span></code> constructor.</p>
+<p>The next sections will guide you on configuring each of the different trackers available.</p>
+<section id="tracking-with-loguru-logger">
+<h3>Tracking with Loguru (Logger)<a class="headerlink" href="#tracking-with-loguru-logger" title="Link to this heading">#</a></h3>
+<p><a class="reference external" href="https://loguru.readthedocs.io/en/stable/">Loguru</a> is a Python logging library that provides structured logging to files. This is the default tracker and requires no additional setup.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.ciq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Search</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">LoguruTrackerConfig</span>
+
+<span class="c1"># Using default tracker (Loguru)</span>
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">tracker_config</span><span class="o">=</span><span class="n">TrackerTypes</span><span class="o">.</span><span class="n">LOGURU</span>
+<span class="p">)</span>
+
+<span class="c1"># Explicit Loguru tracker</span>
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">tracker_config</span><span class="o">=</span><span class="n">LoguruTrackerConfig</span><span class="p">(</span><span class="n">sink</span><span class="o">=</span><span class="s2">&quot;search.log&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">LoguruTrackerConfig</span></code> will accept any parameter passed into logger, such <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code> and others. You can also pass in a list to <code class="docutils literal notranslate"><span class="pre">sink</span></code> so we both output to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> as well as a file for example.</p>
+</div></blockquote>
+<p>In the example above, Loguru tracker creates a <code class="docutils literal notranslate"><span class="pre">search.log</span></code> file in your current directory with structured log entries:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:09.118<span class="w"> </span><span class="p">|</span><span class="w"> </span>INFO<span class="w">     </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:__init__:77<span class="w"> </span>-<span class="w"> </span>LoguruTracker<span class="w"> </span>initialized<span class="w"> </span>with<span class="w"> </span><span class="nv">file</span><span class="o">=</span>search.log,<span class="w"> </span><span class="nv">kwargs</span><span class="o">={}</span>
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.795<span class="w"> </span><span class="p">|</span><span class="w"> </span>INFO<span class="w">     </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:search_starts:86<span class="w"> </span>-<span class="w"> </span>Search<span class="w"> </span>started
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.796<span class="w"> </span><span class="p">|</span><span class="w"> </span>DEBUG<span class="w">    </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:search_starts:87<span class="w"> </span>-<span class="w"> </span>Other<span class="w"> </span>kwargs:<span class="w"> </span><span class="o">{}</span>
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.824<span class="w"> </span><span class="p">|</span><span class="w"> </span>INFO<span class="w">     </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:generation_starts:95<span class="w"> </span>-<span class="w"> </span><span class="o">================================================</span>
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.824<span class="w"> </span><span class="p">|</span><span class="w"> </span>INFO<span class="w">     </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:generation_starts:96<span class="w"> </span>-<span class="w"> </span>Generation<span class="w"> </span><span class="m">0</span><span class="w"> </span>started
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.824<span class="w"> </span><span class="p">|</span><span class="w"> </span>DEBUG<span class="w">    </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:generation_starts:97<span class="w"> </span>-<span class="w"> </span>Other<span class="w"> </span>kwargs:<span class="w"> </span><span class="o">{}</span>
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.828<span class="w"> </span><span class="p">|</span><span class="w"> </span>INFO<span class="w">     </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:pre_objective:105<span class="w"> </span>-<span class="w"> </span>Executing<span class="w"> </span>objective<span class="w"> </span><span class="k">function</span><span class="w"> </span>with:<span class="w"> </span><span class="o">{</span><span class="s1">&#39;x&#39;</span>:<span class="w"> </span><span class="m">12</span>.5,<span class="w"> </span><span class="s1">&#39;y&#39;</span>:<span class="w"> </span><span class="m">3</span><span class="o">}</span>
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.828<span class="w"> </span><span class="p">|</span><span class="w"> </span>DEBUG<span class="w">    </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:pre_objective:106<span class="w"> </span>-<span class="w"> </span>Other<span class="w"> </span>kwargs<span class="w"> </span>before<span class="w"> </span>running<span class="w"> </span>the<span class="w"> </span>objective<span class="w"> </span><span class="k">function</span>:<span class="w"> </span><span class="o">{}</span>
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.828<span class="w"> </span><span class="p">|</span><span class="w"> </span>INFO<span class="w">     </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:post_objective:109<span class="w"> </span>-<span class="w"> </span>Scored:<span class="w"> </span><span class="o">[</span><span class="m">159</span>.25<span class="o">]</span>
+<span class="m">2025</span>-07-07<span class="w"> </span><span class="m">16</span>:41:10.828<span class="w"> </span><span class="p">|</span><span class="w"> </span>DEBUG<span class="w">    </span><span class="p">|</span><span class="w"> </span>compileiq.tracker:post_objective:110<span class="w"> </span>-<span class="w"> </span>Other<span class="w"> </span>kwargs<span class="w"> </span>after<span class="w"> </span>running<span class="w"> </span>the<span class="w"> </span>objective<span class="w"> </span><span class="k">function</span>:<span class="w"> </span><span class="o">{}</span>
+</pre></div>
+</div>
+</section>
+<section id="tracking-with-mlflow">
+<h3>Tracking with MLflow<a class="headerlink" href="#tracking-with-mlflow" title="Link to this heading">#</a></h3>
+<p><a class="reference external" href="https://mlflow.org/docs/latest/ml/">MLflow</a> is a popular ML experiment tracking platform.</p>
+<blockquote>
+<div><p>This is an optional dependency and can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">compileiq[tracking]</span></code></p>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.ciq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Search</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLflowTrackerConfig</span>
+
+<span class="c1"># The config will be logged as an artifact, by default.</span>
+<span class="c1"># This can be disabled by setting log_config=False in the tracker config.</span>
+<span class="n">tracker_config</span> <span class="o">=</span> <span class="n">MLflowTrackerConfig</span><span class="p">(</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+    <span class="n">tracking_uri</span><span class="o">=</span><span class="s2">&quot;&lt;mlflow_url&gt;&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test run in CompileIQ&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">main_config</span> <span class="o">=</span> <span class="n">SearchConfiguration</span><span class="p">(</span>
+    <span class="n">pool_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">generations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">mutate_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">problem_type</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">,</span>
+    <span class="n">num_objectives</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The MLflow tracker automatically logs:</p>
+<ul class="simple">
+<li><p><strong>Parameters</strong>: Each parameter configuration tested</p></li>
+<li><p><strong>Metrics</strong>: Objective function scores</p></li>
+<li><p><strong>Artifacts</strong>: Search configuration file</p></li>
+<li><p><strong>Tags</strong>: Worker type, node information, and search metadata</p></li>
+</ul>
+<section id="artifacts">
+<h4>Artifacts<a class="headerlink" href="#artifacts" title="Link to this heading">#</a></h4>
+<p>MLflow supports logging a variety of objects as artifacts, including:</p>
+<ul class="simple">
+<li><p>files (by path), directories</p></li>
+<li><p>JSON/YAML-serializable dictionaries</p></li>
+<li><p>Pandas DataFrames (as CSV)</p></li>
+<li><p>Numpy arrays (as .npy)</p></li>
+<li><p>Matplotlib and Plotly figures (as images), images (as numpy arrays, PIL images, or mlflow.Image), and text.</p></li>
+</ul>
+<p>You are allowed to use all of the MlFlow tracking facilities inside of the objective function. Elements tracked here will be stored in the run being used by the evaluation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">trace</span><span class="p">,</span> <span class="n">log_artifact</span><span class="p">,</span> <span class="n">set_tag</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="o">...</span>
+        <span class="c1"># Also to keep track of the config</span>
+    <span class="k">if</span> <span class="s2">&quot;z&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">set_tag</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;present&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">set_tag</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;not present&quot;</span><span class="p">)</span>
+    <span class="o">...</span>
+
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">temp_dir</span><span class="p">:</span>
+        <span class="n">temp_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">,</span> <span class="s2">&quot;sample.acf&quot;</span><span class="p">)</span>
+        <span class="c1"># Use the trace decorator to trace any function calls</span>
+        <span class="n">save_compiler_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">temp_file</span><span class="p">)</span>
+        <span class="n">log_artifact</span><span class="p">(</span><span class="n">temp_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="function-tracing">
+<h4>Function Tracing<a class="headerlink" href="#function-tracing" title="Link to this heading">#</a></h4>
+<p>Function Tracing (a.k.a. <a class="reference external" href="https://mlflow.org/docs/latest/genai/tracing/">Tracing</a>) is an MLflow feature that allows recording the input parameters and return values of functions. This is specially useful for profiling and debugging. When exceptions are raised the stack trace is also displayed nicely in the MLflow UI. MLflow Function Tracing is optional, and can be activated by using the <code class="docutils literal notranslate"><span class="pre">mlflow.trace</span></code> decorator:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">trace</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">secondary_function</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="c1"># Do something cool!</span>
+    <span class="k">pass</span>
+
+<span class="nd">@trace</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">trace</span><span class="p">(</span><span class="n">secondary_function</span><span class="p">)(</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="worker-specific-tracking">
+<h2>Worker-Specific Tracking<a class="headerlink" href="#worker-specific-tracking" title="Link to this heading">#</a></h2>
+<p>CompileIQ’s event-driven architecture automatically adapts to different worker types, providing relevant contextual information:</p>
+<section id="multiprocess-workers">
+<h3>MultiProcess Workers<a class="headerlink" href="#multiprocess-workers" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Process ID</strong>: Identifies which process executed the objective function</p></li>
+<li><p><strong>Process-level metrics</strong>: Memory usage, execution time per process</p></li>
+<li><p><strong>Local file logging</strong>: All events logged to local files</p></li>
+</ul>
+</section>
+<section id="ray-workers">
+<h3>Ray Workers<a class="headerlink" href="#ray-workers" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Node ID</strong>: Identifies which Ray cluster node executed the function</p></li>
+<li><p><strong>Distributed metrics</strong>: Cross-node performance comparison</p></li>
+<li><p><strong>Remote event collection</strong>: Events collected from remote nodes and aggregated</p></li>
+</ul>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
+<section id="common-issues">
+<h3>Common Issues<a class="headerlink" href="#common-issues" title="Link to this heading">#</a></h3>
+<p><strong>Log files not created</strong>: Ensure you have write permissions in the current directory.</p>
+<p><strong>Ray workers not tracking</strong>: Verify that the Ray cluster is properly configured and that remote nodes can communicate with the tracking backend.</p>
+<p><strong>MLflow connection errors</strong>: Check network connectivity to the MLflow server and verify authentication credentials.</p>
+</section>
+<section id="debug-mode">
+<h3>Debug Mode<a class="headerlink" href="#debug-mode" title="Link to this heading">#</a></h3>
+<p>Enable debug mode for more verbose tracking information:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="c1"># ... your configuration ...</span>
+    <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This will provide additional diagnostic information in your tracking outputs.</p>
+</section>
+</section>
+<section id="defining-your-own-tracker">
+<h2>Defining your own tracker<a class="headerlink" href="#defining-your-own-tracker" title="Link to this heading">#</a></h2>
+<p>CompileIQ’s experiment tracking system uses an event-driven architecture that allows developers to implement custom tracking backends. This section explains how to create your own tracker implementations.</p>
+<section id="architecture-overview">
+<h3>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Link to this heading">#</a></h3>
+<p>CompileIQ’s tracking system is built on top of a single <code class="docutils literal notranslate"><span class="pre">BaseTracker</span></code> class that tracker classes must implement.</p>
+</section>
+<section id="event-timeline">
+<h3>Event Timeline<a class="headerlink" href="#event-timeline" title="Link to this heading">#</a></h3>
+<p>The following diagram shows the sequence of events during a typical CompileIQ search:</p>
+<div class="highlight-mermaid notranslate"><div class="highlight"><pre><span></span>sequenceDiagram
+    participant ES as Search
+    participant EB as EventBus
+    participant T as Tracker
+    participant MW as MultiProcessWorker
+    participant RW as RayWorker
+    
+    Note over ES,RW: Search Initialization
+    ES-&gt;&gt;EB: setup tracker
+    EB-&gt;&gt;T: subscribe()
+    
+    Note over ES,RW: Search Start
+    ES-&gt;&gt;EB: emit(SEARCH_START)
+    EB-&gt;&gt;T: handle_event(SEARCH_START)
+    T-&gt;&gt;T: initialize tracking
+    
+    Note over ES,RW: Generation Processing
+    loop Each Generation
+        ES-&gt;&gt;EB: emit(GENERATION_START)
+        EB-&gt;&gt;T: handle_event(GENERATION_START)
+        
+        Note over ES,RW: Objective Function Calls
+        par MultiProcess Workers
+            MW-&gt;&gt;EB: emit(OBJECTIVE_START)
+            EB-&gt;&gt;T: handle_event(OBJECTIVE_START)
+            
+            MW-&gt;&gt;MW: execute objective_function()
+            
+            MW-&gt;&gt;EB: emit(OBJECTIVE_END)
+            EB-&gt;&gt;T: handle_event(OBJECTIVE_END)
+        and Ray Workers
+            RW-&gt;&gt;RW: collect events locally
+            RW-&gt;&gt;RW: execute objective_function()
+            RW-&gt;&gt;ES: return (scores, events)
+            ES-&gt;&gt;EB: emit collected events
+            EB-&gt;&gt;T: handle_event(events)
+        end
+        
+        ES-&gt;&gt;EB: emit(GENERATION_END)
+        EB-&gt;&gt;T: handle_event(GENERATION_END)
+    end
+    
+    Note over ES,RW: Search Completion
+    ES-&gt;&gt;EB: emit(SEARCH_END)
+    EB-&gt;&gt;T: handle_event(SEARCH_END)
+    T-&gt;&gt;T: finalize tracking
+</pre></div>
+</div>
+</section>
+<section id="implementing-a-custom-tracker">
+<h3>Implementing a Custom Tracker<a class="headerlink" href="#implementing-a-custom-tracker" title="Link to this heading">#</a></h3>
+<p>To create a custom tracker, inherit from <code class="docutils literal notranslate"><span class="pre">BaseTracker</span></code> and implement the required methods:</p>
+</section>
+<section id="registering-custom-trackers">
+<h3>Registering Custom Trackers<a class="headerlink" href="#registering-custom-trackers" title="Link to this heading">#</a></h3>
+<p>To use your custom tracker, you’ll need to extend the tracker factory in CompileIQ:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add to TrackerTypes enum</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TrackerTypes</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">LOGURU</span> <span class="o">=</span> <span class="s2">&quot;loguru&quot;</span>
+    <span class="n">MLFLOW</span> <span class="o">=</span> <span class="s2">&quot;mlflow&quot;</span>
+    <span class="n">CUSTOM</span> <span class="o">=</span> <span class="s2">&quot;custom&quot;</span>
+
+<span class="c1"># Modify Search to support custom trackers</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Search</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">tracker_type</span><span class="p">:</span> <span class="n">TrackerTypes</span> <span class="o">=</span> <span class="n">TrackerTypes</span><span class="o">.</span><span class="n">DEFAULT</span>
+    <span class="n">custom_tracker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BaseTracker</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># ... existing setup ...</span>
+        
+        <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracker_type</span><span class="p">:</span>
+            <span class="k">case</span> <span class="n">TrackerTypes</span><span class="o">.</span><span class="n">LOGURU</span><span class="p">:</span>
+                <span class="n">tracker</span> <span class="o">=</span> <span class="n">LoguruTracker</span><span class="p">()</span>
+            <span class="k">case</span> <span class="n">TrackerTypes</span><span class="o">.</span><span class="n">MLFLOW</span><span class="p">:</span>
+                <span class="n">tracker</span> <span class="o">=</span> <span class="n">MLflowTracker</span><span class="p">()</span>
+            <span class="k">case</span> <span class="n">TrackerTypes</span><span class="o">.</span><span class="n">CUSTOM</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_tracker</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;custom_tracker must be provided when using TrackerTypes.CUSTOM&quot;</span><span class="p">)</span>
+                <span class="n">tracker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_tracker</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_bus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">tracker</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices-for-custom-trackers">
+<h3>Best Practices for Custom Trackers<a class="headerlink" href="#best-practices-for-custom-trackers" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Error Handling</strong>: Always handle exceptions gracefully. Tracker errors should not break the main search process.</p></li>
+<li><p><strong>Resource Management</strong>: Properly implement <code class="docutils literal notranslate"><span class="pre">setup()</span></code> and <code class="docutils literal notranslate"><span class="pre">cleanup()</span></code> methods for resource management.</p></li>
+<li><p><strong>Distributed Considerations</strong>: Your tracker should handle scenarios where workers don’t run in the same machine as the host.</p></li>
+</ol>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="xgboost.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Fine-tune an XGBoost ML Model</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="flashinfer_booster.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Applying a Booster Pack to FlashInfer</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-tracking-works">How Tracking Works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tracker-events">Tracker Events</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#search-lifecycle-events">Search Lifecycle Events</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#objective-function-events">Objective Function Events</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tracker-types">Tracker Types</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tracking-with-loguru-logger">Tracking with Loguru (Logger)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tracking-with-mlflow">Tracking with MLflow</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#artifacts">Artifacts</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#function-tracing">Function Tracing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#worker-specific-tracking">Worker-Specific Tracking</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiprocess-workers">MultiProcess Workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray-workers">Ray Workers</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-issues">Common Issues</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debug-mode">Debug Mode</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-your-own-tracker">Defining your own tracker</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-overview">Architecture Overview</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#event-timeline">Event Timeline</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-a-custom-tracker">Implementing a Custom Tracker</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#registering-custom-trackers">Registering Custom Trackers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices-for-custom-trackers">Best Practices for Custom Trackers</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2026, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
