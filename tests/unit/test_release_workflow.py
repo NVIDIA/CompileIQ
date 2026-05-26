@@ -6,6 +6,7 @@ import pathlib
 
 
 WORKFLOWS = pathlib.Path(__file__).resolve().parents[2] / ".github" / "workflows"
+MAKEFILE = pathlib.Path(__file__).resolve().parents[2] / "Makefile"
 CI_WORKFLOW = WORKFLOWS / "ci.yml"
 DOCS_WORKFLOW = WORKFLOWS / "docs.yml"
 
@@ -34,6 +35,19 @@ def test_wheel_release_only_runs_for_version_tags():
     assert '${GITHUB_REF#refs/tags/v}' in content
     assert "startsWith(github.ref, 'refs/tags/v')" in content
     assert broad_tag_release_condition not in content
+
+
+def test_compileiq_package_release_setup_writes_sourceable_env_file():
+    content = MAKEFILE.read_text()
+
+    assert "setup-compileiq-package-release:" in content
+    assert "PACKAGE_RELEASE_ENV_FILE ?= dist/compileiq-package-release/current.env" in content
+    assert "grep -Eq '^[0-9]+\\.[0-9]+\\.[0-9]+((a|b|rc|dev)[0-9]+)?$$'" in content
+    assert 'echo \'export RELEASE_VERSION="$(RELEASE_VERSION)"\'' in content
+    assert 'echo \'export RELEASE_TAG="v$(RELEASE_VERSION)"\'' in content
+    assert "export RELEASE_MAJOR_MINOR" in content
+    assert "export RELEASE_BRANCH" in content
+    assert "source $(PACKAGE_RELEASE_ENV_FILE)" in content
 
 
 def test_search_space_release_prep_is_local_until_publish_path_is_decided():

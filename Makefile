@@ -4,6 +4,7 @@
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
         docs docs-serve docs-preview build clean validate \
         verify-core update-core \
+        setup-compileiq-package-release \
         setup-search-space-release update-search-space-catalog \
         build-search-space-release check-search-space-staging check-search-space-assets \
         create-search-space-draft-release inspect-search-space-release \
@@ -105,6 +106,32 @@ update-core: ## Update bundled core binaries from CORE_MANIFEST_URL and CORE_TAR
 		--manifest-url "$(CORE_MANIFEST_URL)" \
 		--tarball-url "$(CORE_TARBALL_URL)" \
 		$(if $(CORE_MANIFEST_SHA256),--expected-manifest-sha256 "$(CORE_MANIFEST_SHA256)",)
+
+# CompileIQ package release targets.
+
+RELEASE_VERSION ?=
+PACKAGE_RELEASE_ENV_FILE ?= dist/compileiq-package-release/current.env
+
+setup-compileiq-package-release: ## Write sourceable env vars for a CompileIQ package release
+	@test -n "$(RELEASE_VERSION)" || (echo "ERROR: set RELEASE_VERSION=MAJOR.MINOR.PATCH[SUFFIX], e.g. RELEASE_VERSION=1.0.0" >&2; exit 1)
+	@test "$(RELEASE_VERSION)" != "MAJOR.MINOR.PATCH" || (echo "ERROR: replace MAJOR.MINOR.PATCH with the actual release version" >&2; exit 1)
+	@mkdir -p "$$(dirname "$(PACKAGE_RELEASE_ENV_FILE)")"
+	@if ! printf '%s\n' "$(RELEASE_VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+((a|b|rc|dev)[0-9]+)?$$'; then \
+		echo "ERROR: RELEASE_VERSION must match MAJOR.MINOR.PATCH with optional aN, bN, rcN, or devN suffix, e.g. 1.0.0 or 1.0.0rc5" >&2; \
+		exit 1; \
+	fi; \
+	release_major_minor="$$(printf '%s\n' "$(RELEASE_VERSION)" | sed -E 's/^([0-9]+\.[0-9]+)\..*$$/\1/')"; \
+	{ \
+		echo 'export RELEASE_VERSION="$(RELEASE_VERSION)"'; \
+		echo 'export RELEASE_TAG="v$(RELEASE_VERSION)"'; \
+		echo "export RELEASE_MAJOR_MINOR=\"$$release_major_minor\""; \
+		echo "export RELEASE_BRANCH=\"release-$$release_major_minor\""; \
+	} > "$(PACKAGE_RELEASE_ENV_FILE)"; \
+	echo "Wrote $(PACKAGE_RELEASE_ENV_FILE):"; \
+	cat "$(PACKAGE_RELEASE_ENV_FILE)"; \
+	echo; \
+	echo "Run to set environment variables for release process:"; \
+	echo "  source $(PACKAGE_RELEASE_ENV_FILE)"; \
 
 # Search Space release targets.
 
