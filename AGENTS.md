@@ -40,7 +40,7 @@ poetry run pytest tests/unit/test_ciq.py -vvv
 poetry run pytest tests/unit/test_ciq.py::TestClassName::test_method -vvv
 
 # Build docs
-make install-docs && poetry run sphinx-multiversion -E -a docs/ public/
+make install-docs && make docs
 
 # Build wheel
 make build

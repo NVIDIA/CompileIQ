@@ -5012,22 +5012,6 @@ theme-rtd = ["sphinx-rtd-theme (>=2.0,<3.0)"]
 theme-sbt = ["sphinx-book-theme (>=1.1,<2.0)"]
 
 [[package]]
-name = "sphinx-multiversion"
-version = "0.2.4"
-description = "Add support for multiple versions to sphinx"
-optional = false
-python-versions = "*"
-groups = ["docs"]
-files = [
-    {file = "sphinx-multiversion-0.2.4.tar.gz", hash = "sha256:5cd1ca9ecb5eed63cb8d6ce5e9c438ca13af4fa98e7eb6f376be541dd4990bcb"},
-    {file = "sphinx_multiversion-0.2.4-py2.py3-none-any.whl", hash = "sha256:5c38d5ce785a335d8c8d768b46509bd66bfb9c6252b93b700ca8c05317f207d6"},
-    {file = "sphinx_multiversion-0.2.4-py3-none-any.whl", hash = "sha256:dec29f2a5890ad68157a790112edc0eb63140e70f9df0a363743c6258fbeb478"},
-]
-
-[package.dependencies]
-sphinx = ">=2.1"
-
-[[package]]
 name = "sphinxcontrib-applehelp"
 version = "2.0.0"
 description = "sphinxcontrib-applehelp is a Sphinx extension which outputs Apple help books"
@@ -5903,4 +5887,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "0b53f410e80e833875a9e9eee9413378a9a8dd53002be341ffb4a1f29b273849"
+content-hash = "21958e1e3633beaa440be322d837d9676bfd01264e4a1b37b52d0dc55d061cb3"
