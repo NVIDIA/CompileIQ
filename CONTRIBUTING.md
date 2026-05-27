@@ -4,6 +4,65 @@ CompileIQ is NVIDIA's hyperparameter optimizer for tuning compiler controls. Thi
 
 For installation and end-user docs, see [`README.md`](README.md) and the [CompileIQ documentation](https://nvidia.github.io/CompileIQ/stable/). For internal architecture and module layout, see [`AGENTS.md`](AGENTS.md).
 
+## Signing your work
+
+Every commit must carry a `Signed-off-by:` trailer matching your git `user.name` and `user.email`. The simplest way is to use `-s` on every commit:
+
+```bash
+git commit -s -m "Add core manifest verification"
+```
+
+This requirement applies to commits made on or after this guide lands; existing history is not retroactively re-signed.
+
+If you forgot to sign off, fix it before pushing:
+
+```bash
+git commit --amend -s --no-edit                # last commit
+git rebase -i --signoff <upstream-base>        # older commits in your branch
+```
+
+By signing off, you certify the following Developer Certificate of Origin for every contribution you make:
+
+```
+Developer Certificate of Origin
+Version 1.1
+
+Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
+1 Letterman Drive
+Suite D4700
+San Francisco, CA, 94129
+
+Everyone is permitted to copy and distribute verbatim copies of this
+license document, but changing it is not allowed.
+
+
+Developer's Certificate of Origin 1.1
+
+By making a contribution to this project, I certify that:
+
+(a) The contribution was created in whole or in part by me and I
+    have the right to submit it under the open source license
+    indicated in the file; or
+
+(b) The contribution is based upon previous work that, to the best
+    of my knowledge, is covered under an appropriate open source
+    license and I have the right under that license to submit that
+    work with modifications, whether created in whole or in part
+    by me, under the same open source license (unless I am
+    permitted to submit under a different license), as indicated
+    in the file; or
+
+(c) The contribution was provided directly to me by some other
+    person who certified (a), (b) or (c) and I have not modified
+    it.
+
+(d) I understand and agree that this project and the contribution
+    are public and that a record of the contribution (including all
+    personal information I submit with it, including my sign-off) is
+    maintained indefinitely and may be redistributed consistent with
+    this project or the open source license(s) involved.
+```
+
 ## Reporting issues
 
 File issues from the templates in [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/):
@@ -136,65 +195,6 @@ CI must be green before review. Required and informative checks include `lint`, 
 - At least one [CODEOWNERS](.github/CODEOWNERS) approval is required before merge.
 - Address review comments with additional commits — do not force-push during active review.
 - Pull requests idle for more than 30 days may be closed; reopen when you have time to continue.
-
-## Signing your work
-
-Every commit must carry a `Signed-off-by:` trailer matching your git `user.name` and `user.email`. The simplest way is to use `-s` on every commit:
-
-```bash
-git commit -s -m "Add core manifest verification"
-```
-
-This requirement applies to commits made on or after this guide lands; existing history is not retroactively re-signed.
-
-If you forgot to sign off, fix it before pushing:
-
-```bash
-git commit --amend -s --no-edit                # last commit
-git rebase -i --signoff <upstream-base>        # older commits in your branch
-```
-
-By signing off, you certify the following Developer Certificate of Origin for every contribution you make:
-
-```
-Developer Certificate of Origin
-Version 1.1
-
-Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
-1 Letterman Drive
-Suite D4700
-San Francisco, CA, 94129
-
-Everyone is permitted to copy and distribute verbatim copies of this
-license document, but changing it is not allowed.
-
-
-Developer's Certificate of Origin 1.1
-
-By making a contribution to this project, I certify that:
-
-(a) The contribution was created in whole or in part by me and I
-    have the right to submit it under the open source license
-    indicated in the file; or
-
-(b) The contribution is based upon previous work that, to the best
-    of my knowledge, is covered under an appropriate open source
-    license and I have the right under that license to submit that
-    work with modifications, whether created in whole or in part
-    by me, under the same open source license (unless I am
-    permitted to submit under a different license), as indicated
-    in the file; or
-
-(c) The contribution was provided directly to me by some other
-    person who certified (a), (b) or (c) and I have not modified
-    it.
-
-(d) I understand and agree that this project and the contribution
-    are public and that a record of the contribution (including all
-    personal information I submit with it, including my sign-off) is
-    maintained indefinitely and may be redistributed consistent with
-    this project or the open source license(s) involved.
-```
 
 ## License
 
