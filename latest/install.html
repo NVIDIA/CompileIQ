@@ -442,6 +442,34 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
+<section id="supported-platforms">
+<h2>Supported Platforms<a class="headerlink" href="#supported-platforms" title="Link to this heading">#</a></h2>
+<p>CompileIQ supports Python 3.11, 3.12, and 3.13. Published wheels include the
+bundled CompileIQ core for:</p>
+<ul class="simple">
+<li><p>Linux x86_64</p></li>
+<li><p>Linux aarch64</p></li>
+<li><p>Windows amd64</p></li>
+</ul>
+<p>Linux wheels target glibc 2.34 or newer and are tagged <code class="docutils literal notranslate"><span class="pre">manylinux_2_34</span></code>.
+macOS is not currently a packaged-core target.</p>
+</section>
+<section id="runtime-requirements">
+<h2>Runtime Requirements<a class="headerlink" href="#runtime-requirements" title="Link to this heading">#</a></h2>
+<p>On Linux, the bundled core expects the platform C/C++ runtime libraries and
+zlib to be available on the host. Package names vary by distribution; on
+Debian/Ubuntu, the direct runtime packages for the current Linux wheels are:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>update
+sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libc6<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libgcc-s1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libstdc++6<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>zlib1g
+</pre></div>
+</div>
+<p>On Windows, install the Microsoft Visual C++ Redistributable 2015 or newer
+(x64) if it is not already present.</p>
+</section>
 <section id="managing-searches-with-coding-agents">
 <h2>Managing Searches with Coding Agents<a class="headerlink" href="#managing-searches-with-coding-agents" title="Link to this heading">#</a></h2>
 <p>CompileIQ ships an agent-agnostic skill set under <code class="docutils literal notranslate"><span class="pre">agent-skills/</span></code> that any
@@ -593,6 +621,8 @@ for the full layout and authoring conventions.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-platforms">Supported Platforms</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime-requirements">Runtime Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#managing-searches-with-coding-agents">Managing Searches with Coding Agents</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-configuration-options">Environment Configuration Options</a></li>
 </ul>
