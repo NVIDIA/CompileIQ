@@ -11,8 +11,9 @@ from typing import Iterable
 
 EXECUTABLE_DIR = Path(__file__).resolve().parent / "executable"
 MANIFEST_PATH = EXECUTABLE_DIR / "core-manifest.json"
-SIDECAR_FILENAMES = frozenset({"core-manifest.json", "core-version.lock"})
+SIDECAR_FILENAMES = frozenset({"core-manifest.json"})
 REQUIRED_PLATFORMS = ("linux/x86_64", "linux/aarch64", "win32/amd64")
+CORE_LOCK_EXCLUDED_KEYS = frozenset({"core_lock"})
 
 
 @dataclass
@@ -30,6 +31,7 @@ class VerifyCoreResult:
         missing: Manifest-relative files that were listed but absent on disk.
         extra: On-disk files under `executable_root` that are not in the manifest.
         missing_platforms: Required platform directories absent from the manifest.
+        manifest_errors: Problems with manifest schema or `core_lock`.
     """
 
     ok: bool
@@ -42,6 +44,7 @@ class VerifyCoreResult:
     missing: list[str] = field(default_factory=list)
     extra: list[str] = field(default_factory=list)
     missing_platforms: list[str] = field(default_factory=list)
+    manifest_errors: list[str] = field(default_factory=list)
 
     def render(self) -> str:
         """Render a concise CLI report for human review and CI logs."""
@@ -59,6 +62,9 @@ class VerifyCoreResult:
         if self.missing_platforms:
             lines.append(f"  MISSING PLATFORMS ({len(self.missing_platforms)}):")
             lines.extend(f"    {path}" for path in self.missing_platforms)
+        if self.manifest_errors:
+            lines.append(f"  MANIFEST ERRORS ({len(self.manifest_errors)}):")
+            lines.extend(f"    {error}" for error in self.manifest_errors)
         if self.mismatches:
             lines.append(f"  MISMATCH ({len(self.mismatches)}):")
             for path, expected, actual in self.mismatches:
@@ -94,6 +100,48 @@ def sha256_file(path: Path, chunk_size: int = 1 << 20) -> str:
 def _hex_digest(value: str) -> str:
     """Normalize `sha256:<hex>` manifest values to plain hex."""
     return value.split(":", 1)[1] if ":" in value else value
+
+
+def core_lock_payload(manifest: dict) -> dict:
+    """Return the canonical manifest data protected by `core_lock`.
+
+    The lock covers every manifest field except `core_lock` itself. That binds
+    provenance fields such as `core_commit`, source manifests, and pipeline
+    identifiers to the bundled file hashes in a single digest.
+    """
+    return {
+        key: value
+        for key, value in sorted(manifest.items())
+        if key not in CORE_LOCK_EXCLUDED_KEYS
+    }
+
+
+def compute_core_lock(manifest: dict) -> str:
+    """Compute the stable SHA-256 lock digest for a bundled core manifest."""
+    canonical = json.dumps(
+        core_lock_payload(manifest),
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    return f"sha256:{hashlib.sha256(canonical).hexdigest()}"
+
+
+def with_core_lock(manifest: dict) -> dict:
+    """Return a copy of `manifest` with `core_lock` regenerated."""
+    locked = dict(manifest)
+    locked["core_lock"] = compute_core_lock(locked)
+    return locked
+
+
+def validate_core_lock(manifest: dict) -> list[str]:
+    """Return manifest consistency errors related to `core_lock`."""
+    expected = manifest.get("core_lock")
+    if not isinstance(expected, str) or not expected.startswith("sha256:"):
+        return ["core manifest is missing a valid core_lock"]
+    actual = compute_core_lock(manifest)
+    if actual != expected:
+        return [f"core_lock mismatch, expected {expected}, got {actual}"]
+    return []
 
 
 def _manifest_files(manifest: dict) -> dict[str, str]:
@@ -139,6 +187,7 @@ def verify(
 ) -> VerifyCoreResult:
     """Verify every manifest-listed core binary and report drift."""
     manifest = load_manifest(manifest_path)
+    manifest_errors = validate_core_lock(manifest)
     expected = _manifest_files(manifest)
     on_disk = _on_disk_files(executable_root, manifest_path)
     platforms = _platforms(expected)
@@ -151,6 +200,7 @@ def verify(
         core_commit=manifest.get("core_commit"),
         platforms=platforms,
         missing_platforms=missing_platforms,
+        manifest_errors=manifest_errors,
     )
 
     for rel_path, expected_hash in sorted(expected.items()):
@@ -167,7 +217,11 @@ def verify(
 
     result.extra = sorted(on_disk)
     result.ok = not (
-        result.mismatches or result.missing or result.extra or result.missing_platforms
+        result.manifest_errors
+        or result.mismatches
+        or result.missing
+        or result.extra
+        or result.missing_platforms
     )
     return result
 
@@ -181,6 +235,9 @@ def verify_binary(
     binary_path = Path(binary_path)
     executable_root = Path(executable_root)
     manifest = load_manifest(manifest_path)
+    manifest_errors = validate_core_lock(manifest)
+    if manifest_errors:
+        raise RuntimeError("; ".join(manifest_errors))
     expected = _manifest_files(manifest)
 
     try:
