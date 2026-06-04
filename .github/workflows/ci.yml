@@ -69,6 +69,21 @@ jobs:
           python-version: "3.12"
       - run: python -m compileiq.core.verify_core
 
+  verify-linux-core-abi:
+    name: Verify Linux Core ABI
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - name: Install readelf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils
+      - name: Check bundled Linux ELF version requirements
+        run: python3 dev/check-linux-core-abi.py
+
   unit-test:
     # Matrix matches `pyproject.toml`'s `python = ">=3.11,<3.14"` and the
     # platforms supported per the run-examples job (Linux x86_64, Windows).
@@ -283,7 +298,7 @@ jobs:
               "os": "ubuntu-latest",
               "name": "Linux x86_64",
               "platform_dir": "linux/x86_64",
-              "wheel_platform": "manylinux_2_35_x86_64",
+              "wheel_platform": "manylinux_2_34_x86_64",
               "artifact_name": "compileiq-wheel-linux-x86_64",
           }
           release_platforms = [
@@ -292,7 +307,7 @@ jobs:
                   "os": "ubuntu-24.04-arm",
                   "name": "Linux aarch64",
                   "platform_dir": "linux/aarch64",
-                  "wheel_platform": "manylinux_2_35_aarch64",
+                  "wheel_platform": "manylinux_2_34_aarch64",
                   "artifact_name": "compileiq-wheel-linux-aarch64",
               },
               {
@@ -349,6 +364,13 @@ jobs:
                   print(f'Removing {d} as it is not the target platform')
                   shutil.rmtree(d)
           "
+      - name: Filter core manifest for platform
+        shell: bash
+        run: |
+          python dev/filter-core-manifest.py \
+            --manifest compileiq/core/executable/core-manifest.json \
+            --platform "${{ matrix.platform_dir }}"
+          python -m compileiq.core.verify_core --allow-missing-platforms
       - run: python -m pip install poetry wheel
       - name: Set version from tag
         if: |
@@ -379,7 +401,7 @@ jobs:
   ci-pass:
     name: CI Pass
     runs-on: ubuntu-latest
-    needs: [verify-core, integration-test, fuzz-test, run-examples, validate-binary-ss, build-and-smoke-test-wheel]
+    needs: [verify-core, verify-linux-core-abi, integration-test, fuzz-test, run-examples, validate-binary-ss, build-and-smoke-test-wheel]
     steps:
       - run: echo "All checks passed"
 

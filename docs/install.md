@@ -12,6 +12,36 @@ Or, build from the [repo](https://github.com/NVIDIA/CompileIQ) yourself:
 pip install -e .
 ```
 
+## Supported Platforms
+
+CompileIQ supports Python 3.11, 3.12, and 3.13. Published wheels include the
+bundled CompileIQ core for:
+
+- Linux x86_64
+- Linux aarch64
+- Windows amd64
+
+Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`.
+macOS is not currently a packaged-core target.
+
+## Runtime Requirements
+
+On Linux, the bundled core expects the platform C/C++ runtime libraries and
+zlib to be available on the host. Package names vary by distribution; on
+Debian/Ubuntu, the direct runtime packages for the current Linux wheels are:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+  libc6 \
+  libgcc-s1 \
+  libstdc++6 \
+  zlib1g
+```
+
+On Windows, install the Microsoft Visual C++ Redistributable 2015 or newer
+(x64) if it is not already present.
+
 ## Managing Searches with Coding Agents
 
 CompileIQ ships an agent-agnostic skill set under `agent-skills/` that any

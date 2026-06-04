@@ -104,10 +104,11 @@ verify-core: ## Verify bundled core binaries against core-manifest.json
 update-core: ## Update bundled core binaries from CORE_MANIFEST_URL and CORE_TARBALL_URL
 	@test -n "$(CORE_MANIFEST_URL)" || (echo "ERROR: set CORE_MANIFEST_URL" >&2; exit 1)
 	@test -n "$(CORE_TARBALL_URL)" || (echo "ERROR: set CORE_TARBALL_URL" >&2; exit 1)
+	@test -n "$(CORE_MANIFEST_SHA256)" || (echo "ERROR: set CORE_MANIFEST_SHA256" >&2; exit 1)
 	bash dev/update-core-binaries.sh \
 		--manifest-url "$(CORE_MANIFEST_URL)" \
 		--tarball-url "$(CORE_TARBALL_URL)" \
-		$(if $(CORE_MANIFEST_SHA256),--expected-manifest-sha256 "$(CORE_MANIFEST_SHA256)",)
+		--expected-manifest-sha256 "$(CORE_MANIFEST_SHA256)"
 
 # CompileIQ package release targets.
 

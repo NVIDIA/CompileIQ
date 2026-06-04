@@ -1,9 +1,0 @@
-{
-  "core_commit": "2ee49afc58793cb48c4f445c475ae9c89ea315ce",
-  "source_manifest_sha256": "77220ba35f397640a77dfcec6b7156d6b3ac53bff18777606bf1fcf9b9ae9f73",
-  "platforms": [
-    "linux/aarch64",
-    "linux/x86_64",
-    "win32/amd64"
-  ]
-}
