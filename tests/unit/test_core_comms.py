@@ -5,37 +5,31 @@ import pytest
 
 from compileiq.core import core_comms
 from compileiq.core.core_comms import CoreIPC
-from compileiq.core.verify_core import sha256_file
+from compileiq.core.verify_core import sha256_file, with_core_lock
 
 
 def _write_manifest(root, rel_path, binary):
     manifest = root / "core-manifest.json"
-    manifest.write_text(
-        json.dumps(
-            {
-                "core_commit": "test",
-                "files": {rel_path: f"sha256:{sha256_file(binary)}"},
-            }
-        ),
-        encoding="utf-8",
-    )
+    manifest_data = {
+        "schema_version": 2,
+        "core_commit": "test",
+        "files": {rel_path: f"sha256:{sha256_file(binary)}"},
+    }
+    manifest.write_text(json.dumps(with_core_lock(manifest_data)), encoding="utf-8")
     return manifest
 
 
 def _write_platform_manifest(root, files):
     manifest = root / "core-manifest.json"
-    manifest.write_text(
-        json.dumps(
-            {
-                "core_commit": "test",
-                "files": {
-                    rel_path: f"sha256:{sha256_file(path)}"
-                    for rel_path, path in files.items()
-                },
-            }
-        ),
-        encoding="utf-8",
-    )
+    manifest_data = {
+        "schema_version": 2,
+        "core_commit": "test",
+        "files": {
+            rel_path: f"sha256:{sha256_file(path)}"
+            for rel_path, path in files.items()
+        },
+    }
+    manifest.write_text(json.dumps(with_core_lock(manifest_data)), encoding="utf-8")
     return manifest
 
 

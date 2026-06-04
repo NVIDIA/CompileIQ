@@ -1,13 +1,20 @@
 {
-  "core_commit": "2ee49afc58793cb48c4f445c475ae9c89ea315ce",
+  "schema_version": 2,
+  "core_commit": "92581f1aab1c1ccc37614ff8242a474e4468d2cd",
+  "core_ref": "main",
+  "core_tag": null,
+  "built_at": "2026-06-04T06:23:17Z",
+  "pipeline_id": 53625600,
   "files": {
-    "linux/aarch64/bin/_core": "sha256:7d3c49d63bc2a9a2c286b2fc237246c8b9d83f058fc4a3cc97104eea801c931e",
+    "linux/aarch64/bin/_core": "sha256:a3e32c027b397b8c7e68b6d39bdd01d1877e0ed11008dab6444334277100007c",
     "linux/aarch64/bin/core": "sha256:9fa6463d7210b96d61bc6c1e3a2f7484f2b9b44c5a30a63840c6cd4365baf882",
-    "linux/aarch64/lib/libciq.so": "sha256:ba4ef3f913edd0a6234e979a70dfc535af8076abe8ff6fb154b39585833fd530",
-    "linux/x86_64/bin/_core": "sha256:366089f52a82a3748bad14d5e42ca9e7c0f519649bfbf7d7097c2da2b11feb25",
+    "linux/aarch64/lib/libciq.so": "sha256:7e798e4540905db1942be5d8a740b08390922b900a601afe4d43adf054ec5b7e",
+    "linux/x86_64/bin/_core": "sha256:0fea2a15f0935c2c0c511822d3772a27a4695b3b7912aa089051ef9dea527d4c",
     "linux/x86_64/bin/core": "sha256:9fa6463d7210b96d61bc6c1e3a2f7484f2b9b44c5a30a63840c6cd4365baf882",
-    "linux/x86_64/lib/libciq.so": "sha256:0e0956118c5d137d82118b2f86a60bde5a23939b85a7140aad003970d89207f7",
+    "linux/x86_64/lib/libciq.so": "sha256:e49d1b0fbe196d0ca3f3aafc16db53823136d98b353d1c001768d459e3f2f04c",
     "win32/amd64/core.exe": "sha256:9b4f1a63193d2cad5787ed515f57d20ff0b62e52d687e9bb989d7f26d7ce7c53",
-    "win32/amd64/libciq.dll": "sha256:588b7d3733f8a35491853404a7e3ec19c662fb594fed42a3baf5aa2e87c4f51f"
-  }
+    "win32/amd64/libciq.dll": "sha256:37df95add866f884590ec5c70bce117650799b55d82da571ce75334ae060b6e3"
+  },
+  "source_manifest_sha256": "sha256:f447906f7d62d36fc62d8c88480e5ae1d6edad07ed7044ac2db3f533196aa558",
+  "core_lock": "sha256:17f57b4235307a848d8b465f87773b97e20f5ca485c97084f94ccb8f573d1282"
 }

@@ -16,6 +16,15 @@ Or, build from the [repo](https://github.com/NVIDIA/CompileIQ) yourself:
 pip install -e .
 ```
 
+## Supported platforms
+
+CompileIQ supports Python 3.11, 3.12, and 3.13. Published wheels include the
+bundled CompileIQ core for Linux x86_64, Linux aarch64, and Windows amd64.
+
+Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`. See
+the [installation guide](docs/install.md) for Linux runtime library
+requirements and Windows runtime notes.
+
 ## Search Spaces
 
 CompileIQ can retrieve curated compiler search spaces from GitHub release assets and cache them locally. Use `PtxasSearchSpace` or `NvccSearchSpace` to select a compiler, compiler version, and optional variant:
