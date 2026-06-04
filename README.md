@@ -1,12 +1,27 @@
 # CompileIQ - NVIDIA Compiler HPO
 
-CompileIQ is a hyperparameter optimizer for tuning NVIDIA compiler controls and application parameters.
+**Push high-performance GPU kernels further with NVIDIA compiler tuning.**
 
-[Documentation](https://nvidia.github.io/CompileIQ/stable/) |
-[PyPI](https://pypi.org/project/compileiq/) |
-[Latest Release](https://github.com/NVIDIA/CompileIQ/releases/latest) |
-[Search Space Catalog Releases](https://github.com/NVIDIA/CompileIQ/releases?q=Search+Space+Catalog+Release&expanded=true) |
-[Booster Pack Catalog Releases](https://github.com/NVIDIA/CompileIQ/releases?q=Booster+Pack+Catalog+Release&expanded=true)
+CompileIQ is a hyperparameter optimizer for NVIDIA compiler controls and application parameters. It helps kernel developers tune those controls against workload-specific benchmarks, adding another optimization path for CUDA C++, Triton, and Helion kernels after source-level tuning has plateaued.
+
+[Documentation](https://nvidia.github.io/CompileIQ/stable/) | [PyPI](https://pypi.org/project/compileiq/) | [Latest Release](https://github.com/NVIDIA/CompileIQ/releases/latest) | [Search Space Catalog Releases](https://github.com/NVIDIA/CompileIQ/releases?q=Search+Space+Catalog+Release&expanded=true) | [Booster Pack Catalog Releases](https://github.com/NVIDIA/CompileIQ/releases?q=Booster+Pack+Catalog+Release&expanded=true)
+
+## What CompileIQ Does
+
+- Searches PTXAS and NVCC Advanced Controls for your target kernel.
+- Measures candidates against runtime, compile time, power, or Pareto objectives.
+- Produces reusable ACF artifacts that can be checked in with the kernel.
+- Supports CUDA C++, Triton, and Helion tuning workflows.
+
+## Basic Workflow
+
+1. Define the kernel benchmark and objective.
+2. Run CompileIQ over the relevant compiler controls.
+3. Apply the generated ACF in future builds or JIT compilation.
+
+Tune the compiler to the workload.
+
+See the [documentation](https://nvidia.github.io/CompileIQ/stable/) and [examples](#examples) for more.
 
 ## Quick install
 
