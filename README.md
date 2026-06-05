@@ -1,6 +1,6 @@
 # CompileIQ - NVIDIA Compiler HPO
 
-**Push high-performance GPU kernels further with NVIDIA compiler tuning.**
+**Push GPU kernels further with NVIDIA compiler tuning.**
 
 CompileIQ is a hyperparameter optimizer for NVIDIA compiler controls and application parameters. It helps kernel developers tune those controls against workload-specific benchmarks, adding another optimization path for CUDA C++, Triton, and Helion kernels after source-level tuning has plateaued.
 
@@ -8,9 +8,11 @@ CompileIQ is a hyperparameter optimizer for NVIDIA compiler controls and applica
 
 ## What CompileIQ Does
 
-- Searches PTXAS and NVCC Advanced Controls for your target kernel.
-- Measures candidates against runtime, compile time, power, or Pareto objectives.
-- Produces reusable ACF artifacts that can be checked in with the kernel.
+CompileIQ tunes NVIDIA compilers to your workload using the compiler's [Advanced Controls](https://nvidia.github.io/CompileIQ/stable/compilers_overview.html) interface. At a high level CompileIQ:
+
+- Searches optimal PTXAS and NVCC Advanced Controls for your target kernel.
+- Iteratively measures candidates against metrics defined by you (runtime, compile time, power, etc).
+- Produces an Advanced Control File (ACF) that can be distributed with the kernel.
 - Supports CUDA C++, Triton, and Helion tuning workflows.
 
 ## Basic Workflow
