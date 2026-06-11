@@ -6,7 +6,7 @@ Optimize Triton kernels with CompileIQ's PTXAS controls.
 
 ### Basic PTX Controls (`triton_ptx.py`)
 
-Optimizes a matmul kernel by tuning PTXAS compiler settings.
+Optimizes a fixed-config matmul kernel by tuning PTXAS compiler settings.
 
 ```bash
 python triton_ptx.py
@@ -31,7 +31,7 @@ python mixed_triton.py
 
 ## Output
 
-Both scripts generate `best_matmul.acf` - use with Triton's `ptx_options`:
+Both scripts generate `best_matmul.acf` - use with Triton's `ptx_options` or through `PTXAS_OPTIONS` env var:
 
 ```python
 kernel[grid](..., ptx_options="--apply-controls=best_matmul.acf")

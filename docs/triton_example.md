@@ -1,34 +1,57 @@
 # Tuning PTXAS for your Triton kernel
 
-In this section, we will build on an existing Triton tutorial kernel and apply PTXAS ACFs.
+This section shows how to apply CompileIQ-generated PTXAS ACFs to a Triton
+kernel. The basic example uses a fixed-config illustrative matmul kernel and
+searches only PTXAS controls. The companion mixed example shows how to search
+Triton launch/configuration knobs and PTXAS controls together.
 
 > The example code and supporting files can be found [in our repo here](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/triton_example/triton_ptx.py).
 
-## Matmul Triton Tutorial
+> Examples may become stale as triton or the compiler improve, and these examples are simple in nature, meant to teach you how to incorporate CompileIQ into your existing code
 
-The original kernel for the Triton tutorial can be found in [the Triton repository](https://github.com/triton-lang/triton/blob/v3.6.0/python/tutorials/03-matrix-multiplication.py).
+## Fixed-config matmul example
 
-Our goal is to apply CompileIQ on top of an existing matmul kernel to optimize runtime. Our changes are minimal: we do not modify the kernel code itself. Let’s walk through the integration before looking at the full objective function.
-
-### Specific Changes to Triton
-
-First, Triton is JIT-compiled, so we need to force recompilation for each ACF we try. An easy way to do this is by setting the environment variable `TRITON_ALWAYS_COMPILE`.
-
-Second, at the time of writing, Triton ships with its own PTXAS binary for ease of use. However, we need PTXAS 13.3 or higher to use CompileIQ’s ACF support. Therefore, we also override Triton’s default PTXAS with a local version via `TRITON_PTXAS_PATH`.
-
-You can do this programmatically with:
+The basic `triton_ptx.py` example keeps the Triton kernel configuration fixed:
 
 ```python
-import os
-os.environ["TRITON_ALWAYS_COMPILE"] = "1"
-os.environ["TRITON_PTXAS_PATH"] = "path/to/bin/ptxas"
+BLOCK_M = 32
+BLOCK_N = 64
+BLOCK_K = 32
+NUM_WARPS = 4
+NUM_STAGES = 3
 ```
 
-> For blackwell overwrites use: `TRITON_PTXAS_BLACKWELL_PATH` instead of `TRITON_PTXAS_PATH`
+It then tunes only the PTXAS compiler controls for that kernel and matrix
+shape. The example uses exact-tile `4096 x 4096` inputs, so `M`, `N`, and `K`
+must be divisible by the block sizes.
 
-Finally, we need to pass the ACF file to Triton so it can forward it to PTXAS. Triton already supports this via `ptx_options` when launching your kernel:
+## Specific changes for Triton
+
+Triton is JIT-compiled, so force recompilation for each ACF:
 
 ```python
+os.environ["TRITON_ALWAYS_COMPILE"] = "1"
+```
+
+Triton ships its own PTXAS binary. CompileIQ ACF support requires
+PTXAS 13.3 or newer, so point Triton at the expected local `ptxas`. Set both
+environment variables when targeting systems where Triton may select a
+Blackwell-specific PTXAS path:
+
+```python
+ptxas_path = shutil.which("ptxas")
+if ptxas_path is None:
+    raise RuntimeError("ptxas not found in PATH.")
+
+os.environ["TRITON_PTXAS_PATH"] = ptxas_path
+os.environ["TRITON_PTXAS_BLACKWELL_PATH"] = ptxas_path
+```
+
+Pass the ACF to Triton through the `ptx_options` kernel-launch keyword:
+
+```python
+ptxas_options = f"--apply-controls={controls_path}" if controls_path else None
+
 matmul_kernel[grid](
     a,
     b,
@@ -42,170 +65,160 @@ matmul_kernel[grid](
     b.stride(1),
     c.stride(0),
     c.stride(1),
-    ACTIVATION=activation,
-    ptx_options=f"--apply-controls={ptx_acf_filename}",
+    BLOCK_M=BLOCK_M,
+    BLOCK_N=BLOCK_N,
+    BLOCK_K=BLOCK_K,
+    num_warps=NUM_WARPS,
+    num_stages=NUM_STAGES,
+    ptx_options=ptxas_options,
 )
 ```
 
-> You can optionally use the `PTX_OPTIONS` environment variable to pass in the `--apply-controls` flag instead of explicitly adding it to your kernel calls.
+> You can optionally use the `PTX_OPTIONS` environment variable to pass in the `--apply-controls` flag instead of explicitly adding it to your kernel calls. Note that this will be applied globally
 
 ### Building the objective function
 
-With everything in place, we can now build our objective function:
+The objective writes each sampled CompileIQ config to a temporary `.acf` file,
+passes that file to the Triton launch, checks correctness against Torch, and
+only then benchmarks runtime:
 
 ```python
-def objective(ptx_acf: str) -> float:
-    """
-    Our objective will minimize runtime. It applies the given
-    ACF to the kernel, verifies output correctness, and
-    benchmarks the runtime.
-    """
-
-    ptxas_path = shutil.which("ptxas")  # Ensures Triton picks up the expected ptxas
+def objective(config) -> float:
+    ptxas_path = shutil.which("ptxas")
     if ptxas_path is None:
         raise RuntimeError("ptxas not found in PATH.")
 
     os.environ["TRITON_PTXAS_PATH"] = ptxas_path
+    os.environ["TRITON_PTXAS_BLACKWELL_PATH"] = ptxas_path
     os.environ["TRITON_ALWAYS_COMPILE"] = "1"
 
-    a = torch.rand((512, 512), device=DEVICE, dtype=torch.float16) - 0.5
-    b = torch.rand((512, 512), device=DEVICE, dtype=torch.float16) - 0.5
+    a = torch.rand((4096, 4096), device=DEVICE, dtype=torch.float16) - 0.5
+    b = torch.rand((4096, 4096), device=DEVICE, dtype=torch.float16) - 0.5
 
-    with tempfile.NamedTemporaryFile(suffix=".acf", delete=True) as tmp_acf_file:
-        save_compiler_config(tmp_acf_file.name, ptx_acf)
+    with tempfile.NamedTemporaryFile(suffix=".acf", delete=True) as f:
+        save_compiler_config(f.name, config)
+        triton_out = matmul(a, b, f.name)
+        torch_out = torch.matmul(a, b)
 
-        triton_output = matmul(a, b, tmp_acf_file.name)
-        torch_output = torch.matmul(a, b)
+        if not torch.allclose(triton_out, torch_out, atol=1e-2, rtol=0):
+            return INVALID_SCORE
 
-        # Validating output
-        if not torch.allclose(triton_output, torch_output, atol=1e-2, rtol=0):
-            runtime = INVALID_SCORE
-        else:
-            # Benchmarking Advanced Controls File
-            runtime = triton.testing.do_bench(
-                lambda: matmul(a, b, tmp_acf_file.name),
-                warmup=100,
-                rep=1000,
-                return_mode="mean",
-            )
-
-    return runtime
+        return triton.testing.do_bench(
+            lambda: matmul(a, b, f.name),
+            warmup=100,
+            rep=1000,
+            return_mode="mean",
+        )
 ```
 
-Here’s what the function does:
+This objective follows the guardrails in the [Safety Section](compilers_overview.md#safety--correctness-read-this-first):
 
-* Sets environment variables for Triton to avoid caching and to use the expected PTXAS.
-* Creates a temporary file containing the sampled ACF from CompileIQ.
-* Passes that file into the `matmul` function from the [original tutorial](https://github.com/triton-lang/triton/blob/v3.6.0/python/tutorials/03-matrix-multiplication.py). This function is modified to pass the PTXAS CLI option `--apply-controls`, as described above.
-* Validating result correctness against Torch's implementation.
-* Performing benchmarking to get the runtime, only if the correctness test passed.
+* Force recompilation so each ACF can affect generated code.
+* Use an explicit PTXAS 13.3+ path.
+* Validate correctness before timing.
+* Return `INVALID_SCORE` for wrong answers.
 
-This objective is following all guidelines from our [Safety Section](compilers_overview.md#safety--correctness-read-this-first).
+### Expanding the search to different matrix sizes
 
-#### Expanding the search to different matrix sizes
+In the basic example, the search is specific to `4096 x 4096` matmul with the
+fixed block sizes above. If you want to support multiple sizes, you have a few
+options:
 
-In this example, we tune PTXAS controls for a specific matrix size of 512×512. If you want to support multiple sizes, you have a few options:
+* Run a separate search for each size.
+* Benchmark and validate all matrix sizes inside the objective and return an aggregate score.
+* Use a [multi-objective search](getting_started.md#multi-objective-searches) and return one score per size.
 
-* Perform one different search for each size
-* Benchmark and validate all matrix sizes inside the objective and return the mean, or only return a score if the ACF showed gains on most or all of the benchmarks
-* Perform a [multi-objective search](getting_started.md#multi-objective-searches) where you return one score for each of the sizes you want to support.
+### A note on performance
 
-#### A Note on Performance
-
-It is important that all measurements performed during the search are reliable. We provide helper functionality to lock clocks which will help with reproducibility and runtime stability.
+Reliable latency measurements are important during the search. CompileIQ
+provides a helper to lock clocks:
 
 ```python
 from compileiq.utils.gpu import gpu_benchmark_mode
 
 with gpu_benchmark_mode(clock_mhz=1965, raise_on_failure=False):
-    results = tuner.start()
+    results = tuner.start(task_timeout=20)
 ```
 
-Because we are using the multiprocessing worker that only works locally, we can lock the clocks once before starting the search. If you are using Ray on multiple machines, you may want to either lock the clocks beforehand or use `gpu_benchmark_mode` inside the objective function to make sure the clocks are locked for each individual evaluation regardless of where it will execute.
+Because the default multiprocessing worker runs locally, you can lock clocks
+once before starting the search. If you use Ray across multiple machines, lock
+clocks before the run or use `gpu_benchmark_mode` inside the objective function
+so each remote evaluation runs under the same clock policy.
 
-## Expanding to Mixed-Search Spaces
+## Expanding to mixed search spaces
 
-Besides tuning PTXAS, CompileIQ often finds its best results when co-tuning other hyperparameters that matter to the application. In this example, Triton already does a good job with its own autotuner. As an example, we can disable the autotuner and expose those parameters to CompileIQ as part of the search space.
-
-First, remove the autotune decorator and keep the configs in an accessible location:
+Besides tuning PTXAS, CompileIQ can co-tune application parameters. The
+`mixed_triton.py` example searches a user-defined index into a list of Triton
+configs plus the PTXAS search space:
 
 ```python
 TRITON_CONFIGS = [
-    {
-        "block_size_m": 128,
-        "block_size_n": 256,
-        "block_size_k": 64,
-        "group_size_m": 8,
-        "num_stages": 3,
-        "num_warps": 8,
-    },
-    {
-        "block_size_m": 64,
-        "block_size_n": 256,
-        "block_size_k": 32,
-        "group_size_m": 8,
-        "num_stages": 4,
-        "num_warps": 4,
-    }, 
-    ... 
-    ]
+    {"block_m": 32, "block_n": 64, "block_k": 32, "stages": 3, "warps": 4},
+    {"block_m": 64, "block_n": 64, "block_k": 32, "stages": 3, "warps": 4},
+    {"block_m": 64, "block_n": 128, "block_k": 32, "stages": 4, "warps": 4},
+    {"block_m": 128, "block_n": 128, "block_k": 32, "stages": 4, "warps": 4},
+    {"block_m": 128, "block_n": 256, "block_k": 64, "stages": 3, "warps": 8},
+]
+
+search_space = [
+    {"config_idx": ss.range(0, len(TRITON_CONFIGS) - 1)},
+    PtxasSearchSpace(version=cuda_version),
+]
 ```
 
-We can now define a mixed search space containing the user space and PTX space.
+The objective receives a list with one entry per search-space component:
 
 ```python
-user_space = {"config_idx": ss.range(0, len(TRITON_CONFIGS) - 1)}
-ptx_space = PtxasSearchSpace(version=cuda_version)
-
-search_space_config = [user_space, ptx_space]
-
-tuner = Search(
-    objective_function=objective,
-    search_space=search_space_config,
-    search_config=main_config,
-)
-```
-
-Here we create a range parameter that indexes into `TRITON_CONFIGS`.
-
-In the objective function, we now receive a list with the user space and PTX space sampled separately. We adjust the objective to read the index and pass the selected config to the kernel:
-
-```python
-
-def objective(mixed_ss: list[dict, str]) -> float:
-
-    user_space, ptx_acf = mixed_ss
-    config_idx = user_space["config_idx"]
+def objective(mixed_config: list) -> float:
+    user_space, ptxas_config = mixed_config
+    cfg = TRITON_CONFIGS[user_space["config_idx"]]
 
     ...
 
-    triton_output = matmul(a, b, tmp_acf_file.name, **TRITON_CONFIGS[config_idx])
-
+    with tempfile.NamedTemporaryFile(suffix=".acf", delete=True) as f:
+        save_compiler_config(f.name, ptxas_config)
+        triton_output = matmul(a, b, f.name, cfg)
 ```
 
-With this adjustment, CompileIQ can tune both PTX and user-space parameters together !
+Mixed-search results keep that same list shape in `best["params"]`. Unpack it
+before saving the ACF:
+
+```python
+best = results.get_best_result()
+user_space, ptxas_config = best["params"]
+
+print(f"Best Triton config index: {user_space['config_idx']}")
+save_compiler_config("best_matmul.acf", ptxas_config)
+```
+
+```python
+tuner = Search(
+    objective_function=objective,
+    search_space=search_space,
+    search_config=config,
+)
+```
 
 ### Expanding even further
 
-The example above is illustrative and reuses the pre-defined configurations for the Triton matmul example. Alternatively, you can search over block and group sizes independently.
-
-As an example, you could expose each option as a CompileIQ parameter:
+The example above indexes into a curated list of supported Triton configs.
+Alternatively, you can search over block and launch parameters directly:
 
 ```python
-
 user_space = {
-    "block_size_m": ss.range(16, 128, 16),
-    "block_size_n": ss.range(16, 256, 16),
-    "block_size_k": ss.range(16, 128, 16),
-    "group_size_m": ss.choice([4, 8, 16]),
-    "num_stages": ss.choice([2, 3, 4, 5]),
-    "num_warps": ss.choice([2, 4, 8]),
+    "block_m": ss.range(16, 128, 16),
+    "block_n": ss.range(16, 256, 16),
+    "block_k": ss.range(16, 128, 16),
+    "stages": ss.choice([2, 3, 4, 5]),
+    "warps": ss.choice([2, 4, 8]),
 }
 
-ptx_space = PtxasSearchSpace(version=cuda_version)
-
-search_space_config = [user_space, ptx_space]
-
+search_space = [
+    user_space,
+    PtxasSearchSpace(version=cuda_version),
+]
 ```
 
-Although this approach might require longer searches, it provides better visibility into how each combination behaves. You might even find good solutions where you least expect them.
+This approach may require longer searches, but it gives CompileIQ visibility
+into each parameter combination.
+
