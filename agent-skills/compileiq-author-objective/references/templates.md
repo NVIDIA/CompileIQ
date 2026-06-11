@@ -90,13 +90,14 @@ import torch, triton, triton.language as tl
 import compileiq.search_spaces.base as ss
 from compileiq.ciq import Search
 from compileiq.search_spaces.compilers import PtxasSearchSpace
-from compileiq.types import INVALID_SCORE, SearchConfiguration
+from compileiq.types import INVALID_SCORE, SearchConfiguration, WorkerTypes
+from compileiq.utils.gpu import gpu_benchmark_mode
 from compileiq.utils.helpers import save_compiler_config
 
 DEVICE = triton.runtime.driver.active.get_active_torch_device()
 USER_CONFIGS = [
-    {"block_m": 128, "block_n": 256, "block_k": 64, "stages": 3, "warps": 8},
-    {"block_m": 64,  "block_n": 256, "block_k": 32, "stages": 4, "warps": 4},
+    {"block_m": 32, "block_n": 64, "block_k": 32, "stages": 3, "warps": 4},
+    {"block_m": 64, "block_n": 128, "block_k": 32, "stages": 4, "warps": 4},
     # ... add the configs your kernel supports
 ]
 
@@ -109,10 +110,20 @@ def my_kernel(...):  # your Triton kernel
 def run(a, b, acf_path, cfg):
     M, K = a.shape
     _, N = b.shape
+    assert M % cfg["block_m"] == 0
+    assert N % cfg["block_n"] == 0
+    assert K % cfg["block_k"] == 0
     c = torch.empty((M, N), device=a.device, dtype=torch.float16)
-    grid = (triton.cdiv(M, cfg["block_m"]) * triton.cdiv(N, cfg["block_n"]),)
-    my_kernel[grid](a, b, c, M, N, K, ..., num_stages=cfg["stages"], num_warps=cfg["warps"],
-                    ptx_options=f"--apply-controls={acf_path}")
+    grid = ((M // cfg["block_m"]) * (N // cfg["block_n"]),)
+    my_kernel[grid](
+        a, b, c, M, N, K, ...,
+        BLOCK_M=cfg["block_m"],
+        BLOCK_N=cfg["block_n"],
+        BLOCK_K=cfg["block_k"],
+        num_stages=cfg["stages"],
+        num_warps=cfg["warps"],
+        ptx_options=f"--apply-controls={acf_path}",
+    )
     return c
 
 
@@ -120,7 +131,9 @@ def objective(mixed_config: list) -> float:
     user_space, ptxas_config = mixed_config
     cfg = USER_CONFIGS[user_space["config_idx"]]
 
-    os.environ["TRITON_PTXAS_PATH"]    = shutil.which("ptxas")
+    ptxas_path = shutil.which("ptxas")
+    os.environ["TRITON_PTXAS_PATH"] = ptxas_path
+    os.environ["TRITON_PTXAS_BLACKWELL_PATH"] = ptxas_path
     os.environ["TRITON_ALWAYS_COMPILE"] = "1"
 
     a = torch.rand((512, 512), device=DEVICE, dtype=torch.float16)
@@ -151,9 +164,12 @@ if __name__ == "__main__":
         search_config=SearchConfiguration(problem_type="min", generations=10, pool_size=32),
         dump_results="results.csv",
     )
-    results = tuner.start()
+    with gpu_benchmark_mode(clock_mhz=1965, raise_on_failure=False):
+        results = tuner.start(task_timeout=20)
     best = results.get_best_result()
-    save_compiler_config("best.acf", best["params"])
+    user_space, ptxas_config = best["params"]
+    print(f"best config index: {user_space['config_idx']}")
+    save_compiler_config("best.acf", ptxas_config)
 ```
 
 ---
