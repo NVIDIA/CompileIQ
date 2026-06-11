@@ -39,10 +39,11 @@ the worker, size the configuration, and run the search safely.
 
 ## Worker selection
 
-Pass the **Worker class itself** to `Search(worker_type=...)`, not the enum
-(`docs/workers.md:12`):
+Pass either a built-in `WorkerTypes` enum value or the worker class itself to
+`Search(worker_type=...)`:
 
 ```python
+from compileiq.types import WorkerTypes
 from compileiq.worker import (
     MultiProcessWorker,    # default
     IsoMultiProcessWorker, # spawns fresh process per task; kill-safe
@@ -54,6 +55,7 @@ from compileiq.worker import (
 | Situation | Worker class | Why |
 |---|---|---|
 | GPU kernel that may hang, OOM, or leak CUDA context | **`IsoMultiProcessWorker`** | One fresh process per task; parent kills on `task_timeout`. Defaults to `fork`. (`docs/workers.md:42`) |
+| Triton mixed example on Blackwell-class GPUs | `WorkerTypes.ISOLATED` + `CIQ_PROCESS_MODE=spawn` | Isolates each evaluation and avoids leaking illegal memory access state across runs. |
 | Fast (<100ms), stateless objective | `MultiProcessWorker` (default) | Reuses a pool; lower overhead. Defaults to `forkserver`. |
 | Multi-node / multi-GPU cluster | `RayWorker` | User must set up Ray cluster + install compileiq on every worker. Both `num_workers` and `task_timeout` are ignored. (`docs/workers.md:79-91`) |
 | I/O-bound `async def` objective | `AsyncWorker` | Concurrency, not parallelism. Rare for GPU work. |
@@ -106,7 +108,7 @@ tuner = Search(
     objective_function=objective,
     search_space=PtxasSearchSpace(version="13.3", variant="att"),
     search_config=config,
-    worker_type=IsoMultiProcessWorker,                 # class, not enum
+    worker_type=IsoMultiProcessWorker,                 # or WorkerTypes.ISOLATED
     tracker_config=LoguruTrackerConfig(sink="optimization.log"),
     dump_results=Path("results.csv"),                  # ALWAYS set this
     cache_folder=None,                                  # default ~/.cache/compileiq
