@@ -1,7 +1,7 @@
 """
-CompileIQ Triton Example: Optimize matmul kernel with PTXAS controls.
+CompileIQ Triton Example: Optimize a fixed-config matmul kernel with PTXAS controls.
 
-This example uses Triton's matmul kernel from the official tutorials and
+This example uses an illustrative Triton matmul kernel and
 applies CompileIQ to search for optimal PTXAS compiler configurations.
 
 Usage:
@@ -26,22 +26,13 @@ from compileiq.utils.gpu import gpu_benchmark_mode
 
 DEVICE = triton.runtime.driver.active.get_active_torch_device()
 
+BLOCK_M = 32
+BLOCK_N = 64
+BLOCK_K = 32
+NUM_WARPS = 4
+NUM_STAGES = 3
 
-# Matmul kernel from Triton tutorials (simplified config list)
-@triton.autotune(
-    configs=[
-        triton.Config(
-            {"BLOCK_M": 128, "BLOCK_N": 256, "BLOCK_K": 64, "GROUP_M": 8}, num_stages=3, num_warps=8
-        ),
-        triton.Config(
-            {"BLOCK_M": 64, "BLOCK_N": 256, "BLOCK_K": 32, "GROUP_M": 8}, num_stages=4, num_warps=4
-        ),
-        triton.Config(
-            {"BLOCK_M": 128, "BLOCK_N": 128, "BLOCK_K": 32, "GROUP_M": 8}, num_stages=4, num_warps=4
-        ),
-    ],
-    key=["M", "N", "K"],
-)
+
 @triton.jit
 def matmul_kernel(
     a_ptr,
@@ -59,47 +50,42 @@ def matmul_kernel(
     BLOCK_M: tl.constexpr,
     BLOCK_N: tl.constexpr,
     BLOCK_K: tl.constexpr,
-    GROUP_M: tl.constexpr,
-    ACTIVATION: tl.constexpr,
 ):
-    """Standard tiled matmul: C = A @ B"""
+    """Simple exact-tile matmul: C = A @ B."""
     pid = tl.program_id(0)
-    num_pid_m, num_pid_n = tl.cdiv(M, BLOCK_M), tl.cdiv(N, BLOCK_N)
-    num_pid_in_group = GROUP_M * num_pid_n
-    group_id = pid // num_pid_in_group
-    first_pid_m = group_id * GROUP_M
-    group_size_m = min(num_pid_m - first_pid_m, GROUP_M)
-    pid_m = first_pid_m + ((pid % num_pid_in_group) % group_size_m)
-    pid_n = (pid % num_pid_in_group) // group_size_m
+    num_pid_n = N // BLOCK_N
+    pid_m = pid // num_pid_n
+    pid_n = pid % num_pid_n
 
-    offs_am = (pid_m * BLOCK_M + tl.arange(0, BLOCK_M)) % M
-    offs_bn = (pid_n * BLOCK_N + tl.arange(0, BLOCK_N)) % N
+    offs_m = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
+    offs_n = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
     offs_k = tl.arange(0, BLOCK_K)
-    a_ptrs = a_ptr + offs_am[:, None] * stride_am + offs_k[None, :] * stride_ak
-    b_ptrs = b_ptr + offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn
 
     acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
-    for k in range(0, tl.cdiv(K, BLOCK_K)):
-        a = tl.load(a_ptrs, mask=offs_k[None, :] < K - k * BLOCK_K, other=0.0)
-        b = tl.load(b_ptrs, mask=offs_k[:, None] < K - k * BLOCK_K, other=0.0)
-        acc = tl.dot(a, b, acc)
-        a_ptrs += BLOCK_K * stride_ak
-        b_ptrs += BLOCK_K * stride_bk
+    for k in range(0, K, BLOCK_K):
+        k_idxs = k + offs_k
+        a_ptrs = a_ptr + offs_m[:, None] * stride_am + k_idxs[None, :] * stride_ak
+        b_ptrs = b_ptr + k_idxs[:, None] * stride_bk + offs_n[None, :] * stride_bn
+        a = tl.load(a_ptrs)
+        b = tl.load(b_ptrs)
+        acc += tl.dot(a, b)
 
     c = acc.to(tl.float16)
-    offs_cm = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
-    offs_cn = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
-    c_ptrs = c_ptr + offs_cm[:, None] * stride_cm + offs_cn[None, :] * stride_cn
-    tl.store(c_ptrs, c, mask=(offs_cm[:, None] < M) & (offs_cn[None, :] < N))
+    c_ptrs = c_ptr + offs_m[:, None] * stride_cm + offs_n[None, :] * stride_cn
+    tl.store(c_ptrs, c)
 
 
-def matmul(a, b, acf_path: str):
-    """Run matmul with custom PTXAS controls."""
+def matmul(a, b, controls_path: str):
+    """Run the fixed-config matmul with custom PTXAS controls."""
     assert a.shape[1] == b.shape[0] and a.is_contiguous()
     M, K = a.shape
     _, N = b.shape
+    assert M % BLOCK_M == 0
+    assert N % BLOCK_N == 0
+    assert K % BLOCK_K == 0
     c = torch.empty((M, N), device=a.device, dtype=torch.float16)
-    grid = lambda META: (triton.cdiv(M, META["BLOCK_M"]) * triton.cdiv(N, META["BLOCK_N"]),)  # noqa: E731
+    grid = ((M // BLOCK_M) * (N // BLOCK_N),)
+    ptxas_options = f"--apply-controls={controls_path}" if controls_path else None
     matmul_kernel[grid](
         a,
         b,
@@ -113,19 +99,25 @@ def matmul(a, b, acf_path: str):
         b.stride(1),
         c.stride(0),
         c.stride(1),
-        ACTIVATION="",
-        ptx_options=f"--apply-controls={acf_path}",
+        BLOCK_M=BLOCK_M,
+        BLOCK_N=BLOCK_N,
+        BLOCK_K=BLOCK_K,
+        num_warps=NUM_WARPS,
+        num_stages=NUM_STAGES,
+        ptx_options=ptxas_options,
     )
     return c
 
 
-def objective(config: str) -> float:
+def objective(config) -> float:
     """Evaluate a PTXAS config: verify correctness, then benchmark."""
-    os.environ["TRITON_PTXAS_PATH"] = shutil.which("ptxas")
+    ptxas_path = shutil.which("ptxas")
+    os.environ["TRITON_PTXAS_PATH"] = ptxas_path
+    os.environ["TRITON_PTXAS_BLACKWELL_PATH"] = ptxas_path
     os.environ["TRITON_ALWAYS_COMPILE"] = "1"
 
-    a = torch.rand((512, 512), device=DEVICE, dtype=torch.float16) - 0.5
-    b = torch.rand((512, 512), device=DEVICE, dtype=torch.float16) - 0.5
+    a = torch.rand((4096, 4096), device=DEVICE, dtype=torch.float16) - 0.5
+    b = torch.rand((4096, 4096), device=DEVICE, dtype=torch.float16) - 0.5
 
     with tempfile.NamedTemporaryFile(suffix=".acf", delete=True) as f:
         save_compiler_config(f.name, config)
@@ -149,7 +141,7 @@ def main():
     assert float(cuda_version) >= 13.3, "CompileIQ requires CUDA 13.3+"
 
     # Configure and run search
-    config = SearchConfiguration(problem_type="min", generations=5, pool_size=32)
+    config = SearchConfiguration(problem_type="min", generations=5)
     tuner = Search(
         objective_function=objective,
         search_space=PtxasSearchSpace(version=cuda_version),
@@ -161,7 +153,7 @@ def main():
     # Please set the clock speeds according to your GPU capabilities.
     # If using multiple machines with Ray, use `gpu_benchmark_mode` inside the `objective` function.
     with gpu_benchmark_mode(clock_mhz=1965, raise_on_failure=False):
-        results = tuner.start()
+        results = tuner.start(task_timeout=20)
 
     # Save best result
     best = results.get_best_result()
