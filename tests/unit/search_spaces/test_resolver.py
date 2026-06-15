@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import json
 from unittest.mock import MagicMock
@@ -16,6 +17,8 @@ BIN_BYTES = b"PTX-SS-13.3-DEFAULT" * 200
 BIN_SHA = hashlib.sha256(BIN_BYTES).hexdigest()
 BIN_FILENAME = "ptxas13.3_search_space.bin"
 TAG = "search-spaces-2026.04.27"
+OLD_TAG = "search-spaces-2026.01.01"
+NOW = dt.datetime(2026, 6, 15, 12, 0, tzinfo=dt.timezone.utc)
 
 
 def _manifest_payload(
@@ -45,10 +48,37 @@ def _manifest_payload(
     )
 
 
+def _set_now(monkeypatch, now: dt.datetime = NOW) -> None:
+    monkeypatch.setattr(resolver, "_utc_now", lambda: now)
+
+
+def _write_latest_cache(
+    repo: str,
+    tag_prefix: str,
+    resolved_tag: str,
+    fetched_at: dt.datetime = NOW,
+    ttl_days: float = resolver.DEFAULT_LATEST_TAG_TTL_DAYS,
+) -> None:
+    cache = resolver._latest_tag_cache_path(repo, tag_prefix)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(
+        json.dumps(
+            {
+                "repo": repo,
+                "tag_prefix": tag_prefix,
+                "resolved_tag": resolved_tag,
+                "fetched_at": fetched_at.isoformat(),
+                "ttl_days": ttl_days,
+            }
+        )
+    )
+
+
 @pytest.fixture(autouse=True)
 def reset_lru(monkeypatch):
     resolver._resolve_latest_tag.cache_clear()
     monkeypatch.delenv(resolver.LOCAL_DIR_ENV_VAR, raising=False)
+    monkeypatch.delenv(resolver.LATEST_TAG_TTL_DAYS_ENV_VAR, raising=False)
     # Force the no-prefix code path by default so tests can target
     # /releases/latest cleanly. test_default_tag_prefix_used_when_unset and
     # test_tag_prefix_filters_releases override to exercise the prefix path.
@@ -99,6 +129,13 @@ def fake_http(monkeypatch):
 
     monkeypatch.setattr(resolver.requests, "get", fake_get)
     return handlers, _stream_response, _json_response
+
+
+def _add_asset_routes(handlers, stream, repo: str, tag: str = TAG) -> None:
+    handlers[f"{resolver.GH_DL}/{repo}/releases/download/{tag}/manifest.json"] = stream(
+        _manifest_payload(tag=tag).encode()
+    )
+    handlers[f"{resolver.GH_DL}/{repo}/releases/download/{tag}/{BIN_FILENAME}"] = stream(BIN_BYTES)
 
 
 def test_air_gap_short_circuit(tmp_path, monkeypatch):
@@ -336,6 +373,137 @@ def test_latest_resolution_memoized_per_process(fake_http):
         {"tag_name": "WRONG"}, status=500
     )
     resolver.resolve("ptxas", "13.3")  # would raise if cache miss re-fetched
+
+
+def test_fresh_latest_disk_cache_skips_github_latest(fake_http, monkeypatch):
+    _set_now(monkeypatch)
+    handlers, stream, _jsn = fake_http
+    repo = resolver._release_repo()
+    _write_latest_cache(repo, "", TAG, fetched_at=NOW)
+    _add_asset_routes(handlers, stream, repo, TAG)
+
+    path = resolver.resolve("ptxas", "13.3")
+
+    assert path.read_bytes() == BIN_BYTES
+    assert TAG in str(path)
+
+
+def test_missing_latest_disk_cache_refreshes_and_writes(fake_http, monkeypatch):
+    _set_now(monkeypatch)
+    handlers, stream, jsn = fake_http
+    repo = resolver._release_repo()
+    handlers[f"{resolver.GH_API}/repos/{repo}/releases/latest"] = jsn({"tag_name": TAG})
+    _add_asset_routes(handlers, stream, repo, TAG)
+
+    resolver.resolve("ptxas", "13.3")
+
+    cache = json.loads(resolver._latest_tag_cache_path(repo, "").read_text())
+    assert cache["repo"] == repo
+    assert cache["tag_prefix"] == ""
+    assert cache["resolved_tag"] == TAG
+    assert cache["fetched_at"] == NOW.isoformat()
+    assert cache["ttl_days"] == resolver.DEFAULT_LATEST_TAG_TTL_DAYS
+
+
+def test_expired_latest_disk_cache_refreshes_and_updates(fake_http, monkeypatch):
+    _set_now(monkeypatch)
+    handlers, stream, jsn = fake_http
+    repo = resolver._release_repo()
+    stale_time = NOW - dt.timedelta(days=8)
+    _write_latest_cache(repo, "", OLD_TAG, fetched_at=stale_time)
+    handlers[f"{resolver.GH_API}/repos/{repo}/releases/latest"] = jsn({"tag_name": TAG})
+    _add_asset_routes(handlers, stream, repo, TAG)
+
+    path = resolver.resolve("ptxas", "13.3")
+
+    cache = json.loads(resolver._latest_tag_cache_path(repo, "").read_text())
+    assert path.read_bytes() == BIN_BYTES
+    assert TAG in str(path)
+    assert cache["resolved_tag"] == TAG
+    assert cache["fetched_at"] == NOW.isoformat()
+
+
+@pytest.mark.parametrize("status", [403, 429, 500])
+def test_expired_latest_disk_cache_uses_stale_on_github_failure(
+    fake_http,
+    monkeypatch,
+    status,
+):
+    _set_now(monkeypatch)
+    handlers, stream, jsn = fake_http
+    repo = resolver._release_repo()
+    stale_time = NOW - dt.timedelta(days=8)
+    _write_latest_cache(repo, "", OLD_TAG, fetched_at=stale_time)
+    handlers[f"{resolver.GH_API}/repos/{repo}/releases/latest"] = jsn({"message": "nope"}, status)
+    _add_asset_routes(handlers, stream, repo, OLD_TAG)
+
+    with pytest.warns(RuntimeWarning, match="Using stale cached latest search-space tag"):
+        path = resolver.resolve("ptxas", "13.3")
+
+    assert path.read_bytes() == BIN_BYTES
+    assert OLD_TAG in str(path)
+
+
+def test_github_failure_without_latest_disk_cache_raises(fake_http):
+    handlers, _stream, jsn = fake_http
+    repo = resolver._release_repo()
+    handlers[f"{resolver.GH_API}/repos/{repo}/releases/latest"] = jsn({"message": "nope"}, 500)
+
+    with pytest.raises(requests.HTTPError):
+        resolver.resolve("ptxas", "13.3")
+
+
+def test_latest_disk_cache_can_be_disabled(fake_http, monkeypatch):
+    _set_now(monkeypatch)
+    monkeypatch.setenv(resolver.LATEST_TAG_TTL_DAYS_ENV_VAR, "0")
+    handlers, stream, jsn = fake_http
+    repo = resolver._release_repo()
+    _write_latest_cache(repo, "", OLD_TAG, fetched_at=NOW)
+    handlers[f"{resolver.GH_API}/repos/{repo}/releases/latest"] = jsn({"tag_name": TAG})
+    _add_asset_routes(handlers, stream, repo, TAG)
+
+    path = resolver.resolve("ptxas", "13.3")
+
+    cache = json.loads(resolver._latest_tag_cache_path(repo, "").read_text())
+    assert path.read_bytes() == BIN_BYTES
+    assert TAG in str(path)
+    assert cache["resolved_tag"] == OLD_TAG
+
+
+@pytest.mark.parametrize("value", ["nope", "-1", "inf"])
+def test_invalid_latest_cache_ttl_raises(monkeypatch, value):
+    monkeypatch.setenv(resolver.LATEST_TAG_TTL_DAYS_ENV_VAR, value)
+
+    with pytest.raises(ValueError, match=resolver.LATEST_TAG_TTL_DAYS_ENV_VAR):
+        resolver.resolve("ptxas", "13.3")
+
+
+def test_latest_disk_cache_key_includes_repo_and_prefix():
+    default = resolver._latest_tag_cache_path("NVIDIA/CompileIQ", "search-spaces-")
+    other_repo = resolver._latest_tag_cache_path("example/search-spaces-test", "search-spaces-")
+    other_prefix = resolver._latest_tag_cache_path("NVIDIA/CompileIQ", "booster-packs-")
+
+    assert default != other_repo
+    assert default != other_prefix
+    assert other_repo != other_prefix
+
+
+def test_air_gap_ignores_latest_cache_ttl(tmp_path, monkeypatch):
+    air_gap = tmp_path / "ag"
+    air_gap.mkdir()
+    (air_gap / BIN_FILENAME).write_bytes(BIN_BYTES)
+    (air_gap / "manifest.json").write_text(_manifest_payload())
+    monkeypatch.setenv(resolver.LOCAL_DIR_ENV_VAR, str(air_gap))
+    monkeypatch.setenv(resolver.LATEST_TAG_TTL_DAYS_ENV_VAR, "invalid")
+    monkeypatch.setattr(
+        resolver.requests,
+        "get",
+        lambda *a, **kw: pytest.fail(f"network used despite {resolver.LOCAL_DIR_ENV_VAR}"),
+    )
+
+    path = resolver.resolve("ptxas", "13.3")
+
+    assert path == air_gap / BIN_FILENAME
 
 
 def test_default_tag_prefix_used_when_unset(fake_http, monkeypatch):
