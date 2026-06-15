@@ -556,12 +556,17 @@ for the full layout and authoring conventions.</p>
 <td><p>str</p></td>
 <td><p>GitHub repository used for search-space release lookups, useful for staging or a future dedicated asset repo.</p></td>
 </tr>
-<tr class="row-odd"><td><p>CIQ_CORE_BINARY</p></td>
+<tr class="row-odd"><td><p>CIQ_SS_LATEST_TTL_DAYS</p></td>
+<td><p>7</p></td>
+<td><p>float</p></td>
+<td><p>Reuses the cached GitHub <code class="docutils literal notranslate"><span class="pre">latest</span></code> search-space release tag for this many days, reducing anonymous REST API calls that can be throttled on shared IPs. Set to <code class="docutils literal notranslate"><span class="pre">0</span></code> to check GitHub every time.</p></td>
+</tr>
+<tr class="row-even"><td><p>CIQ_CORE_BINARY</p></td>
 <td><p>unset</p></td>
 <td><p>path</p></td>
 <td><p>Uses an explicit core executable for local core development instead of the bundled binary.</p></td>
 </tr>
-<tr class="row-even"><td><p>CIQ_CORE_MANIFEST</p></td>
+<tr class="row-odd"><td><p>CIQ_CORE_MANIFEST</p></td>
 <td><p>unset</p></td>
 <td><p>path</p></td>
 <td><p>Optionally verifies <code class="docutils literal notranslate"><span class="pre">CIQ_CORE_BINARY</span></code> against a local core manifest rooted next to the platform directories.</p></td>
