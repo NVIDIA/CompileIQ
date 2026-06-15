@@ -16,11 +16,15 @@ Two ways to bypass the GitHub release path:
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import datetime as dt
 import functools
 import hashlib
+import json
+import math
 import os
 import pathlib
 from typing import Literal
+import warnings
 
 import requests
 
@@ -44,6 +48,12 @@ SEARCH_SPACE_TAG_PREFIX_ENV_VAR = "CIQ_SS_TAG_PREFIX"
 # resolving "latest"; override via CIQ_SS_TAG_PREFIX.
 DEFAULT_SEARCH_SPACE_TAG_PREFIX = "search-spaces-"
 
+# Environment variable used to choose how long a resolved "latest" search-space
+# release tag can be reused from disk before checking GitHub again. Set to "0"
+# to disable the on-disk latest cache.
+LATEST_TAG_TTL_DAYS_ENV_VAR = "CIQ_SS_LATEST_TTL_DAYS"
+DEFAULT_LATEST_TAG_TTL_DAYS = 7.0
+
 # GitHub API host for release metadata and GitHub web host for release-asset
 # downloads.
 GH_API = "https://api.github.com"
@@ -56,6 +66,7 @@ _HTTP_TIMEOUT_SEC = 60
 _CHUNK_BYTES = 1 << 16
 # 1 MiB hash chunks avoid loading large artifacts into memory.
 _HASH_CHUNK_BYTES = 1 << 20
+_LATEST_TAG_CACHE_DIR = "latest-tags"
 
 
 @dataclass(frozen=True)
@@ -98,15 +109,92 @@ def _cache_root() -> pathlib.Path:
     return pathlib.Path(const._CACHE_DIR)
 
 
-@functools.lru_cache(maxsize=8)
-def _resolve_latest_tag(repo: str, tag_prefix: str) -> str:
-    """Resolve "latest" to a concrete release tag.
+def _utc_now() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc)
 
-    With no prefix, uses GitHub's ``/releases/latest`` endpoint. With a prefix
-    (single-repo topology where wheel and search-space tags share a namespace),
-    walks ``/releases`` and returns the first non-draft release whose tag
-    begins with the prefix.
-    """
+
+def _latest_tag_ttl_days() -> float:
+    """Return the configured latest-tag cache TTL in days."""
+    raw = os.getenv(LATEST_TAG_TTL_DAYS_ENV_VAR, str(DEFAULT_LATEST_TAG_TTL_DAYS))
+    try:
+        ttl_days = float(raw)
+    except ValueError as exc:
+        raise ValueError(
+            f"{LATEST_TAG_TTL_DAYS_ENV_VAR} must be a non-negative number of days, got {raw!r}"
+        ) from exc
+    if not math.isfinite(ttl_days) or ttl_days < 0:
+        raise ValueError(
+            f"{LATEST_TAG_TTL_DAYS_ENV_VAR} must be a non-negative number of days, got {raw!r}"
+        )
+    return ttl_days
+
+
+def _latest_tag_cache_path(repo: str, tag_prefix: str) -> pathlib.Path:
+    """Return the repo/prefix-specific cache path for a latest-tag record."""
+    key = hashlib.sha256(f"{repo}\0{tag_prefix}".encode("utf-8")).hexdigest()
+    return _cache_root() / _LATEST_TAG_CACHE_DIR / f"{key}.json"
+
+
+def _read_latest_tag_cache(repo: str, tag_prefix: str) -> dict[str, object] | None:
+    """Load a matching latest-tag record, ignoring missing or invalid files."""
+    path = _latest_tag_cache_path(repo, tag_prefix)
+    try:
+        payload = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("repo") != repo or payload.get("tag_prefix") != tag_prefix:
+        return None
+    if not isinstance(payload.get("resolved_tag"), str):
+        return None
+    if not isinstance(payload.get("fetched_at"), str):
+        return None
+    return payload
+
+
+def _latest_tag_cache_age(record: dict[str, object]) -> dt.timedelta | None:
+    """Return the cache record age, or None when fetched_at is invalid."""
+    try:
+        fetched_at = dt.datetime.fromisoformat(str(record["fetched_at"]))
+    except (KeyError, ValueError):
+        return None
+    if fetched_at.tzinfo is None:
+        fetched_at = fetched_at.replace(tzinfo=dt.timezone.utc)
+    return _utc_now() - fetched_at
+
+
+def _latest_tag_cache_is_fresh(record: dict[str, object], ttl_days: float) -> bool:
+    """Return whether the cache record is within the configured TTL."""
+    age = _latest_tag_cache_age(record)
+    if age is None:
+        return False
+    return age <= dt.timedelta(days=ttl_days)
+
+
+def _write_latest_tag_cache(
+    repo: str,
+    tag_prefix: str,
+    resolved_tag: str,
+    ttl_days: float,
+) -> None:
+    """Persist the resolved latest tag atomically for later cold processes."""
+    path = _latest_tag_cache_path(repo, tag_prefix)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".part")
+    payload = {
+        "repo": repo,
+        "tag_prefix": tag_prefix,
+        "resolved_tag": resolved_tag,
+        "fetched_at": _utc_now().isoformat(),
+        "ttl_days": ttl_days,
+    }
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    tmp.replace(path)
+
+
+def _fetch_latest_tag_from_github(repo: str, tag_prefix: str) -> str:
+    """Resolve latest through GitHub without consulting the on-disk cache."""
     if tag_prefix:
         page = 1
         while True:
@@ -130,6 +218,39 @@ def _resolve_latest_tag(repo: str, tag_prefix: str) -> str:
     r = requests.get(f"{GH_API}/repos/{repo}/releases/latest", timeout=_HTTP_TIMEOUT_SEC)
     r.raise_for_status()
     return r.json()["tag_name"]
+
+
+@functools.lru_cache(maxsize=8)
+def _resolve_latest_tag(repo: str, tag_prefix: str) -> str:
+    """Resolve "latest" to a concrete release tag.
+
+    A fresh on-disk record is returned without a GitHub request. Missing or
+    expired records are refreshed from GitHub, then rewritten for future cold
+    processes. With no prefix, refresh uses GitHub's ``/releases/latest``
+    endpoint. With a prefix, refresh walks ``/releases`` and returns the first
+    non-draft, non-prerelease release whose tag begins with the prefix.
+    """
+    ttl_days = _latest_tag_ttl_days()
+    cached = _read_latest_tag_cache(repo, tag_prefix)
+    if ttl_days > 0 and cached is not None and _latest_tag_cache_is_fresh(cached, ttl_days):
+        return str(cached["resolved_tag"])
+
+    try:
+        resolved_tag = _fetch_latest_tag_from_github(repo, tag_prefix)
+    except Exception:
+        if ttl_days > 0 and cached is not None and _latest_tag_cache_age(cached) is not None:
+            warnings.warn(
+                f"Using stale cached latest search-space tag {cached['resolved_tag']!r} "
+                "because GitHub latest-tag resolution failed.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return str(cached["resolved_tag"])
+        raise
+
+    if ttl_days > 0:
+        _write_latest_tag_cache(repo, tag_prefix, resolved_tag, ttl_days)
+    return resolved_tag
 
 
 def _cache_path(tag: str, sha256: str, filename: str) -> pathlib.Path:
