@@ -5,14 +5,13 @@
 
 ## Checklist
 
-- [ ] I am familiar with the [Contributing Guidelines](https://nvidia.github.io/CompileIQ/user_guide/contribution_guide.html).
+- [ ] I am familiar with the [Contributing Guidelines](https://github.com/NVIDIA/CompileIQ/blob/main/CONTRIBUTING.md).
 - [ ] New or existing tests cover these changes.
 - [ ] The documentation is up to date with these changes.
 
-## Test plan
+## Validation
 
-<!-- How did you verify these changes? Example commands, test names,
-     or manual steps. -->
+<!-- How did you validate these changes? Test names, example commands, manual steps, etc. -->
 
 ## Bug fix
 
@@ -21,7 +20,7 @@
 
 ```python
 import compileiq as ciq
-# Code that demonstrates the bug
+# Code with a minimal example that demonstrates the bug
 ```
 
 ## New feature / enhancement

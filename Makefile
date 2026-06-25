@@ -69,6 +69,7 @@ test-cov-html: ## Run tests with coverage report
 	poetry run pytest tests/unit tests/integration -vvv --cov=compileiq --cov-report=html
 
 DOC_VERSION ?= latest
+DOCS_PORT ?= 8000
 
 docs: ## Build documentation for DOC_VERSION=latest or MAJOR.MINOR
 	@version="$(DOC_VERSION)"; \
@@ -80,8 +81,9 @@ docs-serve: ## Build and serve local docs preview
 	bash dev/view_docs.sh
 
 docs-preview: ## Build and serve live worktree docs locally
-	CIQ_DOCS_LOCAL_PREVIEW=1 CIQ_DOCS_BASE_URL=http://localhost:8000 DOC_VERSION=latest poetry run sphinx-build -E -a docs public/latest
-	python3 -m http.server 8000 --directory public
+	CIQ_DOCS_LOCAL_PREVIEW=1 CIQ_DOCS_BASE_URL=http://localhost:$(DOCS_PORT) DOC_VERSION=latest poetry run sphinx-build -E -a docs public/latest
+	@echo "Serving docs at http://localhost:$(DOCS_PORT)/latest/"
+	poetry run python -m http.server $(DOCS_PORT) --directory public
 
 build: ## Build wheel and sdist
 	poetry build

@@ -9,11 +9,6 @@ on:
       # GitHub tag globs are not regexes. This catches CompileIQ package
       # release-looking tags such as v1.0.0, v1.0.0rc5, and v1.0.0dev1.
       - "v[0-9]*.[0-9]*.[0-9]*"
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
-      - "LICENSE"
-      - ".gitignore"
   workflow_dispatch:
 
 concurrency:

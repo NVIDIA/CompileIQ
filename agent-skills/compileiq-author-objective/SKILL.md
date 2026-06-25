@@ -47,9 +47,10 @@ For paste-ready full-file templates per framework, see
 | Single provider, e.g. `PtxasSearchSpace()` | `def objective(config: str) -> float` | A hex string. Pass it straight to `save_compiler_config(acf_path, config)`. |
 | List, e.g. `[{"k": ss.choice(...)}, PtxasSearchSpace()]` | `def objective(mixed: list) -> float` | A list of the same length. Unpack: `user_space, ptxas_config = mixed`. |
 
-Mixed-space results have separate keys: `best["user_space"]` for the user-side
-knobs and `best["params"]` for the ACF hex string. (Pattern reference:
-`examples/compilers/triton_example/mixed_triton.py:97-118`.)
+Mixed-space results keep the same list shape in `best["params"]`. Unpack it
+before saving the ACF, for example:
+`user_space, ptxas_config = best["params"]`. (Pattern reference:
+`examples/compilers/triton_example/mixed_triton.py:123-146`.)
 
 For multi-objective, return `tuple[float, ...]` of length `num_objectives`.
 
@@ -97,7 +98,7 @@ absent — `flashinfer_cubin` and `flashinfer_jit_cache`. See
 |---|---|
 | Raw PTXAS (you have a `.ptx` file) | `ptxas --apply-controls candidate.acf kernel.ptx -arch=sm_100 -o kernel.cubin` |
 | NVCC source (CUDA `.cu`) | `nvcc -Xptxas --apply-controls=candidate.acf -arch=sm_100 kernel.cu -o exe` (canonical; see `examples/compilers/nvbench_example/optimize_reduction.py:108`) |
-| Triton kernel | kernel kwarg: `kernel[grid](..., ptx_options=f"--apply-controls={acf_path}")` plus `TRITON_ALWAYS_COMPILE=1` and `os.environ["TRITON_PTXAS_PATH"] = shutil.which("ptxas")` (see `examples/compilers/triton_example/mixed_triton.py:91-103`). This **replaces** the older `PTXAS_OPTIONS=` env-var approach for Triton. |
+| Triton kernel | kernel kwarg: `kernel[grid](..., ptx_options=f"--apply-controls={acf_path}")` plus `TRITON_ALWAYS_COMPILE=1`, `os.environ["TRITON_PTXAS_PATH"] = shutil.which("ptxas")`, and `os.environ["TRITON_PTXAS_BLACKWELL_PATH"] = shutil.which("ptxas")` when Blackwell-specific PTXAS selection may apply. This **replaces** the older `PTXAS_OPTIONS=` env-var approach for Triton. |
 | Helion | Helion's official ACF API. See `https://helionlang.com/examples/acfs/softmax_acf.html`. Always set `HELION_SKIP_CACHE=1`. |
 | cuTeDSL / FA4 (TVM-FFI) | `cute.compile(..., options=f"{existing_options} --ptxas-options '--apply-controls {acf_path}'")`. If you can't reach the call site, patch `CompileCallable.__call__` to splice in the option string. |
 | FlashInfer | `FLASHINFER_EXTRA_CUDAFLAGS="--ptxas-options=--apply-controls=$ACF_FILE"` (see `docs/flashinfer_booster.md:107`). |
@@ -124,7 +125,7 @@ if not torch.allclose(actual, reference, atol=1e-2, rtol=0):
 return triton.testing.do_bench(lambda: kernel(...), warmup=100, rep=1000, return_mode="mean")
 ```
 
-(Pattern from `examples/compilers/triton_example/mixed_triton.py:113-118`.)
+(Pattern from `examples/compilers/triton_example/mixed_triton.py:141-146`.)
 
 ## Catch everything → return INVALID_SCORE
 
@@ -193,7 +194,8 @@ and `results.get_best_result()` returns a dict, your scaffold is correct.
   `ptx_options=` kernel kwarg. See the table above.
 - **Mixed search spaces require list unpacking.** If you pass
   `search_space=[user_dict, PtxasSearchSpace()]`, your objective must accept
-  a list, not a string. The result dict has separate `user_space` and `params`.
+  a list, not a string. Results keep that list in `best["params"]`; unpack it
+  before saving the compiler config.
 - **Don't redefine `INVALID_SCORE`.** Import it from `compileiq.types`. If
   you redefine it locally as `float('inf')`, the value happens to work today
   but is not guaranteed to in future releases.
