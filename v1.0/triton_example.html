@@ -434,29 +434,52 @@
                   
   <section id="tuning-ptxas-for-your-triton-kernel">
 <h1>Tuning PTXAS for your Triton kernel<a class="headerlink" href="#tuning-ptxas-for-your-triton-kernel" title="Link to this heading">#</a></h1>
-<p>In this section, we will build on an existing Triton tutorial kernel and apply PTXAS ACFs.</p>
+<p>This section shows how to apply CompileIQ-generated PTXAS ACFs to a Triton
+kernel. The basic example uses a fixed-config illustrative matmul kernel and
+searches only PTXAS controls. The companion mixed example shows how to search
+Triton launch/configuration knobs and PTXAS controls together.</p>
 <blockquote>
 <div><p>The example code and supporting files can be found <a class="reference external" href="https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/triton_example/triton_ptx.py">in our repo here</a>.</p>
 </div></blockquote>
-<section id="matmul-triton-tutorial">
-<h2>Matmul Triton Tutorial<a class="headerlink" href="#matmul-triton-tutorial" title="Link to this heading">#</a></h2>
-<p>The original kernel for the Triton tutorial can be found in <a class="reference external" href="https://github.com/triton-lang/triton/blob/v3.6.0/python/tutorials/03-matrix-multiplication.py">the Triton repository</a>.</p>
-<p>Our goal is to apply CompileIQ on top of an existing matmul kernel to optimize runtime. Our changes are minimal: we do not modify the kernel code itself. Let’s walk through the integration before looking at the full objective function.</p>
-<section id="specific-changes-to-triton">
-<h3>Specific Changes to Triton<a class="headerlink" href="#specific-changes-to-triton" title="Link to this heading">#</a></h3>
-<p>First, Triton is JIT-compiled, so we need to force recompilation for each ACF we try. An easy way to do this is by setting the environment variable <code class="docutils literal notranslate"><span class="pre">TRITON_ALWAYS_COMPILE</span></code>.</p>
-<p>Second, at the time of writing, Triton ships with its own PTXAS binary for ease of use. However, we need PTXAS 13.3 or higher to use CompileIQ’s ACF support. Therefore, we also override Triton’s default PTXAS with a local version via <code class="docutils literal notranslate"><span class="pre">TRITON_PTXAS_PATH</span></code>.</p>
-<p>You can do this programmatically with:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TRITON_ALWAYS_COMPILE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TRITON_PTXAS_PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;path/to/bin/ptxas&quot;</span>
+<blockquote>
+<div><p>Examples may become stale as triton or the compiler improve, and these examples are simple in nature, meant to teach you how to incorporate CompileIQ into your existing code</p>
+</div></blockquote>
+<section id="fixed-config-matmul-example">
+<h2>Fixed-config matmul example<a class="headerlink" href="#fixed-config-matmul-example" title="Link to this heading">#</a></h2>
+<p>The basic <code class="docutils literal notranslate"><span class="pre">triton_ptx.py</span></code> example keeps the Triton kernel configuration fixed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">BLOCK_M</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">BLOCK_N</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">BLOCK_K</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">NUM_WARPS</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">NUM_STAGES</span> <span class="o">=</span> <span class="mi">3</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>For blackwell overwrites use: <code class="docutils literal notranslate"><span class="pre">TRITON_PTXAS_BLACKWELL_PATH</span></code> instead of <code class="docutils literal notranslate"><span class="pre">TRITON_PTXAS_PATH</span></code></p>
-</div></blockquote>
-<p>Finally, we need to pass the ACF file to Triton so it can forward it to PTXAS. Triton already supports this via <code class="docutils literal notranslate"><span class="pre">ptx_options</span></code> when launching your kernel:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">matmul_kernel</span><span class="p">[</span><span class="n">grid</span><span class="p">](</span>
+<p>It then tunes only the PTXAS compiler controls for that kernel and matrix
+shape. The example uses exact-tile <code class="docutils literal notranslate"><span class="pre">4096</span> <span class="pre">x</span> <span class="pre">4096</span></code> inputs, so <code class="docutils literal notranslate"><span class="pre">M</span></code>, <code class="docutils literal notranslate"><span class="pre">N</span></code>, and <code class="docutils literal notranslate"><span class="pre">K</span></code>
+must be divisible by the block sizes.</p>
+</section>
+<section id="specific-changes-for-triton">
+<h2>Specific changes for Triton<a class="headerlink" href="#specific-changes-for-triton" title="Link to this heading">#</a></h2>
+<p>Triton is JIT-compiled, so force recompilation for each ACF:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TRITON_ALWAYS_COMPILE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+</pre></div>
+</div>
+<p>Triton ships its own PTXAS binary. CompileIQ ACF support requires
+PTXAS 13.3 or newer, so point Triton at the expected local <code class="docutils literal notranslate"><span class="pre">ptxas</span></code>. Set both
+environment variables when targeting systems where Triton may select a
+Blackwell-specific PTXAS path:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ptxas_path</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ptxas&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">ptxas_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;ptxas not found in PATH.&quot;</span><span class="p">)</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TRITON_PTXAS_PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ptxas_path</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TRITON_PTXAS_BLACKWELL_PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ptxas_path</span>
+</pre></div>
+</div>
+<p>Pass the ACF to Triton through the <code class="docutils literal notranslate"><span class="pre">ptx_options</span></code> kernel-launch keyword:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ptxas_options</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;--apply-controls=</span><span class="si">{</span><span class="n">controls_path</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">controls_path</span> <span class="k">else</span> <span class="kc">None</span>
+
+<span class="n">matmul_kernel</span><span class="p">[</span><span class="n">grid</span><span class="p">](</span>
     <span class="n">a</span><span class="p">,</span>
     <span class="n">b</span><span class="p">,</span>
     <span class="n">c</span><span class="p">,</span>
@@ -469,161 +492,153 @@
     <span class="n">b</span><span class="o">.</span><span class="n">stride</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">c</span><span class="o">.</span><span class="n">stride</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
     <span class="n">c</span><span class="o">.</span><span class="n">stride</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
-    <span class="n">ACTIVATION</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
-    <span class="n">ptx_options</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;--apply-controls=</span><span class="si">{</span><span class="n">ptx_acf_filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">BLOCK_M</span><span class="o">=</span><span class="n">BLOCK_M</span><span class="p">,</span>
+    <span class="n">BLOCK_N</span><span class="o">=</span><span class="n">BLOCK_N</span><span class="p">,</span>
+    <span class="n">BLOCK_K</span><span class="o">=</span><span class="n">BLOCK_K</span><span class="p">,</span>
+    <span class="n">num_warps</span><span class="o">=</span><span class="n">NUM_WARPS</span><span class="p">,</span>
+    <span class="n">num_stages</span><span class="o">=</span><span class="n">NUM_STAGES</span><span class="p">,</span>
+    <span class="n">ptx_options</span><span class="o">=</span><span class="n">ptxas_options</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <blockquote>
-<div><p>You can optionally use the <code class="docutils literal notranslate"><span class="pre">PTX_OPTIONS</span></code> environment variable to pass in the <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code> flag instead of explicitly adding it to your kernel calls.</p>
+<div><p>You can optionally use the <code class="docutils literal notranslate"><span class="pre">PTX_OPTIONS</span></code> environment variable to pass in the <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code> flag instead of explicitly adding it to your kernel calls. Note that this will be applied globally</p>
 </div></blockquote>
-</section>
 <section id="building-the-objective-function">
 <h3>Building the objective function<a class="headerlink" href="#building-the-objective-function" title="Link to this heading">#</a></h3>
-<p>With everything in place, we can now build our objective function:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">ptx_acf</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Our objective will minimize runtime. It applies the given</span>
-<span class="sd">    ACF to the kernel, verifies output correctness, and</span>
-<span class="sd">    benchmarks the runtime.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">ptxas_path</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ptxas&quot;</span><span class="p">)</span>  <span class="c1"># Ensures Triton picks up the expected ptxas</span>
+<p>The objective writes each sampled CompileIQ config to a temporary <code class="docutils literal notranslate"><span class="pre">.acf</span></code> file,
+passes that file to the Triton launch, checks correctness against Torch, and
+only then benchmarks runtime:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">ptxas_path</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ptxas&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ptxas_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;ptxas not found in PATH.&quot;</span><span class="p">)</span>
 
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TRITON_PTXAS_PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ptxas_path</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TRITON_PTXAS_BLACKWELL_PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ptxas_path</span>
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TRITON_ALWAYS_COMPILE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
 
-    <span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">4096</span><span class="p">,</span> <span class="mi">4096</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">4096</span><span class="p">,</span> <span class="mi">4096</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
 
-    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.acf&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp_acf_file</span><span class="p">:</span>
-        <span class="n">save_compiler_config</span><span class="p">(</span><span class="n">tmp_acf_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ptx_acf</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.acf&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">save_compiler_config</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">triton_out</span> <span class="o">=</span> <span class="n">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">torch_out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 
-        <span class="n">triton_output</span> <span class="o">=</span> <span class="n">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">tmp_acf_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">torch_output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">triton_out</span><span class="p">,</span> <span class="n">torch_out</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">INVALID_SCORE</span>
 
-        <span class="c1"># Validating output</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">triton_output</span><span class="p">,</span> <span class="n">torch_output</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-            <span class="n">runtime</span> <span class="o">=</span> <span class="n">INVALID_SCORE</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Benchmarking Advanced Controls File</span>
-            <span class="n">runtime</span> <span class="o">=</span> <span class="n">triton</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">do_bench</span><span class="p">(</span>
-                <span class="k">lambda</span><span class="p">:</span> <span class="n">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">tmp_acf_file</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
-                <span class="n">warmup</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                <span class="n">rep</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-                <span class="n">return_mode</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">runtime</span>
+        <span class="k">return</span> <span class="n">triton</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">do_bench</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+            <span class="n">warmup</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">rep</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+            <span class="n">return_mode</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 </pre></div>
 </div>
-<p>Here’s what the function does:</p>
+<p>This objective follows the guardrails in the <a class="reference internal" href="compilers_overview.html#safety--correctness-read-this-first"><span class="std std-ref">Safety Section</span></a>:</p>
 <ul class="simple">
-<li><p>Sets environment variables for Triton to avoid caching and to use the expected PTXAS.</p></li>
-<li><p>Creates a temporary file containing the sampled ACF from CompileIQ.</p></li>
-<li><p>Passes that file into the <code class="docutils literal notranslate"><span class="pre">matmul</span></code> function from the <a class="reference external" href="https://github.com/triton-lang/triton/blob/v3.6.0/python/tutorials/03-matrix-multiplication.py">original tutorial</a>. This function is modified to pass the PTXAS CLI option <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code>, as described above.</p></li>
-<li><p>Validating result correctness against Torch’s implementation.</p></li>
-<li><p>Performing benchmarking to get the runtime, only if the correctness test passed.</p></li>
+<li><p>Force recompilation so each ACF can affect generated code.</p></li>
+<li><p>Use an explicit PTXAS 13.3+ path.</p></li>
+<li><p>Validate correctness before timing.</p></li>
+<li><p>Return <code class="docutils literal notranslate"><span class="pre">INVALID_SCORE</span></code> for wrong answers.</p></li>
 </ul>
-<p>This objective is following all guidelines from our <a class="reference internal" href="compilers_overview.html#safety--correctness-read-this-first"><span class="std std-ref">Safety Section</span></a>.</p>
+</section>
 <section id="expanding-the-search-to-different-matrix-sizes">
-<h4>Expanding the search to different matrix sizes<a class="headerlink" href="#expanding-the-search-to-different-matrix-sizes" title="Link to this heading">#</a></h4>
-<p>In this example, we tune PTXAS controls for a specific matrix size of 512×512. If you want to support multiple sizes, you have a few options:</p>
+<h3>Expanding the search to different matrix sizes<a class="headerlink" href="#expanding-the-search-to-different-matrix-sizes" title="Link to this heading">#</a></h3>
+<p>In the basic example, the search is specific to <code class="docutils literal notranslate"><span class="pre">4096</span> <span class="pre">x</span> <span class="pre">4096</span></code> matmul with the
+fixed block sizes above. If you want to support multiple sizes, you have a few
+options:</p>
 <ul class="simple">
-<li><p>Perform one different search for each size</p></li>
-<li><p>Benchmark and validate all matrix sizes inside the objective and return the mean, or only return a score if the ACF showed gains on most or all of the benchmarks</p></li>
-<li><p>Perform a <a class="reference internal" href="getting_started.html#multi-objective-searches"><span class="std std-ref">multi-objective search</span></a> where you return one score for each of the sizes you want to support.</p></li>
+<li><p>Run a separate search for each size.</p></li>
+<li><p>Benchmark and validate all matrix sizes inside the objective and return an aggregate score.</p></li>
+<li><p>Use a <a class="reference internal" href="getting_started.html#multi-objective-searches"><span class="std std-ref">multi-objective search</span></a> and return one score per size.</p></li>
 </ul>
 </section>
 <section id="a-note-on-performance">
-<h4>A Note on Performance<a class="headerlink" href="#a-note-on-performance" title="Link to this heading">#</a></h4>
-<p>It is important that all measurements performed during the search are reliable. We provide helper functionality to lock clocks which will help with reproducibility and runtime stability.</p>
+<h3>A note on performance<a class="headerlink" href="#a-note-on-performance" title="Link to this heading">#</a></h3>
+<p>Reliable latency measurements are important during the search. CompileIQ
+provides a helper to lock clocks:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.utils.gpu</span><span class="w"> </span><span class="kn">import</span> <span class="n">gpu_benchmark_mode</span>
 
 <span class="k">with</span> <span class="n">gpu_benchmark_mode</span><span class="p">(</span><span class="n">clock_mhz</span><span class="o">=</span><span class="mi">1965</span><span class="p">,</span> <span class="n">raise_on_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">task_timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Because we are using the multiprocessing worker that only works locally, we can lock the clocks once before starting the search. If you are using Ray on multiple machines, you may want to either lock the clocks beforehand or use <code class="docutils literal notranslate"><span class="pre">gpu_benchmark_mode</span></code> inside the objective function to make sure the clocks are locked for each individual evaluation regardless of where it will execute.</p>
-</section>
+<p>Because the default multiprocessing worker runs locally, you can lock clocks
+once before starting the search. If you use Ray across multiple machines, lock
+clocks before the run or use <code class="docutils literal notranslate"><span class="pre">gpu_benchmark_mode</span></code> inside the objective function
+so each remote evaluation runs under the same clock policy.</p>
 </section>
 </section>
 <section id="expanding-to-mixed-search-spaces">
-<h2>Expanding to Mixed-Search Spaces<a class="headerlink" href="#expanding-to-mixed-search-spaces" title="Link to this heading">#</a></h2>
-<p>Besides tuning PTXAS, CompileIQ often finds its best results when co-tuning other hyperparameters that matter to the application. In this example, Triton already does a good job with its own autotuner. As an example, we can disable the autotuner and expose those parameters to CompileIQ as part of the search space.</p>
-<p>First, remove the autotune decorator and keep the configs in an accessible location:</p>
+<h2>Expanding to mixed search spaces<a class="headerlink" href="#expanding-to-mixed-search-spaces" title="Link to this heading">#</a></h2>
+<p>Besides tuning PTXAS, CompileIQ can co-tune application parameters. The
+<code class="docutils literal notranslate"><span class="pre">mixed_triton.py</span></code> example searches a user-defined index into a list of Triton
+configs plus the PTXAS search space:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TRITON_CONFIGS</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;block_size_m&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;block_size_n&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-        <span class="s2">&quot;block_size_k&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span>
-        <span class="s2">&quot;group_size_m&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-        <span class="s2">&quot;num_stages&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;num_warps&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;block_size_m&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span>
-        <span class="s2">&quot;block_size_n&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-        <span class="s2">&quot;block_size_k&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
-        <span class="s2">&quot;group_size_m&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-        <span class="s2">&quot;num_stages&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-        <span class="s2">&quot;num_warps&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-    <span class="p">},</span> 
-    <span class="o">...</span> 
-    <span class="p">]</span>
+    <span class="p">{</span><span class="s2">&quot;block_m&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&quot;block_n&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;block_k&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&quot;stages&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;warps&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;block_m&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;block_n&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;block_k&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&quot;stages&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;warps&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;block_m&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;block_n&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">&quot;block_k&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&quot;stages&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;warps&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;block_m&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">&quot;block_n&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">&quot;block_k&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&quot;stages&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;warps&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;block_m&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">&quot;block_n&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;block_k&quot;</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;stages&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;warps&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="n">search_space</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;config_idx&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">TRITON_CONFIGS</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)},</span>
+    <span class="n">PtxasSearchSpace</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">cuda_version</span><span class="p">),</span>
+<span class="p">]</span>
 </pre></div>
 </div>
-<p>We can now define a mixed search space containing the user space and PTX space.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">user_space</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;config_idx&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">TRITON_CONFIGS</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)}</span>
-<span class="n">ptx_space</span> <span class="o">=</span> <span class="n">PtxasSearchSpace</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">cuda_version</span><span class="p">)</span>
-
-<span class="n">search_space_config</span> <span class="o">=</span> <span class="p">[</span><span class="n">user_space</span><span class="p">,</span> <span class="n">ptx_space</span><span class="p">]</span>
-
-<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
-    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
-    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
-    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>Here we create a range parameter that indexes into <code class="docutils literal notranslate"><span class="pre">TRITON_CONFIGS</span></code>.</p>
-<p>In the objective function, we now receive a list with the user space and PTX space sampled separately. We adjust the objective to read the index and pass the selected config to the kernel:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-<span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">mixed_ss</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-
-    <span class="n">user_space</span><span class="p">,</span> <span class="n">ptx_acf</span> <span class="o">=</span> <span class="n">mixed_ss</span>
-    <span class="n">config_idx</span> <span class="o">=</span> <span class="n">user_space</span><span class="p">[</span><span class="s2">&quot;config_idx&quot;</span><span class="p">]</span>
+<p>The objective receives a list with one entry per search-space component:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">mixed_config</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">user_space</span><span class="p">,</span> <span class="n">ptxas_config</span> <span class="o">=</span> <span class="n">mixed_config</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">TRITON_CONFIGS</span><span class="p">[</span><span class="n">user_space</span><span class="p">[</span><span class="s2">&quot;config_idx&quot;</span><span class="p">]]</span>
 
     <span class="o">...</span>
 
-    <span class="n">triton_output</span> <span class="o">=</span> <span class="n">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">tmp_acf_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">TRITON_CONFIGS</span><span class="p">[</span><span class="n">config_idx</span><span class="p">])</span>
-
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.acf&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">save_compiler_config</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ptxas_config</span><span class="p">)</span>
+        <span class="n">triton_output</span> <span class="o">=</span> <span class="n">matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>With this adjustment, CompileIQ can tune both PTX and user-space parameters together !</p>
+<p>Mixed-search results keep that same list shape in <code class="docutils literal notranslate"><span class="pre">best[&quot;params&quot;]</span></code>. Unpack it
+before saving the ACF:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">best</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_best_result</span><span class="p">()</span>
+<span class="n">user_space</span><span class="p">,</span> <span class="n">ptxas_config</span> <span class="o">=</span> <span class="n">best</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best Triton config index: </span><span class="si">{</span><span class="n">user_space</span><span class="p">[</span><span class="s1">&#39;config_idx&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">save_compiler_config</span><span class="p">(</span><span class="s2">&quot;best_matmul.acf&quot;</span><span class="p">,</span> <span class="n">ptxas_config</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 <section id="expanding-even-further">
 <h3>Expanding even further<a class="headerlink" href="#expanding-even-further" title="Link to this heading">#</a></h3>
-<p>The example above is illustrative and reuses the pre-defined configurations for the Triton matmul example. Alternatively, you can search over block and group sizes independently.</p>
-<p>As an example, you could expose each option as a CompileIQ parameter:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-<span class="n">user_space</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;block_size_m&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-    <span class="s2">&quot;block_size_n&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-    <span class="s2">&quot;block_size_k&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-    <span class="s2">&quot;group_size_m&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">]),</span>
-    <span class="s2">&quot;num_stages&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]),</span>
-    <span class="s2">&quot;num_warps&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">]),</span>
+<p>The example above indexes into a curated list of supported Triton configs.
+Alternatively, you can search over block and launch parameters directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">user_space</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;block_m&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+    <span class="s2">&quot;block_n&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+    <span class="s2">&quot;block_k&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+    <span class="s2">&quot;stages&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]),</span>
+    <span class="s2">&quot;warps&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">]),</span>
 <span class="p">}</span>
 
-<span class="n">ptx_space</span> <span class="o">=</span> <span class="n">PtxasSearchSpace</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">cuda_version</span><span class="p">)</span>
-
-<span class="n">search_space_config</span> <span class="o">=</span> <span class="p">[</span><span class="n">user_space</span><span class="p">,</span> <span class="n">ptx_space</span><span class="p">]</span>
-
+<span class="n">search_space</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">user_space</span><span class="p">,</span>
+    <span class="n">PtxasSearchSpace</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">cuda_version</span><span class="p">),</span>
+<span class="p">]</span>
 </pre></div>
 </div>
-<p>Although this approach might require longer searches, it provides better visibility into how each combination behaves. You might even find good solutions where you least expect them.</p>
+<p>This approach may require longer searches, but it gives CompileIQ visibility
+into each parameter combination.</p>
 </section>
 </section>
 </section>
@@ -677,16 +692,14 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#matmul-triton-tutorial">Matmul Triton Tutorial</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#specific-changes-to-triton">Specific Changes to Triton</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-objective-function">Building the objective function</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#expanding-the-search-to-different-matrix-sizes">Expanding the search to different matrix sizes</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#a-note-on-performance">A Note on Performance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fixed-config-matmul-example">Fixed-config matmul example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specific-changes-for-triton">Specific changes for Triton</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-objective-function">Building the objective function</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#expanding-the-search-to-different-matrix-sizes">Expanding the search to different matrix sizes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-note-on-performance">A note on performance</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#expanding-to-mixed-search-spaces">Expanding to Mixed-Search Spaces</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#expanding-to-mixed-search-spaces">Expanding to mixed search spaces</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#expanding-even-further">Expanding even further</a></li>
 </ul>
 </li>
