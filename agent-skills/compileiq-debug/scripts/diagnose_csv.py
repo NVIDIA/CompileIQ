@@ -9,6 +9,7 @@ Prints a generation-summary table and flags one or more of:
 - INCREASING_INVALID_RATE  (mutation arm spreading bad configs)
 - STALLED_CONVERGENCE      (no improvement in best score over recent gens)
 - HIGH_VARIANCE            (validation-time noise; check GPU clocks)
+- NO_SCORE_COLUMN          (generation present but no score_1 or score column)
 - HEALTHY                  (none of the above)
 
 Exit code = number of flagged pathologies (0 = healthy).
@@ -41,6 +42,9 @@ def diagnose(df: pd.DataFrame) -> Diagnosis:
 
     if "score_1" not in df.columns and "score" in df.columns:
         df = df.rename(columns={"score": "score_1"})
+    elif "score_1" not in df.columns:
+        return Diagnosis(["NO_SCORE_COLUMN"], pd.DataFrame(),
+                         ["CSV missing 'score_1' or 'score' column."])
 
     df = df.copy()
     df["score_numeric"] = pd.to_numeric(df["score_1"], errors="coerce")
