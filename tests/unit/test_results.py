@@ -148,6 +148,24 @@ def test_class_method(single_objective_results, multi_objective_results):
     assert result_multi.num_scores == 2
 
 
+def test_score_column_matching_ignores_substring_columns():
+    df = pd.DataFrame(
+        {
+            "score_1": [1.0],
+            "baseline_score_1": [2.0],
+            "params": ['{"a": 1}'],
+        }
+    )
+
+    result = SearchResult.from_dataframe(df=df, problem_type=ProblemType.MIN)
+
+    assert result.num_scores == 1
+    assert result.score_columns == ["score_1"]
+    best_result = result.get_best_result()
+    assert isinstance(best_result, dict)
+    assert best_result["score_1"] == 1.0
+
+
 def test_singlescore_results(single_objective_results):
     correct_result = {
         ProblemType.MAX: {
