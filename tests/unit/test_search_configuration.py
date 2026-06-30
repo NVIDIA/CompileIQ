@@ -181,6 +181,16 @@ class TestLegacyRoundTrip:
         with pytest.raises(ValueError, match="extension .config"):
             SearchConfiguration.from_legacy("not_a_config.txt")
 
+    def test_from_legacy_rejects_malformed_supported_field_value(self, tmp_path):
+        """Malformed supported-field values should fail at the parser boundary."""
+        config_path = tmp_path / "test.config"
+        config_path.write_text("(generations . 1+)\n")
+
+        with pytest.raises(ValueError, match="Invalid value.*generations") as excinfo:
+            SearchConfiguration.from_legacy(str(config_path))
+
+        assert isinstance(excinfo.value.__cause__, SyntaxError)
+
     def test_to_legacy_contains_seek_minimum(self):
         """The core binary reads 'seek_minimum', not 'problem_type'.
         Verify the key name translation happens."""

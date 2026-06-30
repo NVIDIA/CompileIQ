@@ -683,7 +683,12 @@ class SearchConfiguration(BaseModel, extra="forbid"):
             if "seek_minimum" in key:
                 config_dict["problem_type"] = ProblemType.MIN if val == "True" else ProblemType.MAX
             elif key in available_fields:
-                config_dict[key] = ast.literal_eval(val)
+                try:
+                    config_dict[key] = ast.literal_eval(val)
+                except (SyntaxError, ValueError) as exc:
+                    raise ValueError(
+                        f"Invalid value for legacy configuration field {key!r}: {val!r}"
+                    ) from exc
             else:
                 warnings.warn(f"Configuration {key} is going to be ignored")
 
