@@ -87,13 +87,14 @@ When selecting a successful sample from the search, test it in the target deploy
 
 ## Standalone Examples
 
-Each example below follows this pattern: define an objective function, fetch a compiler search space, and run a CompileIQ search.
+Each example below follows this pattern: define an objective function, define or fetch a search space, and run a CompileIQ search.
 
 | Example | Compiler | Metric | Docs |
 |---------|----------|--------|------|
 | [NVCC reduction](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/nvcc_example/) | NVCC | Runtime (ms) | [NVCC example](nvcc_example.md) |
 | [PTXAS spill reduction](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/ptxas_example/) | PTXAS | Spill bytes | [PTXAS example](ptx_spill_example.md) |
 | [Triton matmul](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/triton_example/) | PTXAS via Triton | Runtime (ms) | [Triton example](triton_example.md) |
+| [cuTile matmul](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/cutile_example/) | cuTile user-level parameters | Runtime (ms) | [cuTile example](cutile_example.md) |
 | [NVBench reduction](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/nvbench_example/) | PTXAS via NVCC | Runtime (P75, NVBench) | [Benchmarking](benchmarking.md) |
 
-The PTXAS example is the simplest starting point — it only requires `ptxas` and runs on CPU (no GPU needed). The NVCC and Triton examples require a GPU to measure runtime.
+The PTXAS example is the simplest starting point — it only requires `ptxas` and runs on CPU (no GPU needed). The NVCC, Triton, and cuTile examples require a GPU to measure runtime.

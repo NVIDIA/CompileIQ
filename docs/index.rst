@@ -20,6 +20,7 @@ CompileIQ Documentation
    Tuning PTXAS <ptx_spill_example>
    Tuning NVCC <nvcc_example>
    Tuning PTXAS in Triton <triton_example>
+   Autotuning cuTile parameters <cutile_example>
    benchmarking
 
 .. toctree::

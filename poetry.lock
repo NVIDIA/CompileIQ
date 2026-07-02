@@ -1019,6 +1019,40 @@ files = [
 ]
 
 [[package]]
+name = "cuda-tile"
+version = "1.4.0"
+description = "CUDA Tile Compiler"
+optional = false
+python-versions = "<3.15,>=3.10"
+groups = ["examples"]
+files = [
+    {file = "cuda_tile-1.4.0-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:8758454ae3971cd8dc195a61210e42ad3696528a9da6a4a429da4cdbbf305d80"},
+    {file = "cuda_tile-1.4.0-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:63fc9edd9376a196870ff9dcd9cdb9a7e4d2f2271a4e531c390b232bc60ee0f0"},
+    {file = "cuda_tile-1.4.0-cp310-cp310-win_amd64.whl", hash = "sha256:bbfaa33f86d93c7a0ae1f82b626a9f442cd6ff5f991c8a4e7214abd170cf3d21"},
+    {file = "cuda_tile-1.4.0-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:da2649de97cbaf886d564a9f75b3bd2fb112999c99c58a27c817a46bb8725f29"},
+    {file = "cuda_tile-1.4.0-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:5741a789aaff85e3b2417b8611f0d11f967b9bac567432f0057b2b8bf72259ac"},
+    {file = "cuda_tile-1.4.0-cp311-cp311-win_amd64.whl", hash = "sha256:9825202c1175dcac6c2daafd176da4444801e13049b4e2688d92f5b582f6ea6d"},
+    {file = "cuda_tile-1.4.0-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:9e358a85a153820aa0a51d0e09346d884a3c14b88c0313d20d0fb9f53952abae"},
+    {file = "cuda_tile-1.4.0-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:1d9d99b6fa57366af3f8707ac4fd91411275af2ee736996a60620240fcf92070"},
+    {file = "cuda_tile-1.4.0-cp312-cp312-win_amd64.whl", hash = "sha256:616f13cbc7af6caa7b92430b85ba0a429d1f96ca9e7e04a29d89114cfe859663"},
+    {file = "cuda_tile-1.4.0-cp313-cp313-manylinux2014_aarch64.whl", hash = "sha256:fc74185efd81f6153af0a19549d111dec6861ee9b9bc27927a2cef6e19173eb5"},
+    {file = "cuda_tile-1.4.0-cp313-cp313-manylinux2014_x86_64.whl", hash = "sha256:45be74f6568c440446f510bc7799b953858e64c6abf26e96f2c9598a79084860"},
+    {file = "cuda_tile-1.4.0-cp313-cp313-win_amd64.whl", hash = "sha256:edd1df4d7955032c7be2a26c6d7e47261415ba7c87587705e0f4f1fd0d61650a"},
+    {file = "cuda_tile-1.4.0-cp314-cp314-manylinux2014_aarch64.whl", hash = "sha256:738593650784ebb3c601486914b563e7569144fe596048766ea9e12280ac3bb9"},
+    {file = "cuda_tile-1.4.0-cp314-cp314-manylinux2014_x86_64.whl", hash = "sha256:4b1a591c26836a550c2bf87c22d31c4716e5f83d24d255f843d9429625cca973"},
+    {file = "cuda_tile-1.4.0-cp314-cp314-win_amd64.whl", hash = "sha256:c19e10fe70ba92709b6ca446d1c52a8a346b56f4f8ad7c8941736f60e32f3c87"},
+    {file = "cuda_tile-1.4.0-cp314-cp314t-manylinux2014_aarch64.whl", hash = "sha256:b3cbeffbe0fedac4936edcf00b6ba13ab5ddb74d3b7ce4a287dfc04491b5f6af"},
+    {file = "cuda_tile-1.4.0-cp314-cp314t-manylinux2014_x86_64.whl", hash = "sha256:675b2afff62af5d4e72c34bc72d0be27b0933a44933b8a449f590fbded8c1107"},
+    {file = "cuda_tile-1.4.0-cp314-cp314t-win_amd64.whl", hash = "sha256:3f58eac5577ea3ed7c17bfcab015a506fd2cf61f8848407c5b403f1bf46c55ca"},
+]
+
+[package.dependencies]
+typing-extensions = "*"
+
+[package.extras]
+tileiras = ["cuda-toolkit[nvcc,nvvm,tileiras] (>=13.2,<13.4)"]
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 description = "Composable style cycles"
@@ -5887,4 +5921,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "21958e1e3633beaa440be322d837d9676bfd01264e4a1b37b52d0dc55d061cb3"
+content-hash = "4d07ede48b6b7114f980b12676c03f01e81d44fbff0ccdf0a0ef51324d7941c7"
