@@ -7,14 +7,16 @@ over the PTXAS search space to find compiler configurations for a CUDA
 reduction kernel.
 
 Usage:
-    python optimize_reduction.py --nvbench-path /path/to/nvbench/install
+    # Run optimization for chosen architecture
+    python optimize_reduction.py --arch sm_120
 
     # Benchmark-only (no optimization):
-    python optimize_reduction.py --nvbench-path /path/to/nvbench/install --benchmark-only
+    python optimize_reduction.py --arch sm_120 --benchmark-only
 
     # With saved config:
-    python optimize_reduction.py --nvbench-path /path/to/nvbench/install \
-        --benchmark-only --nvcc-options "--apply-controls best_reduction.acf"
+    python optimize_reduction.py --arch sm_120 --benchmark-only \
+        --nvbench-path /path/to/nvbench/install \
+        --nvcc-options "-Xptxas --apply-controls=best_reduction.acf"
 """
 
 import argparse
@@ -24,6 +26,7 @@ import shlex
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -34,99 +37,133 @@ from compileiq.utils.helpers import save_compiler_config
 from nvbench_utils import parse_nvbench_result
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
-REDUCTION_CU = SCRIPT_DIR / "reduction_bench.cu"
 
 
 # ---------------------------------------------------------------------------
 # CUDA / NVBench path discovery
 # ---------------------------------------------------------------------------
 
-def get_cuda_paths():
-    """Find CUDA installation from nvcc in PATH."""
-    nvcc_path = shutil.which("nvcc")
+def get_nvcc_path() -> Path:
+    """Find nvcc from CUDACXX or PATH."""
+    nvcc_path = os.environ.get("CUDACXX") or shutil.which("nvcc")
     if not nvcc_path:
         raise RuntimeError("nvcc not found in PATH")
-    cuda_root = Path(nvcc_path).parent.parent
-    cuda_lib = cuda_root / "lib64"
-    if not cuda_lib.exists():
-        cuda_lib = cuda_root / "lib"
-    return cuda_root, cuda_lib
+    return Path(nvcc_path)
 
 
-def get_nvbench_paths(nvbench_path: Path):
-    """Locate NVBench include, lib, and main.cu.o from install directory.
+def discover_nvbench_prefix(nvbench_path: Path | None) -> Path:
+    """Return an installed NVBench CMake prefix."""
+    if nvbench_path is not None:
+        return Path(nvbench_path)
 
-    Returns (include_dir, lib_dir, main_obj) or raises RuntimeError.
-    """
-    nvbench_path = Path(nvbench_path)
-    include_dir = nvbench_path / "include"
-    lib_dir = nvbench_path / "lib"
-    main_obj = lib_dir / "objects-Release" / "nvbench.main" / "main.cu.o"
-
-    if not include_dir.exists():
-        raise RuntimeError(f"NVBench include dir not found: {include_dir}")
-    if not lib_dir.exists():
-        raise RuntimeError(f"NVBench lib dir not found: {lib_dir}")
-    if not main_obj.exists():
-        raise RuntimeError(
-            f"NVBench main.cu.o not found: {main_obj}\n"
-            "Ensure NVBench was built with cmake --build ... --target install"
-        )
-    return include_dir, lib_dir, main_obj
-
-
-# ---------------------------------------------------------------------------
-# Build and run
-# ---------------------------------------------------------------------------
-
-def build_benchmark(
-    arch: str,
-    nvbench_path: Path,
-    tmpdir: str,
-    config_file: Path = None,
-    extra_nvcc_opts: list = None,
-) -> Path | None:
-    """Compile reduction_bench.cu linked with NVBench.
-
-    Returns path to the compiled executable, or None on failure.
-    """
-    cuda_root, cuda_lib = get_cuda_paths()
-    nvcc = str(cuda_root / "bin" / "nvcc")
-    include_dir, lib_dir, main_obj = get_nvbench_paths(nvbench_path)
-
-    exe = Path(tmpdir) / "reduction_bench"
-
-    flags = [
-        f"-arch={arch}",
-        "-O3", "-std=c++17", "-DNDEBUG",
-        f"-I{include_dir}",
-        f"-L{lib_dir}",
-        f"-Xlinker=-rpath,{lib_dir}",
-    ]
-    if config_file:
-        # Forward controls to ptxas only (not libnvvm) via -Xptxas
-        flags += ["-Xptxas", f"--apply-controls={config_file}"]
-    if extra_nvcc_opts:
-        flags += extra_nvcc_opts
-
-    env = os.environ.copy()
-    env["LIBRARY_PATH"] = f"{cuda_lib}:{env.get('LIBRARY_PATH', '')}"
-    env["LD_LIBRARY_PATH"] = f"{cuda_lib}:{lib_dir}:{env.get('LD_LIBRARY_PATH', '')}"
-
-    cmd = [
-        nvcc, *flags,
-        str(REDUCTION_CU),
-        str(main_obj),
-        "-lnvbench", "-lcudart_static", "-lcuda",
-        "-o", str(exe),
-    ]
+    env_path = os.environ.get("NVBENCH_PATH")
+    if env_path:
+        return Path(env_path)
 
     try:
-        subprocess.run(cmd, env=env, capture_output=True, check=True, timeout=120)
+        import cuda.bench as bench
+    except ImportError as e:
+        raise RuntimeError(
+            "NVBench install prefix was not provided. Pass --nvbench-path, set "
+            "NVBENCH_PATH, or install cuda-bench so cuda.bench.get_nvbench_prefix() "
+            "is available."
+        ) from e
+
+    return bench.get_nvbench_prefix()
+
+
+def normalize_cmake_arch(arch: str) -> str:
+    """Convert nvcc-style architecture strings to CMake CUDA architectures."""
+    if arch.startswith("sm_"):
+        return arch.removeprefix("sm_")
+    if arch.startswith("compute_"):
+        return arch.removeprefix("compute_")
+    return arch
+
+
+# ---------------------------------------------------------------------------
+# Configure, build, and run
+# ---------------------------------------------------------------------------
+
+def quote_cmd(cmd: list[str]) -> str:
+    return shlex.join(str(part) for part in cmd)
+
+
+def print_failed_command(cmd: list[str], *, stdout: str = "", stderr: str = "") -> None:
+    print(f"Command failed: {quote_cmd(cmd)}")
+    if stdout:
+        print("stdout:")
+        print(stdout.rstrip())
+    if stderr:
+        print("stderr:")
+        print(stderr.rstrip())
+
+
+def cmake_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env.setdefault("CUDACXX", str(get_nvcc_path()))
+    return env
+
+
+def cmake_configure(
+    build_dir: Path,
+    arch: str,
+    nvbench_path: Path,
+    controls_file: Path | None = None,
+    extra_nvcc_opts: list[str] | None = None,
+) -> bool:
+    """Configure a CMake build tree for the benchmark."""
+    build_dir.mkdir(parents=True, exist_ok=True)
+
+    cmd = [
+        "cmake",
+        "-S", str(SCRIPT_DIR),
+        "-B", str(build_dir),
+        "-G", "Ninja",
+        f"-DCMAKE_PREFIX_PATH={nvbench_path}",
+        f"-DCMAKE_CUDA_ARCHITECTURES={normalize_cmake_arch(arch)}",
+    ]
+    if controls_file is not None:
+        cmd.append(f"-DCOMPILEIQ_PTXAS_CONTROLS={controls_file}")
+    if extra_nvcc_opts:
+        cmd.append(f"-DCOMPILEIQ_EXTRA_NVCC_OPTIONS={shlex.join(extra_nvcc_opts)}")
+
+    try:
+        subprocess.run(
+            cmd,
+            env=cmake_env(),
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=120,
+        )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-        stderr = getattr(e, "stderr", b"")
-        if stderr:
-            print(f"Build failed: {stderr.decode(errors='replace')[:500]}")
+        stdout = getattr(e, "stdout", "") or ""
+        stderr = getattr(e, "stderr", "")
+        print_failed_command(cmd, stdout=stdout, stderr=stderr)
+        return False
+
+    return True
+
+
+def cmake_build(build_dir: Path) -> Path | None:
+    """Build the configured benchmark target."""
+    exe = build_dir / "reduction_bench"
+
+    try:
+        cmd = ["cmake", "--build", str(build_dir), "--target", "reduction_bench"]
+        subprocess.run(
+            cmd,
+            env=cmake_env(),
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=120,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+        stdout = getattr(e, "stdout", "") or ""
+        stderr = getattr(e, "stderr", "") or ""
+        print_failed_command(cmd, stdout=stdout, stderr=stderr)
         return None
 
     return exe
@@ -150,70 +187,107 @@ def run_nvbench(
     try:
         p = subprocess.Popen(
             cmd, start_new_session=True,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         )
-        p.wait(timeout=timeout)
+        stdout, stderr = p.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+        stdout, stderr = p.communicate()
         print("NVBench benchmark timed out")
+        print_failed_command(cmd, stdout=stdout or "", stderr=stderr or "")
         return None
 
     if p.returncode != 0:
+        print(f"NVBench benchmark failed with exit code {p.returncode}")
+        print_failed_command(cmd, stdout=stdout or "", stderr=stderr or "")
         return None
 
-    return parse_nvbench_result(Path(result_path))
+    score = parse_nvbench_result(Path(result_path))
+    if score is None:
+        print("NVBench result parsing failed")
+        print(f"Result file: {result_path}")
+        print_failed_command(cmd, stdout=stdout or "", stderr=stderr or "")
+    return score
 
 
 # ---------------------------------------------------------------------------
 # Modes
 # ---------------------------------------------------------------------------
 
-def run_benchmark_only(args):
+def run_benchmark_only(args) -> int:
     """Benchmark-only mode: build with optional nvcc options and report timing."""
     extra_opts = shlex.split(args.nvcc_options) if args.nvcc_options else None
+    nvbench_path = discover_nvbench_prefix(args.nvbench_path)
 
     with tempfile.TemporaryDirectory(prefix="ciq_nvbench_") as tmpdir:
-        exe = build_benchmark(
-            args.arch, args.nvbench_path, tmpdir, extra_nvcc_opts=extra_opts,
-        )
-        if not exe:
+        build_dir = Path(tmpdir) / "build"
+        if not cmake_configure(
+            build_dir,
+            args.arch,
+            nvbench_path,
+            extra_nvcc_opts=extra_opts,
+        ):
+            print("Configure failed")
+            return 1
+
+        exe = cmake_build(build_dir)
+        if exe is None:
             print("Build failed")
-            exit(1)
+            return 1
 
         score = run_nvbench(exe, args.elements_pow2, tmpdir)
         if score is None:
             print("Benchmark failed")
-            exit(1)
+            return 1
 
         print(f"P75 latency: {score * 1000:.4f} ms  ({score:.6f} s)")
+        return 0
 
 
 def run_optimization(args, cuda_version: str):
     """Run optimization to find the best PTXAS compiler config."""
-    nvbench_path = args.nvbench_path
+    nvbench_path = discover_nvbench_prefix(args.nvbench_path)
 
-    # Run baseline (no compiler controls)
-    print("Running baseline...")
-    with tempfile.TemporaryDirectory(prefix="ciq_nvbench_base_") as tmpdir:
-        exe = build_benchmark(args.arch, nvbench_path, tmpdir)
-        if not exe:
+    with tempfile.TemporaryDirectory(prefix="ciq_nvbench_") as tmpdir:
+        tmp_path = Path(tmpdir)
+        baseline_build_dir = tmp_path / "baseline_build"
+        search_build_dir = tmp_path / "search_build"
+        controls_path = search_build_dir / "controls.acf"
+
+        # Run baseline (no compiler controls)
+        print("Running baseline...")
+        if not cmake_configure(baseline_build_dir, args.arch, nvbench_path):
+            print("Baseline configure failed")
+            return 1
+        baseline_exe = cmake_build(baseline_build_dir)
+        if baseline_exe is None:
             print("Baseline build failed")
             return 1
-        baseline = run_nvbench(exe, args.elements_pow2, tmpdir)
+        baseline = run_nvbench(baseline_exe, args.elements_pow2, tmpdir)
 
-    if baseline is None:
-        print("Baseline benchmark failed")
-        return 1
-    print(f"Baseline P75: {baseline * 1000:.4f} ms\n")
+        if baseline is None:
+            print("Baseline benchmark failed")
+            return 1
+        print(f"Baseline P75: {baseline * 1000:.4f} ms\n")
 
-    # Objective function: compile with PTXAS config, measure with NVBench
-    def objective(config_str: str) -> float:
-        with tempfile.TemporaryDirectory(prefix="ciq_nvbench_") as tmpdir:
-            acf_path = Path(tmpdir) / "controls.acf"
-            save_compiler_config(str(acf_path), config_str)
+        # Configure the candidate build once. The controls file is declared as
+        # an object dependency in CMakeLists.txt, so rewriting it is enough to
+        # trigger recompilation with Ninja on each candidate.
+        search_build_dir.mkdir(parents=True, exist_ok=True)
+        controls_path.write_text("", encoding="utf-8")
+        if not cmake_configure(
+            search_build_dir, args.arch, nvbench_path, controls_file=controls_path
+        ):
+            print("Search configure failed")
+            return 1
 
-            exe = build_benchmark(args.arch, nvbench_path, tmpdir, config_file=acf_path)
-            if not exe:
+        # Objective function: compile with PTXAS config, measure with NVBench
+        def objective(config_str: str) -> float:
+            save_compiler_config(str(controls_path), config_str)
+            controls_path.touch()
+
+            exe = cmake_build(search_build_dir)
+            if exe is None:
                 return INVALID_SCORE
 
             score = run_nvbench(exe, args.elements_pow2, tmpdir)
@@ -222,39 +296,44 @@ def run_optimization(args, cuda_version: str):
 
             return score
 
-    # Configure and run search
-    search_space = args.search_space or PtxasSearchSpace(version=cuda_version)
-    config = SearchConfiguration(
-        problem_type=ProblemType.MIN,
-        generations=args.generations,
-        pool_size=args.pool_size,
-    )
-    tuner = Search(
-        objective_function=objective,
-        search_space=search_space,
-        search_config=config,
-        dump_results=SCRIPT_DIR / "optimization_results.csv",
-    )
+        # Configure and run search
+        search_space = args.search_space or PtxasSearchSpace(version=cuda_version)
+        config = SearchConfiguration(
+            problem_type=ProblemType.MIN,
+            generations=args.generations,
+            pool_size=args.pool_size,
+        )
+        tuner = Search(
+            objective_function=objective,
+            search_space=search_space,
+            search_config=config,
+            dump_results=SCRIPT_DIR / "optimization_results.csv",
+        )
 
-    print(f"Starting optimization ({args.generations} generations, pool={args.pool_size})...")
-    print("Using PtxasSearchSpace with NVBench measurement (P75 latency)\n")
-    results = tuner.start(num_workers=1)
-    best = results.get_best_result()
+        print(f"Starting optimization ({args.generations} generations, pool={args.pool_size})...")
+        print("Using PtxasSearchSpace with NVBench measurement (P75 latency)\n")
+        results = tuner.start(num_workers=1)
+        best = results.get_best_result()
 
-    # Report results
-    if best:
-        best_time = best.get("score_1", best.get("score"))
-        speedup = baseline / best_time if best_time > 0 else 0
+        # Report results
+        if best:
+            best_time = best.get("score_1", best.get("score"))
+            speedup = baseline / best_time if best_time > 0 else 0
 
-        print(f"\nBaseline:  {baseline * 1000:.4f} ms")
-        print(f"Optimized: {best_time * 1000:.4f} ms")
-        print(f"Speedup:   {speedup:.2f}x")
+            print(f"\nBaseline:  {baseline * 1000:.4f} ms")
+            print(f"Optimized: {best_time * 1000:.4f} ms")
+            print(f"Speedup:   {speedup:.2f}x")
 
-        # Save best config
-        config_path = SCRIPT_DIR / "best_reduction.acf"
-        save_compiler_config(str(config_path), best["params"])
-        print(f"\nConfig saved: {config_path}")
-        print(f"Usage: nvcc -Xptxas --apply-controls={config_path} -arch={args.arch} ...")
+            # Save best config
+            config_path = SCRIPT_DIR / "best_reduction.acf"
+            save_compiler_config(str(config_path), best["params"])
+            print(f"\nConfig saved: {config_path}")
+            print(
+                "Usage: cmake -S . -B build -G Ninja "
+                f"-DCOMPILEIQ_PTXAS_CONTROLS={config_path} ..."
+            )
+
+        return 0
 
 
 # ---------------------------------------------------------------------------
@@ -288,24 +367,20 @@ def main():
                         help="Additional NVCC options (benchmark-only mode)")
     args = parser.parse_args()
 
-    # Validate NVBench path
-    if not args.nvbench_path:
-        parser.error(
-            "--nvbench-path is required (or set NVBENCH_PATH environment variable)"
-        )
-
     # Check CUDA version
     version_output = subprocess.run(
-        ["nvcc", "--version"], capture_output=True, text=True, check=True
+        [str(get_nvcc_path()), "--version"], capture_output=True, text=True, check=True
     ).stdout
-    cuda_version = re.search(r"release (\d+\.\d+),", version_output).group(1)
+    cuda_version_match = re.search(r"release (\d+\.\d+),", version_output)
+    if cuda_version_match is None:
+        parser.error("Could not determine CUDA version from nvcc --version output")
+    cuda_version = cuda_version_match.group(1)
     assert float(cuda_version) >= 13.3, "CompileIQ requires CUDA 13.3+"
 
     if args.benchmark_only:
-        run_benchmark_only(args)
-    else:
-        run_optimization(args, cuda_version)
+        return run_benchmark_only(args)
+    return run_optimization(args, cuda_version)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

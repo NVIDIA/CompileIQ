@@ -1,53 +1,34 @@
-# NVBench Optimization Example
+# NVBench CMake Optimization Example
 
 Optimize a CUDA reduction kernel with CompileIQ using NVBench for accurate
-benchmarking and the PTXAS search space for compiler control tuning.
+benchmarking. This variant builds the benchmark with CMake and links against the
+NVBench installation embedded in the `cuda-bench` wheel.
 
 ## Why NVBench?
 
-NVBench provides statistically rigorous and accurate kernel runtime measurements
-and should be preferred to naive use of cudaEvent timing (as used in
-`../nvcc_example/`):
+NVBench provides statistically rigorous kernel runtime measurements and should
+be preferred to naive `cudaEvent` timing:
 
 - **Cold measurements** — L2 cache is flushed between samples, preventing
   artificially warm cache from skewing results
 - **Entropy-based convergence** — automatically collects enough samples until
-  the timing distribution stabilizes, rather than using a fixed iteration count
+  the timing distribution stabilizes
 - **Throttling detection** — automatically discards measurements when thermal
   throttling is detected
-- **Access to full sample** — allows implementing custom metrics, e.g.
-  75-percentile, which are more robust and less sensitive to outliers than
-  the mean
-
-## Why PTXAS Controls on CUDA Source?
-
-The existing `ptxas_example/` applies PTXAS controls to pre-compiled `.ptx`
-files. This example shows that PTXAS controls also work on `.cu` source files
-compiled through `nvcc` — using `-Xptxas --apply-controls=<file>` to forward
-controls to the PTXAS invocation. This opens up PTXAS-level tuning
-for any CUDA kernel without requiring a separate PTX compilation step.
+- **Access to raw samples** — supports custom metrics such as P75 latency
 
 ## Prerequisites
 
+- Linux
 - CUDA 13.3+
-- NVBench (built and installed — see below)
+- `nvcc` available through `PATH` or `CUDACXX`
+- CMake >= 3.30.4
+- Ninja
 - Blackwell GPU (sm_100) or adjust `--arch`
 - `pip install compileiq`
+- `pip install "cuda-bench[cu13]>=0.3.0"`
 
-### NVBench Installation
-
-```bash
-git clone https://github.com/NVIDIA/nvbench.git
-cd nvbench
-cmake -B build -G Ninja --preset nvbench-ci \
-  -DCMAKE_INSTALL_PREFIX=$(pwd)/build/nvbench_install \
-  -DCMAKE_CUDA_COMPILER=$(which nvcc) \
-  -DCMAKE_CUDA_ARCHITECTURES=100 \
-  -DNVBench_ENABLE_CUPTI=OFF \
-  -DNVBench_ENABLE_NVML=OFF
-cmake --build build --target install
-export NVBENCH_PATH=$(pwd)/build/nvbench_install
-```
+The `cuda-bench` wheel contains a CUDA-versioned NVBench CMake installation.
 
 ## Quick Start
 
@@ -81,5 +62,6 @@ python optimize_reduction.py --benchmark-only --arch sm_100
 - `reduction_bench.cu` — NVBench-instrumented CUDA reduction kernel
 - `optimize_reduction.py` — Optimization and benchmarking script
 - `nvbench_utils.py` — NVBench result parsing utilities
+- `CMakeLists.txt` — standalone CMake project for the reduction benchmark
 - `best_reduction.acf` — Best PTXAS config (generated)
 - `optimization_results.csv` — Search history (generated)

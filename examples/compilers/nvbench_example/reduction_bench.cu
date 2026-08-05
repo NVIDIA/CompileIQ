@@ -11,8 +11,7 @@
  *   nvcc -O3 -std=c++17 -arch=sm_100 reduction_bench.cu \
  *     -I $NVBENCH_PATH/include -L $NVBENCH_PATH/lib \
  *     -Xlinker=-rpath,$NVBENCH_PATH/lib \
- *     -lnvbench -lcudart_static -lcuda \
- *     $NVBENCH_PATH/lib/objects-Release/nvbench.main/main.cu.o \
+ *     -lnvbench -lcudart_static -lcuda -lnvbench_main \
  *     -o reduction_bench
  *
  * Usage:
