@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any, Optional, Annotated, Sequence
 from annotated_types import Gt
 import numpy as np
@@ -7,6 +8,13 @@ from compileiq.search_spaces.models import (
     ChoiceParamConfig,
     LiteralParamConfig,
 )
+
+
+def _probability_to_threshold(knockout_prob: Optional[float]) -> Optional[float]:
+    """Convert omission probability without introducing a binary-float artifact."""
+    if knockout_prob is None:
+        return None
+    return float(Decimal("1") - Decimal(str(knockout_prob)))
 
 
 def range(
@@ -62,7 +70,7 @@ def range(
     if end <= start:
         raise ValueError("Please provide a proper range value where start < end.")
 
-    knockout_threshold = (1.0 - knockout_prob) if knockout_prob is not None else None
+    knockout_threshold = _probability_to_threshold(knockout_prob)
 
     # Validating seeding option
     if seed_low is not None and seed_high is not None:
@@ -113,7 +121,7 @@ def choice(
         else:
             processed.append(val)
 
-    knockout_threshold = (1.0 - knockout_prob) if knockout_prob is not None else None
+    knockout_threshold = _probability_to_threshold(knockout_prob)
 
     return ChoiceParamConfig(
         vals=processed,
@@ -147,7 +155,7 @@ def literal(
     if isinstance(const_value, bool):
         const_value = int(const_value)
 
-    knockout_threshold = (1.0 - knockout_prob) if knockout_prob is not None else None
+    knockout_threshold = _probability_to_threshold(knockout_prob)
 
     return LiteralParamConfig(
         value=const_value,
