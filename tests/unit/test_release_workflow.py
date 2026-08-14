@@ -11,6 +11,10 @@ CI_WORKFLOW = WORKFLOWS / "ci.yml"
 DOCS_WORKFLOW = WORKFLOWS / "docs.yml"
 
 
+def _make_target_block(content: str, target: str, next_target: str) -> str:
+    return content.split(f"{target}:", 1)[1].split(f"\n{next_target}:", 1)[0]
+
+
 def test_search_space_release_workflow_is_not_active_without_artifact_staging():
     content = CI_WORKFLOW.read_text()
     legacy_assets_glob = "/".join(("assets", "*.bin"))
@@ -54,6 +58,33 @@ def test_search_space_release_prep_is_local_until_publish_path_is_decided():
     content = CI_WORKFLOW.read_text()
 
     assert "startsWith(github.ref, 'refs/tags/search-spaces-')" not in content
+
+
+def test_catalog_releases_publish_atomically_without_becoming_latest():
+    content = MAKEFILE.read_text()
+    release_targets = (
+        (
+            "publish-search-space-release",
+            "clear-search-space-latest",
+            "check-search-space-published",
+        ),
+        (
+            "publish-booster-pack-release",
+            "clear-booster-pack-latest",
+            "check-booster-pack-published",
+        ),
+    )
+
+    for publish_target, next_target, check_target in release_targets:
+        recipe = _make_target_block(content, publish_target, next_target)
+
+        assert "set -eu" in recipe
+        assert recipe.count("gh api --method PATCH") == 1
+        assert "-F draft=false" in recipe
+        assert "-f make_latest=false" in recipe
+        assert recipe.index("-F draft=false") < recipe.index("-f make_latest=false")
+        assert f"$(MAKE) --no-print-directory {check_target}" in recipe
+        assert recipe.index(check_target) < recipe.index('echo "PASS: Published')
 
 
 def test_ci_workflow_no_longer_deploys_pages_artifacts():
