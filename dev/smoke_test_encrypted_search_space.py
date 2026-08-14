@@ -20,6 +20,17 @@ def _positive_int(value: str) -> int:
     return parsed
 
 
+def _sha256_value(value: str) -> str:
+    normalized = value.removeprefix("sha256:").lower()
+    if len(normalized) != 64:
+        raise argparse.ArgumentTypeError("must be a 64-character SHA-256 digest")
+    try:
+        bytes.fromhex(normalized)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("must be a hexadecimal SHA-256 digest") from error
+    return normalized
+
+
 def _decode_candidate(candidate: object, index: int) -> bytes:
     if not isinstance(candidate, str) or not candidate:
         raise RuntimeError(f"candidate {index} is not a non-empty encrypted hex string")
@@ -133,21 +144,33 @@ def main() -> None:
     parser.add_argument("--pool-size", type=_positive_int, default=6)
     parser.add_argument("--cull-size", type=_positive_int, default=2)
     parser.add_argument("--workers", type=_positive_int, default=1)
+    parser.add_argument("--expected-sha256", type=_sha256_value)
+    parser.add_argument("--expected-size", type=_positive_int)
     args = parser.parse_args()
 
     if not args.search_space.is_file():
         parser.error(f"search-space file does not exist: {args.search_space}")
     if args.cull_size >= args.pool_size:
         parser.error("--cull-size must be smaller than --pool-size")
+    artifact = args.search_space.read_bytes()
+    artifact_sha256 = _sha256(artifact)
+    if args.expected_sha256 is not None and artifact_sha256 != args.expected_sha256:
+        parser.error(
+            f"search-space SHA-256 mismatch: expected {args.expected_sha256}, "
+            f"got {artifact_sha256}"
+        )
+    if args.expected_size is not None and len(artifact) != args.expected_size:
+        parser.error(
+            f"search-space size mismatch: expected {args.expected_size}, got {len(artifact)}"
+        )
     if args.output_dir.exists() and any(args.output_dir.iterdir()):
         parser.error(f"output directory must be empty: {args.output_dir}")
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    artifact = args.search_space.read_bytes()
     manifest: dict[str, Any] = {
         "artifact": {
             "filename": args.search_space.name,
-            "sha256": _sha256(artifact),
+            "sha256": artifact_sha256,
             "size_bytes": len(artifact),
         },
         "mode": args.mode,

@@ -92,6 +92,23 @@ def test_ci_workflow_no_longer_deploys_pages_artifacts():
 
     assert "deploy-pages:" not in content
     assert "actions/deploy-pages" not in content
+
+
+def test_release_wheel_matrix_smokes_pinned_encrypted_search_space():
+    content = CI_WORKFLOW.read_text()
+    smoke_step = content.split(
+        "- name: Smoke encrypted search space through installed wheel", 1
+    )[1].split("- name: Upload smoke-tested wheel artifact", 1)[0]
+
+    assert "dev/smoke_test_encrypted_search_space.py" in smoke_step
+    assert "search-spaces-2026.08.14/ptxas13.4_search_space.bin" in smoke_step
+    assert (
+        "--expected-sha256 "
+        "9a232adcc36a6451a4a30f3fe1dbfb29c4476b7b324bcec87bc0f5cc30bbf70d"
+        in smoke_step
+    )
+    assert "--expected-size 13904" in smoke_step
+    assert "--mode both" in smoke_step
     assert "actions/upload-pages-artifact" not in content
 
 
