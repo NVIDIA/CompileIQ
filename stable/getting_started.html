@@ -453,31 +453,32 @@
     <span class="n">score</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">score</span>
 
-<span class="c1"># Define the search space</span>
-<span class="n">search_space_config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Continuous range</span>
-    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span>  <span class="c1"># Discrete choices</span>
-    <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">literal</span><span class="p">(</span><span class="n">const_value</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">knockout_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Binary parameter</span>
-<span class="p">}</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Define the search space</span>
+    <span class="n">search_space_config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Continuous range</span>
+        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span>  <span class="c1"># Discrete choices</span>
+        <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">literal</span><span class="p">(</span><span class="n">const_value</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">knockout_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Binary parameter</span>
+    <span class="p">}</span>
 
-<span class="c1"># Configure the search</span>
-<span class="n">main_config</span> <span class="o">=</span> <span class="n">SearchConfiguration</span><span class="p">(</span>
-    <span class="n">pool_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>      <span class="c1"># Size of population</span>
-    <span class="n">generations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>      <span class="c1"># Number of iterations</span>
-    <span class="n">mutate_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>   <span class="c1"># Mutation probability</span>
-    <span class="n">problem_type</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="c1"># Minimize objective</span>
-    <span class="n">num_objectives</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>   <span class="c1"># Single objective</span>
-<span class="p">)</span>
+    <span class="c1"># Configure the search</span>
+    <span class="n">main_config</span> <span class="o">=</span> <span class="n">SearchConfiguration</span><span class="p">(</span>
+        <span class="n">pool_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>      <span class="c1"># Size of population</span>
+        <span class="n">generations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>      <span class="c1"># Number of iterations</span>
+        <span class="n">mutate_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>   <span class="c1"># Mutation probability</span>
+        <span class="n">problem_type</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="c1"># Minimize objective</span>
+        <span class="n">num_objectives</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>   <span class="c1"># Single objective</span>
+    <span class="p">)</span>
 
-<span class="c1"># Create and run the search</span>
-<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
-    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
-    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
-    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
-<span class="p">)</span>
+    <span class="c1"># Create and run the search</span>
+    <span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+        <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+        <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+        <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="p">)</span>
 
-<span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best Result: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">get_best_result</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best Result: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">get_best_result</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -529,28 +530,29 @@
     <span class="k">return</span> <span class="n">score_1</span><span class="p">,</span> <span class="n">score_2</span> <span class="c1"># returning two scores</span>
 
 
-<span class="n">search_space_config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Continuous range</span>
-    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span>  <span class="c1"># Discrete choices</span>
-    <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">literal</span><span class="p">(</span><span class="n">const_value</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">knockout_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Binary parameter</span>
-<span class="p">}</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">search_space_config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Continuous range</span>
+        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span>  <span class="c1"># Discrete choices</span>
+        <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">ss</span><span class="o">.</span><span class="n">literal</span><span class="p">(</span><span class="n">const_value</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">knockout_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># Binary parameter</span>
+    <span class="p">}</span>
 
-<span class="n">main_config</span> <span class="o">=</span> <span class="n">SearchConfiguration</span><span class="p">(</span>
-    <span class="n">pool_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-    <span class="n">generations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-    <span class="n">mutate_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-    <span class="n">problem_type</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">,</span>
-    <span class="n">num_objectives</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="c1"># Updating num of objectives</span>
-<span class="p">)</span>
+    <span class="n">main_config</span> <span class="o">=</span> <span class="n">SearchConfiguration</span><span class="p">(</span>
+        <span class="n">pool_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+        <span class="n">generations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">mutate_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">problem_type</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">,</span>
+        <span class="n">num_objectives</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="c1"># Updating num of objectives</span>
+    <span class="p">)</span>
 
-<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
-    <span class="n">objective_function</span><span class="o">=</span><span class="n">multiobjective</span><span class="p">,</span>
-    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
-    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
-<span class="p">)</span>
+    <span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+        <span class="n">objective_function</span><span class="o">=</span><span class="n">multiobjective</span><span class="p">,</span>
+        <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+        <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="p">)</span>
 
-<span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">pareto_front</span><span class="p">())</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">pareto_front</span><span class="p">())</span>
 </pre></div>
 </div>
 <p>The two important differences are setting <code class="docutils literal notranslate"><span class="pre">num_objectives=2</span></code> and returning two values from the objective function.</p>
