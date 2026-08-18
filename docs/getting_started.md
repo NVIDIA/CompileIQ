@@ -22,31 +22,32 @@ def objective(config):
     score = config["x"] ** 2 + config["y"]
     return score
 
-# Define the search space
-search_space_config = {
-    "x": ss.range(start=1.0, end=20.0, step=0.5),  # Continuous range
-    "y": ss.choice([1, 2, 3]),  # Discrete choices
-    "z": ss.literal(const_value="constant", knockout_prob=0.5),  # Binary parameter
-}
+if __name__ == "__main__":
+    # Define the search space
+    search_space_config = {
+        "x": ss.range(start=1.0, end=20.0, step=0.5),  # Continuous range
+        "y": ss.choice([1, 2, 3]),  # Discrete choices
+        "z": ss.literal(const_value="constant", knockout_prob=0.5),  # Binary parameter
+    }
 
-# Configure the search
-main_config = SearchConfiguration(
-    pool_size=12,      # Size of population
-    generations=3,      # Number of iterations
-    mutate_rate=0.5,   # Mutation probability
-    problem_type="min", # Minimize objective
-    num_objectives=1,   # Single objective
-)
+    # Configure the search
+    main_config = SearchConfiguration(
+        pool_size=12,      # Size of population
+        generations=3,      # Number of iterations
+        mutate_rate=0.5,   # Mutation probability
+        problem_type="min", # Minimize objective
+        num_objectives=1,   # Single objective
+    )
 
-# Create and run the search
-tuner = Search(
-    objective_function=objective,
-    search_space=search_space_config,
-    search_config=main_config,
-)
+    # Create and run the search
+    tuner = Search(
+        objective_function=objective,
+        search_space=search_space_config,
+        search_config=main_config,
+    )
 
-results = tuner.start()
-print(f"Best Result: {results.get_best_result()}")
+    results = tuner.start()
+    print(f"Best Result: {results.get_best_result()}")
 ```
 
 ### Understanding the Code
@@ -88,28 +89,29 @@ def multiobjective(config):
     return score_1, score_2 # returning two scores
 
 
-search_space_config = {
-    "x": ss.range(start=1.0, end=20.0, step=0.5),  # Continuous range
-    "y": ss.choice([1, 2, 3]),  # Discrete choices
-    "z": ss.literal(const_value="constant", knockout_prob=0.5),  # Binary parameter
-}
+if __name__ == "__main__":
+    search_space_config = {
+        "x": ss.range(start=1.0, end=20.0, step=0.5),  # Continuous range
+        "y": ss.choice([1, 2, 3]),  # Discrete choices
+        "z": ss.literal(const_value="constant", knockout_prob=0.5),  # Binary parameter
+    }
 
-main_config = SearchConfiguration(
-    pool_size=12,
-    generations=3,
-    mutate_rate=0.5,
-    problem_type="min",
-    num_objectives=2, # Updating num of objectives
-)
+    main_config = SearchConfiguration(
+        pool_size=12,
+        generations=3,
+        mutate_rate=0.5,
+        problem_type="min",
+        num_objectives=2, # Updating num of objectives
+    )
 
-tuner = Search(
-    objective_function=multiobjective,
-    search_space=search_space_config,
-    search_config=main_config,
-)
+    tuner = Search(
+        objective_function=multiobjective,
+        search_space=search_space_config,
+        search_config=main_config,
+    )
 
-results = tuner.start()
-print(results.pareto_front())
+    results = tuner.start()
+    print(results.pareto_front())
 ```
 
 The two important differences are setting `num_objectives=2` and returning two values from the objective function.

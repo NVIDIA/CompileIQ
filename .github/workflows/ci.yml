@@ -384,6 +384,23 @@ jobs:
         run: |
           cd "$RUNNER_TEMP"
           python "$GITHUB_WORKSPACE/.github/scripts/smoke_test_compileiq_wheel.py"
+      - name: Smoke encrypted search space through installed wheel
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          python -c 'import sys, urllib.request; urllib.request.urlretrieve(sys.argv[1], sys.argv[2])' \
+            "https://github.com/NVIDIA/CompileIQ/releases/download/search-spaces-2026.08.14/ptxas13.4_search_space.bin" \
+            "$RUNNER_TEMP/ptxas13.4_search_space.bin"
+          python "$GITHUB_WORKSPACE/dev/smoke_test_encrypted_search_space.py" \
+            --search-space "$RUNNER_TEMP/ptxas13.4_search_space.bin" \
+            --output-dir "$RUNNER_TEMP/encrypted-search-space-smoke" \
+            --mode both \
+            --samples 4 \
+            --pool-size 6 \
+            --cull-size 2 \
+            --workers 1 \
+            --expected-sha256 9a232adcc36a6451a4a30f3fe1dbfb29c4476b7b324bcec87bc0f5cc30bbf70d \
+            --expected-size 13904
       - name: Upload smoke-tested wheel artifact
         uses: actions/upload-artifact@v6
         with:

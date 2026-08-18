@@ -11,6 +11,10 @@ CI_WORKFLOW = WORKFLOWS / "ci.yml"
 DOCS_WORKFLOW = WORKFLOWS / "docs.yml"
 
 
+def _make_target_block(content: str, target: str, next_target: str) -> str:
+    return content.split(f"{target}:", 1)[1].split(f"\n{next_target}:", 1)[0]
+
+
 def test_search_space_release_workflow_is_not_active_without_artifact_staging():
     content = CI_WORKFLOW.read_text()
     legacy_assets_glob = "/".join(("assets", "*.bin"))
@@ -56,11 +60,55 @@ def test_search_space_release_prep_is_local_until_publish_path_is_decided():
     assert "startsWith(github.ref, 'refs/tags/search-spaces-')" not in content
 
 
+def test_catalog_releases_publish_atomically_without_becoming_latest():
+    content = MAKEFILE.read_text()
+    release_targets = (
+        (
+            "publish-search-space-release",
+            "clear-search-space-latest",
+            "check-search-space-published",
+        ),
+        (
+            "publish-booster-pack-release",
+            "clear-booster-pack-latest",
+            "check-booster-pack-published",
+        ),
+    )
+
+    for publish_target, next_target, check_target in release_targets:
+        recipe = _make_target_block(content, publish_target, next_target)
+
+        assert "set -eu" in recipe
+        assert recipe.count("gh api --method PATCH") == 1
+        assert "-F draft=false" in recipe
+        assert "-f make_latest=false" in recipe
+        assert recipe.index("-F draft=false") < recipe.index("-f make_latest=false")
+        assert f"$(MAKE) --no-print-directory {check_target}" in recipe
+        assert recipe.index(check_target) < recipe.index('echo "PASS: Published')
+
+
 def test_ci_workflow_no_longer_deploys_pages_artifacts():
     content = CI_WORKFLOW.read_text()
 
     assert "deploy-pages:" not in content
     assert "actions/deploy-pages" not in content
+
+
+def test_release_wheel_matrix_smokes_pinned_encrypted_search_space():
+    content = CI_WORKFLOW.read_text()
+    smoke_step = content.split(
+        "- name: Smoke encrypted search space through installed wheel", 1
+    )[1].split("- name: Upload smoke-tested wheel artifact", 1)[0]
+
+    assert "dev/smoke_test_encrypted_search_space.py" in smoke_step
+    assert "search-spaces-2026.08.14/ptxas13.4_search_space.bin" in smoke_step
+    assert (
+        "--expected-sha256 "
+        "9a232adcc36a6451a4a30f3fe1dbfb29c4476b7b324bcec87bc0f5cc30bbf70d"
+        in smoke_step
+    )
+    assert "--expected-size 13904" in smoke_step
+    assert "--mode both" in smoke_step
     assert "actions/upload-pages-artifact" not in content
 
 

@@ -3,6 +3,7 @@ Tests for search space builders in compileiq/search_spaces/base.py.
 """
 
 import json
+import math
 import pytest
 from compileiq.search_spaces import base as ss
 from compileiq.search_spaces.models import (
@@ -51,6 +52,26 @@ def test_knockout_threshold_is_inverted():
     # threshold = 1.0 - knockout_prob
     result = ss.literal(const_value=1, knockout_prob=0.3)
     assert result.knockout_threshold == pytest.approx(0.7)
+
+
+@pytest.mark.parametrize(
+    "fn,kwargs",
+    [
+        (ss.range, {"start": 0, "end": 10}),
+        (ss.choice, {"choice_list": [1, 2, 3]}),
+        (ss.literal, {"const_value": 5}),
+        (ss.log_sampling, {"start": 0.001, "end": 1.0}),
+    ],
+)
+def test_knockout_prob_point_seven_has_exact_quantized_contract(fn, kwargs):
+    result = fn(**kwargs, knockout_prob=0.7)
+
+    assert result.knockout_threshold == 0.3
+    assert '"knockout_threshold":0.3' in result.model_dump_json()
+
+    cutoff = math.ceil(100 * result.knockout_threshold)
+    assert cutoff == 30
+    assert sum(genotype >= cutoff for genotype in range(100)) == 70
 
 
 def test_literal_dive_threads_knockout():

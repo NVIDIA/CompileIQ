@@ -237,11 +237,12 @@ inspect-search-space-release: ## Inspect draft Search Space release before publi
 		--json tagName,name,isDraft,isPrerelease,targetCommitish,assets,body \
 		--template 'tag: {{.tagName}}{{"\n"}}title: {{.name}}{{"\n"}}draft: {{.isDraft}}{{"\n"}}prerelease: {{.isPrerelease}}{{"\n"}}target: {{.targetCommitish}}{{"\n"}}assets:{{"\n"}}{{range .assets}}  - {{.name}}{{"\n"}}{{end}}{{"\n"}}body:{{"\n"}}{{.body}}{{"\n"}}'
 
-# Publish the validated draft, then explicitly clear GitHub "Latest".
-# GitHub ignores make_latest while a release is still a draft, so keep this as
-# two API calls.
+# Publish the validated draft without changing GitHub "Latest". Repositories
+# with immutable releases seal a release as it is published, so both fields
+# must be updated in the same API call.
 publish-search-space-release: ## Publish draft Search Space release with make_latest=false
-	@if [ "$(CONFIRM_PUBLISH_RELEASE)" != "false" ]; then \
+	@set -eu; \
+	if [ "$(CONFIRM_PUBLISH_RELEASE)" != "false" ]; then \
 		printf 'Type %s to publish: ' "$(SS_RELEASE_TAG)"; \
 		read confirmation; \
 		if [ "$$confirmation" != "$(SS_RELEASE_TAG)" ]; then \
@@ -253,19 +254,20 @@ publish-search-space-release: ## Publish draft Search Space release with make_la
 	test -n "$$release_id" || (echo "ERROR: could not find release $(SS_RELEASE_TAG)" >&2; exit 1); \
 	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
 		-F draft=false \
-		--silent; \
-	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
 		-f make_latest=false \
-		--silent; \
-	echo "PASS: Published $(SS_RELEASE_TAG) with make_latest=false."
+		--silent
+	@$(MAKE) --no-print-directory check-search-space-published SS_RELEASE_TAG="$(SS_RELEASE_TAG)"
+	@echo "PASS: Published $(SS_RELEASE_TAG) with make_latest=false."
 
 clear-search-space-latest: ## Clear GitHub Latest marker from a Search Space release
-	@release_id="$$(gh release view "$(SS_RELEASE_TAG)" --repo NVIDIA/CompileIQ --json databaseId --jq .databaseId)"; \
+	@set -eu; \
+	release_id="$$(gh release view "$(SS_RELEASE_TAG)" --repo NVIDIA/CompileIQ --json databaseId --jq .databaseId)"; \
 	test -n "$$release_id" || (echo "ERROR: could not find release $(SS_RELEASE_TAG)" >&2; exit 1); \
 	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
 		-f make_latest=false \
-		--silent; \
-	echo "PASS: Cleared GitHub Latest marker for $(SS_RELEASE_TAG)."
+		--silent
+	@$(MAKE) --no-print-directory check-search-space-published SS_RELEASE_TAG="$(SS_RELEASE_TAG)"
+	@echo "PASS: Cleared GitHub Latest marker for $(SS_RELEASE_TAG)."
 
 # Confirm the published release is no longer a draft and is not GitHub "Latest".
 check-search-space-published: ## Confirm published Search Space release is not Latest
@@ -396,11 +398,12 @@ inspect-booster-pack-release: ## Inspect draft Booster Pack release before publi
 		--json tagName,name,isDraft,isPrerelease,targetCommitish,assets,body \
 		--template 'tag: {{.tagName}}{{"\n"}}title: {{.name}}{{"\n"}}draft: {{.isDraft}}{{"\n"}}prerelease: {{.isPrerelease}}{{"\n"}}target: {{.targetCommitish}}{{"\n"}}assets:{{"\n"}}{{range .assets}}  - {{.name}}{{"\n"}}{{end}}{{"\n"}}body:{{"\n"}}{{.body}}{{"\n"}}'
 
-# Publish the validated draft, then explicitly clear GitHub "Latest".
-# GitHub ignores make_latest while a release is still a draft, so keep this as
-# two API calls.
+# Publish the validated draft without changing GitHub "Latest". Repositories
+# with immutable releases seal a release as it is published, so both fields
+# must be updated in the same API call.
 publish-booster-pack-release: ## Publish draft Booster Pack release with make_latest=false
-	@if [ "$(CONFIRM_PUBLISH_RELEASE)" != "false" ]; then \
+	@set -eu; \
+	if [ "$(CONFIRM_PUBLISH_RELEASE)" != "false" ]; then \
 		printf 'Type %s to publish: ' "$(BOOSTER_RELEASE_TAG)"; \
 		read confirmation; \
 		if [ "$$confirmation" != "$(BOOSTER_RELEASE_TAG)" ]; then \
@@ -412,19 +415,20 @@ publish-booster-pack-release: ## Publish draft Booster Pack release with make_la
 	test -n "$$release_id" || (echo "ERROR: could not find release $(BOOSTER_RELEASE_TAG)" >&2; exit 1); \
 	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
 		-F draft=false \
-		--silent; \
-	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
 		-f make_latest=false \
-		--silent; \
-	echo "PASS: Published $(BOOSTER_RELEASE_TAG) with make_latest=false."
+		--silent
+	@$(MAKE) --no-print-directory check-booster-pack-published BOOSTER_RELEASE_TAG="$(BOOSTER_RELEASE_TAG)"
+	@echo "PASS: Published $(BOOSTER_RELEASE_TAG) with make_latest=false."
 
 clear-booster-pack-latest: ## Clear GitHub Latest marker from a Booster Pack release
-	@release_id="$$(gh release view "$(BOOSTER_RELEASE_TAG)" --repo NVIDIA/CompileIQ --json databaseId --jq .databaseId)"; \
+	@set -eu; \
+	release_id="$$(gh release view "$(BOOSTER_RELEASE_TAG)" --repo NVIDIA/CompileIQ --json databaseId --jq .databaseId)"; \
 	test -n "$$release_id" || (echo "ERROR: could not find release $(BOOSTER_RELEASE_TAG)" >&2; exit 1); \
 	gh api --method PATCH "repos/NVIDIA/CompileIQ/releases/$$release_id" \
 		-f make_latest=false \
-		--silent; \
-	echo "PASS: Cleared GitHub Latest marker for $(BOOSTER_RELEASE_TAG)."
+		--silent
+	@$(MAKE) --no-print-directory check-booster-pack-published BOOSTER_RELEASE_TAG="$(BOOSTER_RELEASE_TAG)"
+	@echo "PASS: Cleared GitHub Latest marker for $(BOOSTER_RELEASE_TAG)."
 
 # Confirm the published release is no longer a draft and is not GitHub "Latest".
 check-booster-pack-published: ## Confirm published Booster Pack release is not Latest

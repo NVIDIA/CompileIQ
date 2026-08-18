@@ -7,6 +7,10 @@ from typing import Dict, List, Literal
 from compileiq.types import ProblemType, MultiScoreComparison, Score, SingleScore, MultiScore
 
 
+SCORE_COLUMN_PATTERN = r"score_\d+"
+NORM_SCORE_COLUMN_PATTERN = r"norm_score_\d+"
+
+
 class SearchResult:
     """
     Stores results from a CompileIQ search in a pandas DataFrame.
@@ -34,12 +38,18 @@ class SearchResult:
     @property
     def score_columns(self) -> list:
         return self.df_results.columns[
-            self.df_results.columns.str.contains(pat=r"score_\d+")
+            self.df_results.columns.str.fullmatch(SCORE_COLUMN_PATTERN)
+        ].to_list()
+
+    @property
+    def norm_score_columns(self) -> list:
+        return self.df_results.columns[
+            self.df_results.columns.str.fullmatch(NORM_SCORE_COLUMN_PATTERN)
         ].to_list()
 
     @property
     def is_normalized(self) -> bool:
-        return bool(self.df_results.columns.str.contains(pat=r"norm_score_\d+").any())
+        return bool(self.norm_score_columns)
 
     @classmethod
     def from_csv(
@@ -91,7 +101,7 @@ class SearchResult:
             SearchResult object
         """
 
-        score_cols = df.columns[df.columns.str.contains(pat=r"\bscore_\d+\b")]
+        score_cols = df.columns[df.columns.str.fullmatch(SCORE_COLUMN_PATTERN)]
 
         if len(score_cols) == 0:
             raise ValueError(
@@ -165,12 +175,8 @@ class SearchResult:
         self.df_results.loc[len(self.df_results)] = row
 
     def _numeric_scores_df(self) -> pd.DataFrame:
-        scores_df = self.df_results[self.score_columns].apply(pd.to_numeric, errors="coerce").copy()
-        if self.is_normalized:
-            norm_score_columns = self.df_results.columns[
-                self.df_results.columns.str.contains(pat=r"norm_score_\d+")
-            ]
-            scores_df = scores_df[norm_score_columns].copy()
+        score_columns = self.norm_score_columns if self.is_normalized else self.score_columns
+        scores_df = self.df_results[score_columns].apply(pd.to_numeric, errors="coerce").copy()
 
         if scores_df.columns.size != self.num_scores:
             raise ValueError(
