@@ -4,7 +4,13 @@ Tests for compileiq/utils/_setup_files.py.
 
 import pathlib
 
-from compileiq.utils._setup_files import setup_search_space
+from compileiq.utils._setup_files import _core_path, setup_search_space
+
+
+def test_core_path_uses_forward_slashes_for_windows_paths():
+    path = pathlib.PureWindowsPath(r"D:\a\_temp\cache\search_space.json")
+
+    assert _core_path(path) == "D:/a/_temp/cache/search_space.json"
 
 
 class TestMultiConfigFilenames:
@@ -22,11 +28,11 @@ class TestMultiConfigFilenames:
         names = [pathlib.Path(path).name for path in result]
         assert names == ["0_search_space.json", "1_search_space.json", "2_search_space.json"]
 
-    def test_single_config_uses_base_filename(self, tmp_path):
+    def test_single_config_uses_base_filename_and_core_path_format(self, tmp_path):
         src = tmp_path / "source.config"
         src.write_text("; test\n")
 
         target = tmp_path / "search_space.json"
         result = setup_search_space([src], str(target))
 
-        assert result == str(target)
+        assert result == target.as_posix()
