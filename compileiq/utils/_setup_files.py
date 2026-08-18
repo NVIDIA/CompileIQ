@@ -1,7 +1,6 @@
 import json
 import pathlib
 import os
-import sys
 import shutil
 import warnings
 from typing import Dict, Any, List, Mapping
@@ -14,6 +13,11 @@ from compileiq.types import InternalSearchConfiguration
 from compileiq.utils.helpers import flatten_nested_dict
 from compileiq.search_spaces.compilers import SearchSpaceProvider
 from compileiq.search_spaces.models import ParamConfig, SearchSpaceFileModel
+
+
+def _core_path(path: pathlib.PurePath) -> str:
+    """Serialize filesystem paths with separators accepted by the cross-platform core."""
+    return path.as_posix()
 
 
 def clear_cache():
@@ -33,14 +37,11 @@ def get_core_filepaths(folder: str | os.PathLike) -> tuple[str, str]:
     """
     All filenames where core reads or writes from/to
     """
-    main_config_filepath = os.path.join(folder, MAIN_CONFIG_FILENAME)
-    search_space_config_filepath = os.path.join(folder, SEARCH_SPACE_CONFIG_FILENAME)
-
-    if sys.platform == "win32":
-        search_space_config_filepath = search_space_config_filepath.replace("\\", "/")
-        main_config_filepath = main_config_filepath.replace("\\", "/")
-
-    return main_config_filepath, search_space_config_filepath
+    folder_path = pathlib.Path(folder)
+    return (
+        _core_path(folder_path / MAIN_CONFIG_FILENAME),
+        _core_path(folder_path / SEARCH_SPACE_CONFIG_FILENAME),
+    )
 
 
 def setup_legacy_search_config(
@@ -100,7 +101,7 @@ def setup_search_space(
         else:
             raise ValueError("CompileIQ Search Spaces need to be of type dict or path to a file")
 
-        search_files.append(str(current_path))
+        search_files.append(_core_path(current_path))
 
     return search_files if len(search_files) > 1 else search_files[0]
 
