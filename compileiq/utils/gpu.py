@@ -30,7 +30,10 @@ def _call_and_warn(cmd: list[str], raise_on_failure: bool):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-    except subprocess.CalledProcessError as e:
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        # FileNotFoundError covers a missing executable (e.g. no nvidia-smi or
+        # sudo on the system), which subprocess raises instead of a
+        # CalledProcessError.
         if raise_on_failure:
             raise
         else:
@@ -96,7 +99,7 @@ def gpu_benchmark_mode(
                 stacklevel=2,
             )
 
-    if not raise_on_failure and not has_nvidia_smi():
+    if not has_nvidia_smi():
         if raise_on_failure:
             raise EnvironmentError("nvidia-smi not found. Ensure NVIDIA drivers are installed.")
         else:
@@ -106,6 +109,10 @@ def gpu_benchmark_mode(
                 RuntimeWarning,
                 stacklevel=2,
             )
+            # Nothing was applied, so run the context body without touching
+            # nvidia-smi and skip the reset in the finally block below.
+            yield
+            return
 
     base_command = ["sudo", "nvidia-smi"] if with_sudo else ["nvidia-smi"]
     if gpu_id is not None:

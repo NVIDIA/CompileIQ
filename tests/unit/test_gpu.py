@@ -79,6 +79,22 @@ class TestCallAndWarn:
             with pytest.warns(RuntimeWarning, match="GPU benchmark mode may not be fully applied"):
                 _call_and_warn(["nvidia-smi", "--version"], raise_on_failure=False)
 
+    def test_missing_binary_raises_when_raise_on_failure_true(self):
+        with patch(
+            "compileiq.utils.gpu.subprocess.run",
+            side_effect=FileNotFoundError("nvidia-smi"),
+        ):
+            with pytest.raises(FileNotFoundError):
+                _call_and_warn(["nvidia-smi", "--version"], raise_on_failure=True)
+
+    def test_missing_binary_warns_when_raise_on_failure_false(self):
+        with patch(
+            "compileiq.utils.gpu.subprocess.run",
+            side_effect=FileNotFoundError("nvidia-smi"),
+        ):
+            with pytest.warns(RuntimeWarning, match="GPU benchmark mode may not be fully applied"):
+                _call_and_warn(["nvidia-smi", "--version"], raise_on_failure=False)
+
 
 # ── gpu_benchmark_mode ──────────────────────────────────────────────────────
 
@@ -103,6 +119,30 @@ class TestGpuBenchmarkModeValidation:
                         clock_mhz=1000, with_sudo=False, raise_on_failure=False
                     ):
                         pass
+
+    def test_raises_environment_error_when_nvidia_smi_missing(self):
+        with patch("compileiq.utils.gpu.has_nvidia_smi", return_value=False):
+            with patch(
+                "compileiq.utils.gpu.subprocess.run",
+                side_effect=AssertionError("subprocess.run should not be called"),
+            ):
+                with pytest.raises(EnvironmentError, match="nvidia-smi not found"):
+                    with gpu_benchmark_mode(clock_mhz=1000, with_sudo=False):
+                        pass
+
+    def test_skips_commands_when_nvidia_smi_missing_and_not_raise_on_failure(self):
+        body_ran = False
+        with patch("compileiq.utils.gpu.has_nvidia_smi", return_value=False):
+            with patch(
+                "compileiq.utils.gpu.subprocess.run",
+                side_effect=AssertionError("subprocess.run should not be called"),
+            ):
+                with pytest.warns(RuntimeWarning, match="nvidia-smi not found"):
+                    with gpu_benchmark_mode(
+                        clock_mhz=1000, with_sudo=False, raise_on_failure=False
+                    ):
+                        body_ran = True
+        assert body_ran is True
 
 
 class TestGpuBenchmarkModeCleanup:
