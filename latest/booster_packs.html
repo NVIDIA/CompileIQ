@@ -503,7 +503,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">SHA256SUMS.txt</span></code>, which records checksums for the uploaded catalog and pack zip assets.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">booster-pack-debug.zip</span></code>, the diagnostic Debug Pack.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">booster-pack-helion.zip</span></code>, the Helion Booster Pack.</p></li>
-<li><p>Each Booster Pack zip consists of ACFs and a pack-specific <code class="docutils literal notranslate"><span class="pre">booster-pack-manifest.json</span></code> that describes the ACFs for that pack.</p></li>
+<li><p>Each Booster Pack zip consists of ACFs and a pack-specific <code class="docutils literal notranslate"><span class="pre">booster-pack-manifest.json</span></code> that describes the ACFs for that pack. When a pack covers more than one compiler stage, each ACF entry includes <code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> so you can choose the correct NVCC/NVVM, PTXAS, or combined application path.</p></li>
 </ul>
 <p>The release notes, catalog file, and pack manifest are the source of truth for each pack; check them for the intended workload, compiler version and path or compiler stage, GPU target, validation context, and known caveats.</p>
 </section>
@@ -513,17 +513,19 @@
 <ol class="arabic simple">
 <li><p>Run your workload without an ACF and save the baseline result.</p></li>
 <li><p>Download the Booster Pack from the filtered GitHub Releases page.</p></li>
-<li><p>Unzip the pack.</p></li>
-<li><p>Apply one ACF at a time through the Controls Interface.</p></li>
+<li><p>Unzip the pack and inspect each ACF’s <code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> in <code class="docutils literal notranslate"><span class="pre">booster-pack-manifest.json</span></code>.</p></li>
+<li><p>Apply one ACF at a time through every compiler stage listed for that ACF.</p></li>
 <li><p>Validate correctness against a known-good reference.</p></li>
 <li><p>Compare performance against the no-ACF baseline.</p></li>
 <li><p>Keep only candidates that compile, pass correctness, and improve the target workload.</p></li>
 </ol>
-<p>For direct PTXAS usage, pass the ACF with <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code>:</p>
+<p>For direct PTXAS usage, select an ACF whose <code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> includes <code class="docutils literal notranslate"><span class="pre">ptxas</span></code> and
+pass it with <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ptxas<span class="w"> </span>-v<span class="w"> </span>-arch<span class="o">=</span>sm_90a<span class="w"> </span>--apply-controls<span class="w"> </span>candidate.acf<span class="w"> </span>kernel.ptx
 </pre></div>
 </div>
-<p>For NVCC usage, pass the same option to NVCC:</p>
+<p>For NVCC usage, select an ACF whose <code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> includes <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> and pass the
+same option to NVCC:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nvcc<span class="w"> </span>-arch<span class="o">=</span>sm_100<span class="w"> </span>--apply-controls<span class="w"> </span>candidate.acf<span class="w"> </span>kernel.cu<span class="w"> </span>-o<span class="w"> </span>kernel
 </pre></div>
 </div>
