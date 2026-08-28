@@ -93,6 +93,8 @@ def setup_search_space(
                 fp.write(search_space_json)
 
         elif isinstance(search_space, pathlib.Path) and search_space.exists():
+            if search_space.suffix.lower() == ".config":
+                current_path = current_path.with_suffix(search_space.suffix)
             # File-backed search spaces are already in a core-readable format.
             shutil.copy(search_space, current_path)
 

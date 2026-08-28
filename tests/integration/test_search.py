@@ -96,15 +96,9 @@ def test_start(
 
 
 @pytest.mark.order(3)
-def test_legacy_files(
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
-):
+def test_legacy_ss_files():
     """
-    Testing if something goes wrong when using legacy files
-    Warning: We need to keep the same number of legacy search-space files.
+    Tests legacy dna files, these will be deprecated in the future.
     """
     path = LEGACY_DIR / "dna_files"
     legacy_configs = [
@@ -119,12 +113,6 @@ def test_legacy_files(
             pool_size=8,
             generations=2,
         )
-
-        pytest.current_gen = 0
-        pytest.max_gen = main_config.generations
-        pytest.pool_size = main_config.pool_size
-        pytest.nested_test = False
-        pytest.encoded_knobs = False
 
         with Search(
             objective_function=async_light_obj_func,

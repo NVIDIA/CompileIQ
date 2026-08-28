@@ -26,7 +26,7 @@ class TestMultiConfigFilenames:
 
         assert isinstance(result, list)
         names = [pathlib.Path(path).name for path in result]
-        assert names == ["0_search_space.json", "1_search_space.json", "2_search_space.json"]
+        assert names == ["0_search_space.config", "1_search_space.config", "2_search_space.config"]
 
     def test_single_config_uses_base_filename_and_core_path_format(self, tmp_path):
         src = tmp_path / "source.config"
@@ -35,4 +35,4 @@ class TestMultiConfigFilenames:
         target = tmp_path / "search_space.json"
         result = setup_search_space([src], str(target))
 
-        assert result == target.as_posix()
+        assert result == target.with_suffix(".config").as_posix()
