@@ -1,0 +1,7 @@
+.visible .entry fusion_demo(
+    .param .u64 fusion_demo_param_0,
+    .param .u64 fusion_demo_param_1
+)
+{
+    ret;
+}

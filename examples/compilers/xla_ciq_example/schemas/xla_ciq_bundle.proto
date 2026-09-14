@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package xla_ciq.bundle.v1alpha1;
+
+// Experimental bundle schema owned by this XLA-side orchestration prototype.
+// Content identifiers are SHA-256 hex digests of AdvancedControlFile.content.
+// fingerprint_to_metadata is optional producer telemetry.
+
+message AdvancedControlFile {
+  bytes content = 1;
+}
+
+message FingerprintMetadata {
+  string kernel_name = 1;
+  string shape = 2;
+  string arch = 3;
+  string cuda_version = 4;
+  // Untuned runtime (ms). 0 means unset when best_ms/speedup also unset is
+  // ambiguous, so presence is tracked via has_* in generated code / CLI layer.
+  double baseline_ms = 5;
+  double best_ms = 6;
+  double speedup = 7;
+  bool has_timing = 8;
+}
+
+message XlaCiqTuningBundle {
+  uint32 format_version = 1;
+
+  // fingerprint -> control_file_id (SHA-256 hex of ACF bytes)
+  map<string, string> fingerprint_to_control_file_id = 2;
+
+  // control_file_id -> unique Advanced Control File bytes
+  map<string, AdvancedControlFile> control_files = 3;
+
+  // fingerprint -> producer-recorded kernel/shape/timing (optional)
+  map<string, FingerprintMetadata> fingerprint_to_metadata = 4;
+}

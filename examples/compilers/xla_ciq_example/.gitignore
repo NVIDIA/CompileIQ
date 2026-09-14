@@ -1,0 +1,5 @@
+*.acf
+*.bundle
+*.cubin
+tmp_*/
+logs/
