@@ -252,7 +252,8 @@ def test_populate_rejects_removed_options(
     )
     captured = capsys.readouterr()
     assert code == 2
-    assert f"No such option '{removed_option}'" in captured.err
+    assert "No such option" in captured.err
+    assert removed_option in captured.err
     assert not bundle.exists()
 
 
