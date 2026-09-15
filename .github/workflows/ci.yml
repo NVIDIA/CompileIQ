@@ -251,6 +251,20 @@ jobs:
               python "${python_file}"
             fi
           done
+      - name: Run XLA-CIQ mock reference example
+        shell: bash
+        run: |
+          python -m pip install -r examples/compilers/xla_ciq_example/requirements-dev.txt
+          cd examples/compilers/xla_ciq_example
+          PYTHONPATH=src python -m pytest -q
+          PYTHONPATH=src python -m xla_ciq.cli --version
+      - name: Check XLA-CIQ protobuf binding
+        if: matrix.name == 'Linux x86_64'
+        working-directory: examples/compilers/xla_ciq_example
+        shell: bash
+        run: |
+          ./scripts/generate_proto.sh
+          git diff --exit-code -- src/xla_ciq/xla_ciq_bundle_pb2.py
 
   validate-binary-ss:
     name: Validate Binary Search Spaces

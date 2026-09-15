@@ -168,6 +168,10 @@ fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$" # Allow unused variables when underscore-prefixed.
 
+[tool.ruff.lint.per-file-ignores]
+"examples/compilers/xla_ciq_example/src/xla_ciq/xla_ciq_bundle_pb2.py" = ["E501"]
+"examples/compilers/xla_ciq_example/tests/test_ptx_meta.py" = ["E501"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"

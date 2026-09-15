@@ -1,0 +1,7 @@
+HloModule demo
+
+ENTRY entry {
+  p0 = f32[1024,2048] parameter(0)
+  p1 = f32[1024] parameter(1)
+  ROOT fusion.1 = f32[1024] fusion(p0, p1), kind=kLoop
+}

@@ -1,0 +1,4 @@
+# module.thunk_metadata.txt
+thunk_0:
+  kernel_name: fusion_demo
+  profile_annotation: fusion.1

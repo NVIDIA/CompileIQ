@@ -1,0 +1,2 @@
+# module.thunk_sequence.txt
+thunk_0: KernelThunk kernel=fusion_demo
