@@ -18,7 +18,7 @@ NVIDIA- and compiler-specific terms used throughout these docs.
 | **NVCC** | NVIDIA CUDA Compiler — the driver that compiles CUDA C/C++ source into PTX/SASS. One of the two compilers CompileIQ tunes. See [Tuning NVCC](nvcc_example.md). |
 | **PTX** | Parallel Thread Execution — NVIDIA's intermediate, GPU-architecture-independent assembly language that NVCC generates and PTXAS compiles further into SASS. |
 | **PTXAS** | The PTX Assembler — compiles PTX into SASS for a specific GPU architecture. One of the two compilers CompileIQ tunes. See [Tuning PTXAS](ptx_spill_example.md). |
-| **SASS** | Streaming ASSembler — the native machine code that actually runs on an NVIDIA GPU, produced by PTXAS from PTX. Different ACFs can produce different SASS for the same kernel source. |
+| **SASS** | Streaming ASSembly or Shader ASSembly — the native machine code that actually runs on an NVIDIA GPU, produced by PTXAS from PTX. Different ACFs can produce different SASS for the same kernel source. |
 | **TMA** | Tensor Memory Accelerator — dedicated hardware on recent NVIDIA GPU architectures for asynchronous, bulk global-to-shared-memory data transfers, exposed as a tunable hint in some search spaces. |
-| **Triton** | An open-source Python-embedded language and compiler for writing GPU kernels, which lowers to PTX via PTXAS. See [Tuning PTXAS in Triton](triton_example.md). |
+| **Triton** | An open-source Python-embedded language and compiler for writing GPU kernels, which lowers to PTX and finally to SASS via PTXAS. See [Tuning PTXAS in Triton](triton_example.md). |
 | **XLA** | Accelerated Linear Algebra — a domain-specific compiler for linear algebra used by frameworks like JAX and TensorFlow to lower computation graphs to GPU code. |
