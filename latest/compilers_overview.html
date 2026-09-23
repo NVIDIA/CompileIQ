@@ -353,6 +353,7 @@
   <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
 </ul>
@@ -437,6 +438,17 @@
 <h1>Tuning NVIDIA Compilers<a class="headerlink" href="#tuning-nvidia-compilers" title="Link to this heading">#</a></h1>
 <p>Starting in CUDA Toolkit (CTK) 13.3, NVCC and PTXAS expose the <strong>Advanced Controls Interface</strong> through the <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code> option. This interface lets you pass an <strong>Advanced Controls File</strong> (ACF) to the compiler and change the compiler optimization choices used for that compilation.</p>
 <p>CompileIQ uses this interface to generate ACFs for a given workload. In practice, this lets you adapt the compiler to the workload without changing the kernel source. If you want to try curated ACFs before running a full search, see <a class="reference internal" href="booster_packs.html"><span class="std std-doc">Booster Packs</span></a>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><strong>Applying an ACF</strong></p>
+<p>Pass the ACF file to the compiler with <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ptxas<span class="w"> </span>-v<span class="w"> </span>-arch<span class="o">=</span>sm_90a<span class="w"> </span>--apply-controls<span class="w"> </span>candidate.acf<span class="w"> </span>kernel.ptx
+nvcc<span class="w">  </span>-arch<span class="o">=</span>sm_100<span class="w">    </span>--apply-controls<span class="w"> </span>candidate.acf<span class="w"> </span>kernel.cu<span class="w"> </span>-o<span class="w"> </span>kernel
+</pre></div>
+</div>
+<p>For Triton, pass it through PTXAS options — see the <a class="reference internal" href="triton_example.html"><span class="std std-doc">Triton example</span></a>.
+For a curated starting point instead of a full search, see <a class="reference internal" href="booster_packs.html"><span class="std std-doc">Booster Packs</span></a>.</p>
+</div>
 <section id="what-an-acf-changes">
 <h2>What an ACF Changes<a class="headerlink" href="#what-an-acf-changes" title="Link to this heading">#</a></h2>
 <p>An ACF changes compiler optimization and control decisions for a compilation. It does not change your kernel source. The practical result can be different SASS, different register allocation, different scheduling choices, different memory behavior, or a different compile outcome.</p>

@@ -131,12 +131,12 @@ options:
 ### A note on performance
 
 Reliable latency measurements are important during the search. CompileIQ
-provides a helper to lock clocks:
+provides a helper to lock clocks and cap the GPU power limit:
 
 ```python
 from compileiq.utils.gpu import gpu_benchmark_mode
 
-with gpu_benchmark_mode(clock_mhz=1965, raise_on_failure=False):
+with gpu_benchmark_mode(clock_mhz=1965, power_watts=350, raise_on_failure=False):
     results = tuner.start(task_timeout=20)
 ```
 

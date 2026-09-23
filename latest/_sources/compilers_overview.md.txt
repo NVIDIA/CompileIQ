@@ -4,6 +4,20 @@ Starting in CUDA Toolkit (CTK) 13.3, NVCC and PTXAS expose the __Advanced Contro
 
 CompileIQ uses this interface to generate ACFs for a given workload. In practice, this lets you adapt the compiler to the workload without changing the kernel source. If you want to try curated ACFs before running a full search, see [Booster Packs](booster_packs.md).
 
+:::{important}
+**Applying an ACF**
+
+Pass the ACF file to the compiler with `--apply-controls`:
+
+```bash
+ptxas -v -arch=sm_90a --apply-controls candidate.acf kernel.ptx
+nvcc  -arch=sm_100    --apply-controls candidate.acf kernel.cu -o kernel
+```
+
+For Triton, pass it through PTXAS options — see the [Triton example](triton_example.md).
+For a curated starting point instead of a full search, see [Booster Packs](booster_packs.md).
+:::
+
 ## What an ACF Changes
 
 An ACF changes compiler optimization and control decisions for a compilation. It does not change your kernel source. The practical result can be different SASS, different register allocation, different scheduling choices, different memory behavior, or a different compile outcome.

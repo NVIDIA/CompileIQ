@@ -353,6 +353,7 @@
   <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
 </ul>
@@ -533,7 +534,9 @@ of terminating the search:</p>
 </div>
 <p>The benchmark uses CUDA events and reports the mean kernel runtime in
 milliseconds. Passing <code class="docutils literal notranslate"><span class="pre">--clock-mhz</span></code> also uses <code class="docutils literal notranslate"><span class="pre">gpu_benchmark_mode</span></code> to stabilize
-GPU clocks for the duration of the search.</p>
+GPU clocks for the duration of the search. <code class="docutils literal notranslate"><span class="pre">gpu_benchmark_mode</span></code> also accepts a
+<code class="docutils literal notranslate"><span class="pre">power_watts</span></code> argument to cap the GPU power limit — see the
+<a class="reference internal" href="normalization.html#for-gpu-measurements"><span class="std std-ref">Normalization guide</span></a> for an example.</p>
 </section>
 <section id="running-the-example">
 <h2>Running the example<a class="headerlink" href="#running-the-example" title="Link to this heading">#</a></h2>

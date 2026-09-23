@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Search-Space Retrieval Testing &#8212; CompileIQ Documentation</title>
+    <title>Glossary &#8212; CompileIQ Documentation</title>
   
   
   
@@ -51,7 +51,7 @@
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=5ceeb459"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'search_space_release_testing';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'glossary';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://nvidia.github.io/CompileIQ/versions.json';
@@ -60,13 +60,13 @@
             false;
         </script>
 
-    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/latest/search_space_release_testing.html" />
+    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/latest/glossary.html" />
     <link rel="icon" href="_static/favicon.png"/>
 
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Booster Packs" href="booster_packs.html" />
-    <link rel="prev" title="Tuning NVIDIA Compilers" href="compilers_overview.html" />
+    <link rel="next" title="Install Instructions" href="install.html" />
+    <link rel="prev" title="CompileIQ Documentation" href="index.html" />
 
 
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -234,10 +234,6 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
-      <span class="fa-solid fa-outdent"></span>
-    </button>
-  
 </div>
 
     </header>
@@ -352,15 +348,15 @@
      aria-label="Table of Contents">
   <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">NVIDIA Compiler Tuning</span></p>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="compilers_overview.html">Tuning NVIDIA Compilers</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Search-Space Retrieval Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search_space_release_testing.html">Search-Space Retrieval Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="booster_packs.html">Booster Packs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ptx_spill_example.html">Tuning PTXAS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nvcc_example.html">Tuning NVCC</a></li>
@@ -417,7 +413,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Search-Space Retrieval Testing</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Glossary</span></li>
   </ul>
 </nav>
 </div>
@@ -434,107 +430,73 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="search-space-retrieval-testing">
-<h1>Search-Space Retrieval Testing<a class="headerlink" href="#search-space-retrieval-testing" title="Link to this heading">#</a></h1>
-<p>This page describes checks for validating a Search Space Catalog Release before
-relying on it in a run. The same checks apply to a public GitHub Release and to
-a local mirror used in restricted environments.</p>
-<section id="local-catalog-checks">
-<h2>Local Catalog Checks<a class="headerlink" href="#local-catalog-checks" title="Link to this heading">#</a></h2>
-<p>These checks do not require GitHub release publication or network access after
-the release inputs have been collected.</p>
-<ol class="arabic">
-<li><p>Install the release-prep helper dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>install-release
-</pre></div>
+  <section id="glossary">
+<h1>Glossary<a class="headerlink" href="#glossary" title="Link to this heading">#</a></h1>
+<p>NVIDIA- and compiler-specific terms used throughout these docs.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Term</p></th>
+<th class="head"><p>Definition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>ACF</strong></p></td>
+<td><p>Advanced Controls File — a file generated by CompileIQ (or curated in a <a class="reference internal" href="booster_packs.html"><span class="std std-doc">Booster Pack</span></a>) that is passed to a compiler via <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code> to change its optimization decisions for a specific kernel. See <a class="reference internal" href="compilers_overview.html"><span class="std std-doc">Tuning NVIDIA Compilers</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Batch Decode</strong></p></td>
+<td><p>A decode-phase attention workload pattern (e.g. FlashInfer’s <code class="docutils literal notranslate"><span class="pre">BatchDecodeWithPagedKVCacheWrapper</span></code>) that processes many sequences’ next-token generation in a single batched kernel call against a paged KV cache. See <a class="reference internal" href="flashinfer_booster.html"><span class="std std-doc">Applying a Booster Pack to FlashInfer</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>compute capability / <code class="docutils literal notranslate"><span class="pre">sm_XX</span></code></strong></p></td>
+<td><p>A version number (e.g. <code class="docutils literal notranslate"><span class="pre">sm_90a</span></code>, <code class="docutils literal notranslate"><span class="pre">sm_100</span></code>) identifying the set of features a GPU architecture supports. Passed to NVCC/PTXAS via <code class="docutils literal notranslate"><span class="pre">-arch</span></code> to target a specific GPU generation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>CTA</strong></p></td>
+<td><p>Cooperative Thread Array — CUDA’s term for a thread block, the group of threads that can synchronize and share memory on one streaming multiprocessor.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>CTK</strong></p></td>
+<td><p>CUDA Toolkit — the NVIDIA SDK (compilers, libraries, tools) used to build and run CUDA programs. CompileIQ’s Advanced Controls Interface requires CTK 13.3 or newer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>cuTile</strong></p></td>
+<td><p>A tile-based CUDA programming model (also called CudaTile) for writing kernels in terms of tile-level operations rather than per-thread code. See <a class="reference internal" href="cutile_example.html"><span class="std std-doc">Autotuning cuTile parameters</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>FA / GQA / MHA / MLA</strong></p></td>
+<td><p>Common attention kernel variants: Flash Attention (FA), Grouped-Query Attention (GQA), Multi-Head Attention (MHA), and Multi-head Latent Attention (MLA). Referenced by the <code class="docutils literal notranslate"><span class="pre">att</span></code> (attention) compiler search-space variant.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>FlashInfer</strong></p></td>
+<td><p>An open-source library of optimized attention/inference kernels for LLM serving, used as a target workload for the Helion <a class="reference internal" href="booster_packs.html"><span class="std std-doc">Booster Pack</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Helion</strong></p></td>
+<td><p>A Python-embedded kernel authoring language and compiler that can consume ACFs through its own ACF API.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>JIT</strong></p></td>
+<td><p>Just-in-time compilation — compiling a kernel at runtime (as opposed to ahead-of-time), which is how frameworks like Triton and Helion typically produce GPU code.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>NVBench</strong></p></td>
+<td><p>A CUDA kernel benchmarking library that provides accurate, repeatable timing measurements. See <a class="reference internal" href="benchmarking.html"><span class="std std-doc">Benchmarking</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>NVCC</strong></p></td>
+<td><p>NVIDIA CUDA Compiler — the driver that compiles CUDA C/C++ source into PTX/SASS. One of the two compilers CompileIQ tunes. See <a class="reference internal" href="nvcc_example.html"><span class="std std-doc">Tuning NVCC</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>PTX</strong></p></td>
+<td><p>Parallel Thread Execution — NVIDIA’s intermediate, GPU-architecture-independent assembly language that NVCC generates and PTXAS compiles further into SASS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>PTXAS</strong></p></td>
+<td><p>The PTX Assembler — compiles PTX into SASS for a specific GPU architecture. One of the two compilers CompileIQ tunes. See <a class="reference internal" href="ptx_spill_example.html"><span class="std std-doc">Tuning PTXAS</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>SASS</strong></p></td>
+<td><p>Streaming ASSembly or Shader ASSembly — the native machine code that actually runs on an NVIDIA GPU, produced by PTXAS from PTX. Different ACFs can produce different SASS for the same kernel source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>TMA</strong></p></td>
+<td><p>Tensor Memory Accelerator — dedicated hardware on recent NVIDIA GPU architectures for asynchronous, bulk global-to-shared-memory data transfers, exposed as a tunable hint in some search spaces.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Triton</strong></p></td>
+<td><p>An open-source Python-embedded language and compiler for writing GPU kernels, which lowers to PTX and finally to SASS via PTXAS. See <a class="reference internal" href="triton_example.html"><span class="std std-doc">Tuning PTXAS in Triton</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>XLA</strong></p></td>
+<td><p>Accelerated Linear Algebra — a domain-specific compiler for linear algebra used by frameworks like JAX and TensorFlow to lower computation graphs to GPU code.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-</li>
-<li><p>Seed a repo-local staging directory:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>setup-search-space-release
-<span class="nb">source</span><span class="w"> </span>dist/search-space-release/current.env
-</pre></div>
-</div>
-</li>
-<li><p>Add, remove, or replace approved <code class="docutils literal notranslate"><span class="pre">.bin</span></code> files in <code class="docutils literal notranslate"><span class="pre">${SS_INPUT_DIR}</span></code>.</p></li>
-<li><p>Reconcile the staged <code class="docutils literal notranslate"><span class="pre">.bin</span></code> files into catalog metadata:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>update-search-space-catalog
-</pre></div>
-</div>
-</li>
-<li><p>Build and validate the local staging bundle:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>build-search-space-release
-make<span class="w"> </span>check-search-space-staging
-</pre></div>
-</div>
-</li>
-</ol>
-<p>The generated <code class="docutils literal notranslate"><span class="pre">${SS_OUTPUT_DIR}</span></code> should contain:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>manifest.json
-*.bin
-SHA256SUMS.txt
-release-body.md
-</pre></div>
-</div>
-<p>The validator confirms that <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, <code class="docutils literal notranslate"><span class="pre">SHA256SUMS.txt</span></code>, the <code class="docutils literal notranslate"><span class="pre">.bin</span></code>
-assets, and the release body agree.</p>
-</section>
-<section id="clean-download-check">
-<h2>Clean Download Check<a class="headerlink" href="#clean-download-check" title="Link to this heading">#</a></h2>
-<p>After creating a draft GitHub Release, validate the uploaded asset set from a
-clean download:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">tmpdir</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>mktemp<span class="w"> </span>-d<span class="k">)</span><span class="s2">&quot;</span>
-gh<span class="w"> </span>release<span class="w"> </span>download<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SS_RELEASE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--repo<span class="w"> </span>NVIDIA/CompileIQ<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--dir<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$tmpdir</span><span class="s2">&quot;</span>
-
-make<span class="w"> </span>check-search-space-assets<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span><span class="nv">SS_OUTPUT_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$tmpdir</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span><span class="nv">SS_RELEASE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SS_RELEASE_TAG</span><span class="si">}</span><span class="s2">&quot;</span>
-</pre></div>
-</div>
-<p>Expected output:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PASS: Validated Search Space release assets for search-spaces-YYYY.MM.DD in &lt;tmpdir&gt;.
-</pre></div>
-</div>
-</section>
-<section id="live-retrieval-check">
-<h2>Live Retrieval Check<a class="headerlink" href="#live-retrieval-check" title="Link to this heading">#</a></h2>
-<p>A live retrieval check validates the same public GitHub path used by online
-clients. The target release must contain <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, every <code class="docutils literal notranslate"><span class="pre">.bin</span></code> asset
-referenced by that manifest, and <code class="docutils literal notranslate"><span class="pre">SHA256SUMS.txt</span></code>.</p>
-<p>Run a clean-cache retrieval check against the published release:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cache/compileiq
-<span class="nv">SS_VALIDATED_DOWNLOAD_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$tmpdir</span><span class="s2">&quot;</span><span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
-<span class="s">import os</span>
-<span class="s">import pathlib</span>
-
-<span class="s">from compileiq.search_spaces.manifest import SearchSpaceManifestModel</span>
-<span class="s">from compileiq.search_spaces.resolver import resolve_with_metadata</span>
-
-<span class="s">tag = os.environ[&quot;SS_RELEASE_TAG&quot;]</span>
-<span class="s">manifest_path = pathlib.Path(os.environ[&quot;SS_VALIDATED_DOWNLOAD_DIR&quot;]) / &quot;manifest.json&quot;</span>
-<span class="s">manifest = SearchSpaceManifestModel.model_validate_json(manifest_path.read_text())</span>
-<span class="s">for entry in manifest.entries:</span>
-<span class="s">    resolved = resolve_with_metadata(</span>
-<span class="s">        entry.compiler,</span>
-<span class="s">        entry.compiler_version,</span>
-<span class="s">        entry.variant,</span>
-<span class="s">        tag=tag,</span>
-<span class="s">    )</span>
-<span class="s">    print(resolved.path)</span>
-<span class="s">PY</span>
-</pre></div>
-</div>
-<p>The paths printed should point at freshly downloaded cache files for every entry
-in the release metadata.</p>
-</section>
-<section id="what-unit-tests-cover">
-<h2>What Unit Tests Cover<a class="headerlink" href="#what-unit-tests-cover" title="Link to this heading">#</a></h2>
-<p>The unit and integration tests cover local mirrors, mocked GitHub downloads,
-<code class="docutils literal notranslate"><span class="pre">latest</span></code> filtering, prerelease skipping, cache hits, corrupt cache replacement,
-digest and size failures, metadata exposure, tracker logging, and the local
-release-prep scripts.</p>
-</section>
 </section>
 
 
@@ -548,20 +510,20 @@ release-prep scripts.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="compilers_overview.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Tuning NVIDIA Compilers</p>
+        <p class="prev-next-title">CompileIQ Documentation</p>
       </div>
     </a>
     <a class="right-next"
-       href="booster_packs.html"
+       href="install.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Booster Packs</p>
+        <p class="prev-next-title">Install Instructions</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -572,28 +534,9 @@ release-prep scripts.</p>
             
             
 
-
-              
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+<div class="bd-sidebar-secondary"></div>
 
 
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-catalog-checks">Local Catalog Checks</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#clean-download-check">Clean Download Check</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#live-retrieval-check">Live Retrieval Check</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-unit-tests-cover">What Unit Tests Cover</a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
 
