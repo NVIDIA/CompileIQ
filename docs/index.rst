@@ -6,6 +6,7 @@ CompileIQ Documentation
    :maxdepth: 3
    :caption: Overview
 
+   glossary
    install
    getting_started
 
@@ -66,6 +67,7 @@ What can be expected from using CompileIQ?
 
 For highly optimized workloads, CompileIQ has shown 2% to 3% improvements in some cases. Less optimized workloads may see larger gains, but actual results depend on the workload, hardware, metric, and available optimization headroom.
 
+* New to NVIDIA compiler terms? Check the :doc:`Glossary <glossary>`.
 * Dive into the :doc:`Getting Started guide <getting_started>` to get started quickly.
 * Get extra performance now with pre-made solutions from our :doc:`Booster Packs <booster_packs>`.
 * Learn more about the new Compiler Controls interface by :doc:`Tuning NVIDIA Compilers <compilers_overview>`.

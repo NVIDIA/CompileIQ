@@ -84,7 +84,9 @@ except Exception:
 
 The benchmark uses CUDA events and reports the mean kernel runtime in
 milliseconds. Passing `--clock-mhz` also uses `gpu_benchmark_mode` to stabilize
-GPU clocks for the duration of the search.
+GPU clocks for the duration of the search. `gpu_benchmark_mode` also accepts a
+`power_watts` argument to cap the GPU power limit — see the
+[Normalization guide](normalization.md#for-gpu-measurements) for an example.
 
 ## Running the example
 
