@@ -2,10 +2,8 @@
 Tests for SearchConfiguration validators in compileiq/types.py.
 """
 
-import json
 import pytest
 from compileiq.types import (
-    InternalSearchConfiguration,
     ProblemType,
     SearchConfiguration,
 )
@@ -79,7 +77,7 @@ class TestSetPoolAndCullSizes:
         """Preserve the signal used by provider-specific configuration validation.
 
         The native provider inspects ``model_fields_set`` so it can reject an
-        explicitly supplied bundled-core control such as ``cull_size`` while
+        explicitly supplied retired setting, such as ``cull_size``, while
         accepting the same value when CompileIQ derives it as a default.
         """
 
@@ -132,15 +130,15 @@ class TestSetPoolAndCullSizes:
 
 
 # ---------------------------------------------------------------------------
-# to_legacy / from_legacy — round-trip through the core's config format
+# to_legacy / from_legacy: round-trip through the legacy .config format
 # ---------------------------------------------------------------------------
 
 
 class TestLegacyRoundTrip:
-    """The core binary reads a lisp-like .config format.  to_legacy() converts
-    our Python config into that format, and from_legacy() reads it back.  If
-    either direction has a bug, the core binary silently gets wrong parameters
-    or we lose user settings on reload."""
+    """Search still accepts a path to a lisp-like legacy .config file as
+    ``search_config``.  to_legacy() writes that format and from_legacy() reads
+    it back.  If either direction has a bug, a reloaded configuration silently
+    differs from the one that was saved."""
 
     def test_min_round_trip(self, tmp_path):
         original = SearchConfiguration(
@@ -206,66 +204,11 @@ class TestLegacyRoundTrip:
         assert isinstance(excinfo.value.__cause__, SyntaxError)
 
     def test_to_legacy_contains_seek_minimum(self):
-        """The core binary reads 'seek_minimum', not 'problem_type'.
+        """The legacy format names the field 'seek_minimum', not 'problem_type'.
         Verify the key name translation happens."""
         cfg = SearchConfiguration(generations=1, problem_type=ProblemType.MIN)
         legacy = cfg.to_legacy()
         assert "seek_minimum" in legacy
-
-
-# ---------------------------------------------------------------------------
-# to_json_dict — JSON output for core consumption
-# ---------------------------------------------------------------------------
-
-
-class TestJsonDict:
-    """to_json_dict() produces the dict that gets written as main_config.json.
-    It uses the Python SDK field names — core handles the translation to its
-    internal names (seek_minimum, qualitative) in load-json-main-config."""
-
-    def test_problem_type_preserved(self):
-        cfg = SearchConfiguration(generations=5, problem_type=ProblemType.MIN)
-        d = cfg.to_json_dict()
-        assert d["problem_type"] == "min"
-
-        cfg_max = SearchConfiguration(generations=5, problem_type=ProblemType.MAX)
-        d_max = cfg_max.to_json_dict()
-        assert d_max["problem_type"] == "max"
-
-    def test_normalize_preserved(self):
-        cfg = SearchConfiguration(generations=1, normalize=True)
-        d = cfg.to_json_dict()
-        assert d["normalize"] is True
-
-        cfg_false = SearchConfiguration(generations=1, normalize=False)
-        d2 = cfg_false.to_json_dict()
-        assert d2["normalize"] is False
-
-    def test_none_values_excluded(self):
-        cfg = SearchConfiguration(generations=1, objective_weights=None)
-        d = cfg.to_json_dict()
-        assert "objective_weights" not in d
-
-    def test_output_is_json_serializable(self):
-        cfg = SearchConfiguration(generations=5, pool_size=32, cull_size=16, mutate_rate=0.3)
-        d = cfg.to_json_dict()
-        roundtripped = json.loads(json.dumps(d))
-        assert roundtripped == d
-
-    def test_numeric_fields_preserved(self):
-        cfg = SearchConfiguration(generations=10, pool_size=50, cull_size=20, mutate_rate=0.15)
-        d = cfg.to_json_dict()
-        assert d["generations"] == 10
-        assert d["pool_size"] == 50
-        assert d["cull_size"] == 20
-        assert d["mutate_rate"] == 0.15
-
-    def test_internal_config_excludes_removed_legacy_field(self):
-        cfg = InternalSearchConfiguration(generations=1, dna_config="search_space.json")
-        d = cfg.to_json_dict()
-        removed_field = "experience" + "_mode"
-
-        assert removed_field not in d
 
 
 # ---------------------------------------------------------------------------

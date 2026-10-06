@@ -9,7 +9,6 @@ import pytest
 import compileiq.search_spaces.base as ss
 import compileiq.backends as backends_module
 import compileiq.ciq as ciq_module
-from compileiq.bundled_backend import BundledCoreBackend
 from compileiq.backends import (
     BackendArtifactInfo,
     BackendCandidate,
@@ -26,7 +25,6 @@ from compileiq.backends import (
     unregister_backend,
 )
 from compileiq.ciq import CheckpointCompatibilityWarning, Search
-from compileiq.core.core_types import ParameterSet, SingleCandidate
 from compileiq.types import (
     LoguruTrackerConfig,
     SearchConfiguration,
@@ -282,6 +280,45 @@ def fake_backend():
         unregister_backend(name)
 
 
+@pytest.fixture
+def uncheckpointed_backend():
+    """Register a provider that, like many plugins, cannot checkpoint."""
+
+    name = "test-uncheckpointed-backend"
+    register_backend(
+        name,
+        FakeSealedBackend,
+        capabilities=BackendCapabilities(arbitrary_batch_size=True),
+        artifact=BackendArtifactInfo(
+            backend_version="0.0.1",
+            abi_version=0,
+            artifact_sha256="b" * 64,
+        ),
+    )
+    try:
+        yield name
+    finally:
+        unregister_backend(name)
+
+
+@pytest.fixture
+def stand_in_amber(monkeypatch):
+    """Serve the default engine name from a fake so tests need no native payload."""
+
+    registration = backends_module.BackendRegistration(
+        name="amber",
+        factory=FakeSealedBackend,
+        capabilities=BackendCapabilities(arbitrary_batch_size=True, checkpoint=True),
+        artifact=BackendArtifactInfo(
+            backend_version="stand-in",
+            abi_version=1,
+            artifact_sha256="c" * 64,
+        ),
+    )
+    monkeypatch.setitem(backends_module._BACKENDS, "amber", registration)
+    return registration
+
+
 def make_search(
     provider=None,
     engine=None,
@@ -302,16 +339,19 @@ def make_search(
 
     if engine is not None and (provider is not None or engine_options):
         raise AssertionError("test helper selection is ambiguous")
+    if engine_options and provider is None:
+        raise AssertionError("engine_options need an explicit provider")
     if provider is not None:
         engine = EngineConfig(
             name=provider,
             options=engine_options or {},
         )
-    elif engine_options:
-        engine = EngineConfig(name="ruby", options=engine_options)
     search_kwargs = {}
     if tracker_config is not None:
         search_kwargs["tracker_config"] = tracker_config
+    if engine is not None:
+        # Omitting engine= exercises the Search default.
+        search_kwargs["engine"] = engine
     return Search(
         objective_function=objective or (lambda config: config["x"]),
         search_space=search_space or {"x": ss.range(0, 10)},
@@ -325,7 +365,6 @@ def make_search(
         exit_on_failure=exit_on_failure,
         dump_results=dump_results,
         disable_progress_bar=True,
-        engine=engine or "ruby",
         **search_kwargs,
     )
 
@@ -353,26 +392,27 @@ def test_engine_config_rejects_algorithm_coordinate():
     """Keep algorithm selection out of the public engine configuration."""
 
     with pytest.raises(ValueError, match="Extra inputs are not permitted"):
-        EngineConfig.model_validate({"name": "ruby", "algorithm": "evo"})
+        EngineConfig.model_validate({"name": "amber", "algorithm": "evo"})
 
 
-def test_default_engine_resolves_to_ruby():
-    """Preserve the compatibility default while exposing its resolved diagnostics."""
+def test_default_engine_resolves_to_amber(stand_in_amber):
+    """Use the native amber engine when the caller does not choose one."""
 
     search = make_search()
 
-    assert search.engine == "ruby"
-    assert search.provider == "ruby"
+    assert search.engine == "amber"
+    assert search.provider == "amber"
     assert search.engine_options == {}
+    assert search._backend_registration is stand_in_amber
 
 
-def test_engine_config_normalizes_registered_name():
+def test_engine_config_normalizes_registered_name(stand_in_amber):
     """Treat the configured engine name as the only selection coordinate."""
 
-    search = make_search(engine=EngineConfig(name=" RuBy "))
+    search = make_search(engine=EngineConfig(name=" AmBeR "))
 
-    assert search._engine_identity == "ruby"
-    assert search.provider == "ruby"
+    assert search._engine_identity == "amber"
+    assert search.provider == "amber"
 
 
 def test_removed_top_level_selectors_are_rejected():
@@ -385,7 +425,7 @@ def test_removed_top_level_selectors_are_rejected():
                 "search_space": {"x": ss.range(0, 10)},
                 "search_config": SearchConfiguration(generations=1, pool_size=6),
                 "worker_type": SynchronousWorker,
-                "backend": "ruby",
+                "backend": "amber",
             }
         )
 
@@ -598,8 +638,8 @@ def test_best_result_forwards_single_and_multi_objective_result_semantics(fake_b
 def test_fresh_backend_setup_resets_facade_execution_identity(fake_backend):
     """Start a new execution without retaining candidate IDs from the replaced backend.
 
-    Internal reduction and legacy resume intentionally install a fresh backend on
-    an existing Search. Providers may restart their local candidate sequence, so
+    Internal reduction intentionally installs a fresh backend on an existing
+    Search. Providers may restart their local candidate sequence, so
     facade-reported IDs from the previous execution must be cleared at that
     boundary while duplicate-ID checks remain strict within each execution.
     """
@@ -1035,197 +1075,6 @@ def test_rejected_tell_does_not_create_dump_results(fake_backend, tmp_path):
     assert not destination.exists()
 
 
-def test_bundled_tell_buffers_subsets_and_sends_in_candidate_order(monkeypatch):
-    """Adapt universal subset tells to the core's ordered full-batch response.
-
-    The first out-of-order subset must produce no IPC. Once the remaining ID is
-    submitted, the adapter sends exactly one response ordered by the original
-    candidate batch, rather than by tell arrival order.
-    """
-
-    search = make_search()
-    backend = search._backend_impl
-    assert isinstance(backend, BundledCoreBackend)
-    backend._pending_ids = ("candidate-41", "candidate-42", "candidate-43")
-    backend._core_ids_by_pending_id = {
-        "candidate-41": 41,
-        "candidate-42": 42,
-        "candidate-43": 43,
-    }
-    backend._core_socket = Mock()
-    candidates = [
-        BackendCandidate(param_id=candidate_id, params={"x": index})
-        for index, candidate_id in enumerate(backend._pending_ids)
-    ]
-    backend._pending_candidates = {str(candidate.param_id): candidate for candidate in candidates}
-    sent = []
-    monkeypatch.setattr(
-        backend._core_ipc,
-        "send_to_core",
-        lambda _socket, response: sent.append(response),
-    )
-
-    search.tell(
-        [
-            Score(score=430, param_id="candidate-43", num_objectives=1),
-            Score(score=410, param_id="candidate-41", num_objectives=1),
-        ]
-    )
-    assert sent == []
-    assert [candidate.param_id for candidate in search.pending_candidates] == ["candidate-42"]
-
-    search.tell([Score(score=420, param_id="candidate-42", num_objectives=1)])
-
-    assert len(sent) == 1
-    assert [item.id for item in sent[0].evaluated_params] == [41, 42, 43]
-    assert [item.scores for item in sent[0].evaluated_params] == [[410], [420], [430]]
-    assert search.pending_candidates == ()
-
-
-def test_bundled_split_all_failed_generation_still_fails_closed(monkeypatch):
-    """Apply first-generation failure policy across multiple bundled tell subsets.
-
-    Buffered failures are accepted for association and ordering, but they are not
-    successful evaluations. The final all-failed subset must therefore trigger
-    ``exit_on_failure`` before the bundled adapter sends anything to the core.
-    """
-
-    search = make_search(exit_on_failure=True)
-    backend = search._backend_impl
-    assert isinstance(backend, BundledCoreBackend)
-    backend._pending_ids = ("candidate-61", "candidate-62")
-    backend._core_ids_by_pending_id = {"candidate-61": 61, "candidate-62": 62}
-    backend._core_socket = Mock()
-    candidates = [
-        BackendCandidate(param_id="candidate-61", params={"x": 1}),
-        BackendCandidate(param_id="candidate-62", params={"x": 2}),
-    ]
-    backend._pending_candidates = {str(candidate.param_id): candidate for candidate in candidates}
-    sent = []
-    monkeypatch.setattr(
-        backend._core_ipc,
-        "send_to_core",
-        lambda _socket, response: sent.append(response),
-    )
-
-    search.tell(
-        [
-            Score(
-                score=INVALID_SCORE,
-                param_id=candidates[0].param_id,
-                num_objectives=1,
-            )
-        ]
-    )
-    with pytest.raises(RuntimeError, match="All objective functions failed"):
-        search.tell(
-            [
-                Score(
-                    score=INVALID_SCORE,
-                    param_id=candidates[1].param_id,
-                    num_objectives=1,
-                )
-            ]
-        )
-
-    assert sent == []
-    assert set(backend._buffered_scores) == {"candidate-61"}
-    assert search.pending_candidates == (candidates[1],)
-    assert len(search.result.get_results()) == 1
-
-
-def test_failed_final_bundled_send_rolls_back_new_subset(monkeypatch):
-    """Keep earlier subsets buffered while making a failed final subset retryable."""
-
-    search = make_search()
-    backend = search._backend_impl
-    assert isinstance(backend, BundledCoreBackend)
-    backend._pending_ids = ("candidate-51", "candidate-52")
-    backend._core_ids_by_pending_id = {"candidate-51": 51, "candidate-52": 52}
-    backend._core_socket = Mock()
-    backend.tell([Score(score=510, param_id="candidate-51", num_objectives=1)])
-
-    def fail_send(_socket, _response):
-        raise OSError("simulated IPC failure")
-
-    monkeypatch.setattr(backend._core_ipc, "send_to_core", fail_send)
-    with pytest.raises(OSError, match="simulated IPC failure"):
-        backend.tell([Score(score=520, param_id="candidate-52", num_objectives=1)])
-
-    assert set(backend._buffered_scores) == {"candidate-51"}
-    assert backend._pending_ids == ("candidate-51", "candidate-52")
-    sent = []
-    monkeypatch.setattr(
-        backend._core_ipc,
-        "send_to_core",
-        lambda _socket, response: sent.append(response),
-    )
-    backend.tell([Score(score=520, param_id="candidate-52", num_objectives=1)])
-    assert len(sent) == 1
-    assert backend._buffered_scores == {}
-    assert backend._pending_ids == ()
-
-
-def test_bundled_tell_validates_normalized_scores_before_buffering():
-    """Keep an invalid direct backend subset retryable and visible as pending."""
-
-    search = make_search(normalize=True, exit_on_failure=False)
-    backend = search._backend_impl
-    assert isinstance(backend, BundledCoreBackend)
-    candidate = BackendCandidate(param_id="candidate-71", params={"x": 1})
-    backend._pending_ids = (str(candidate.param_id),)
-    backend._core_ids_by_pending_id = {str(candidate.param_id): 71}
-    backend._pending_candidates = {str(candidate.param_id): candidate}
-
-    with pytest.raises(ValueError, match="normalized bundled-core score is missing"):
-        backend.tell(
-            [
-                Score(
-                    score=INVALID_SCORE,
-                    param_id=candidate.param_id,
-                    num_objectives=1,
-                )
-            ]
-        )
-
-    assert backend._buffered_scores == {}
-    assert backend.pending_candidates == (candidate,)
-
-
-def test_manual_failed_normalized_score_is_canonicalized_before_bundled_tell(monkeypatch):
-    """Accept the compact failed-score form without wedging manual ask/tell state."""
-
-    search = make_search(normalize=True, exit_on_failure=False)
-    backend = search._backend_impl
-    assert isinstance(backend, BundledCoreBackend)
-    candidate = BackendCandidate(param_id="candidate-72", params={"x": 1})
-    backend._pending_ids = (str(candidate.param_id),)
-    backend._core_ids_by_pending_id = {str(candidate.param_id): 72}
-    backend._pending_candidates = {str(candidate.param_id): candidate}
-    backend._core_socket = Mock()
-    sent = []
-    monkeypatch.setattr(
-        backend._core_ipc,
-        "send_to_core",
-        lambda _socket, response: sent.append(response),
-    )
-
-    search.tell(
-        [
-            Score(
-                score=INVALID_SCORE,
-                param_id=candidate.param_id,
-                num_objectives=1,
-            )
-        ]
-    )
-
-    assert len(sent) == 1
-    assert sent[0].evaluated_params[0].scores == [INVALID_SCORE]
-    assert search.pending_candidates == ()
-    assert search.result.get_results().iloc[0]["norm_score_1"] == INVALID_SCORE
-
-
 def test_failed_backend_ask_leaves_search_pristine_for_restore(
     fake_backend,
     monkeypatch,
@@ -1252,69 +1101,6 @@ def test_failed_backend_ask_leaves_search_pristine_for_restore(
     target.restore_checkpoint(checkpoint)
     assert target.current_generation == 0
     assert target.pending_candidates == ()
-
-
-def test_bundled_candidate_ids_remain_unique_when_core_reuses_ids(monkeypatch):
-    """Namespace core-local IDs so late reports cannot target a later generation.
-
-    The bundled core may reuse its integer IDs across generations. Public IDs
-    must remain unique for the lifetime of Search because they are the
-    authoritative association between issued candidates and evaluation reports.
-    """
-
-    search = make_search()
-    backend = search._backend_impl
-    assert isinstance(backend, BundledCoreBackend)
-    backend._core_socket = Mock()
-    monkeypatch.setattr(backend, "_start", lambda: None)
-    monkeypatch.setattr(
-        backend,
-        "_load_params",
-        lambda message: [{"x": index} for index, _ in enumerate(message.params)],
-    )
-    repeated_batch = [
-        SingleCandidate(id=41, knobs="{}"),
-        SingleCandidate(id=42, knobs="{}"),
-    ]
-    monkeypatch.setattr(
-        backend._core_ipc,
-        "receive_from_core",
-        Mock(
-            side_effect=[
-                ParameterSet(params=repeated_batch, invocation_id=1, generation_num=0),
-                ParameterSet(params=repeated_batch, invocation_id=1, generation_num=1),
-            ]
-        ),
-    )
-    sent = []
-    monkeypatch.setattr(
-        backend._core_ipc,
-        "send_to_core",
-        lambda _socket, response: sent.append(response),
-    )
-
-    first = backend.ask()
-    backend.tell(
-        [
-            Score(score=index, param_id=candidate.param_id, num_objectives=1)
-            for index, candidate in enumerate(first)
-        ]
-    )
-    second = backend.ask()
-    backend.tell(
-        [
-            Score(score=index, param_id=candidate.param_id, num_objectives=1)
-            for index, candidate in enumerate(second)
-        ]
-    )
-
-    assert {candidate.param_id for candidate in first}.isdisjoint(
-        candidate.param_id for candidate in second
-    )
-    assert [[item.id for item in response.evaluated_params] for response in sent] == [
-        [41, 42],
-        [41, 42],
-    ]
 
 
 def test_checkpoint_envelope_keeps_provider_state_out_of_metadata_and_restores(
@@ -2111,11 +1897,14 @@ def test_start_saves_checkpoint_after_each_accepted_managed_batch(fake_backend, 
     assert len(restored.result.get_results()) == 12
 
 
-def test_start_rejects_automatic_checkpoint_for_unsupported_engine(tmp_path):
+def test_start_rejects_automatic_checkpoint_for_unsupported_engine(
+    uncheckpointed_backend,
+    tmp_path,
+):
     """Preflight managed checkpoint capability before starting workers or Search activity."""
 
     destination = tmp_path / "must-not-exist.checkpoint"
-    search = make_search()
+    search = make_search(provider=uncheckpointed_backend)
     assert search._backend_registration is not None
     assert not search._backend_registration.capabilities.checkpoint
 
@@ -2349,18 +2138,21 @@ def test_restore_surfaces_provider_rejection_after_outer_checksum_passes(
     assert received == [(rejected_blob, PendingCandidatePolicy.RESUBMIT)]
 
 
-def test_ruby_direct_restore_checkpoint_rejects_before_parsing(monkeypatch, tmp_path):
-    """Capability-gate a ruby direct restore before it reads or parses the artifact.
+def test_direct_restore_without_checkpoint_support_rejects_before_parsing(
+    uncheckpointed_backend,
+    monkeypatch,
+    tmp_path,
+):
+    """Capability-gate a direct restore before it reads or parses the artifact.
 
-    The bundled ruby engine cannot restore sealed checkpoints, so
-    ``restore_checkpoint`` must reject with the capability error at the very top:
-    before it opens or parses the supplied file, and before it creates any Search
-    activity. A malformed or hostile artifact is never read on a search that could
-    never restore it.
+    An engine that cannot restore checkpoints must make ``restore_checkpoint``
+    reject with the capability error at the very top: before it opens or parses
+    the supplied file, and before it creates any Search activity. A malformed or
+    hostile artifact is never read on a search that could never restore it.
     """
 
-    search = make_search()  # default curated "ruby" engine
-    assert search.provider == "ruby"
+    search = make_search(provider=uncheckpointed_backend)
+    assert search.provider == uncheckpointed_backend
     assert search._backend_registration is not None
     assert not search._backend_registration.capabilities.checkpoint
 

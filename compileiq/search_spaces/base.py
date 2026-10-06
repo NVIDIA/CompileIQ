@@ -56,9 +56,8 @@ def range(
             `init_with_true_random_threshold`.
     """
 
-    # Workaround: Core Limitations
     if step <= 0:
-        raise ValueError("Core only accepts positive step sizes for range parameters")
+        raise ValueError("Range parameters require a positive step size")
 
     if end <= start:
         raise ValueError("Please provide a proper range value where start < end.")
@@ -180,7 +179,7 @@ def log_sampling(
             candidate. Search engines may then evolve the parameter's on/off state, so this
             is an initialization prior rather than a guaranteed ratio in every candidate batch.
     """
-    #  Core does not have native support for logarithmic sampling,
-    # so we emulate it by creating a list that follows a log scale.
+    # Search spaces have no native logarithmic range, so we emulate one with a
+    # choice over values that follow a log scale.
     sampling_list = np.geomspace(start=start, stop=end, num=total)
     return choice(sampling_list, knockout_prob)

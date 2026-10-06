@@ -9,8 +9,8 @@ import pytest
 
 from dev.compose_compileiq_wheel import compose_wheel, write_composition_manifest
 from dev.verify_complete_wheel import (
-    _verify_core_platform,
     _verify_linux_native_abi,
+    _verify_platform,
     verify_complete_wheel,
     verify_composition_manifest,
 )
@@ -38,21 +38,15 @@ def _file_record(path: Path) -> dict[str, str | int]:
     }
 
 
-def _composition_inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
-    core_manifest = json.dumps(
-        {
-            "schema_version": 2,
-            "files": {
-                "linux/x86_64/bin/_core": "sha256:" + "0" * 64,
-            },
-        }
-    ).encode()
+def _composition_inputs(
+    tmp_path: Path,
+    extra_frontend_files: dict[str, bytes] | None = None,
+) -> tuple[Path, Path, Path]:
     frontend = _write_wheel(
         tmp_path / "compileiq-1.1.0b0-py3-none-any.whl",
         {
             "compileiq/__init__.py": b"",
-            "compileiq/core/executable/linux/x86_64/bin/_core": b"legacy-core",
-            "compileiq/core/executable/core-manifest.json": core_manifest,
+            **(extra_frontend_files or {}),
             "compileiq-1.1.0b0.dist-info/METADATA": (
                 b"Metadata-Version: 2.3\n"
                 b"Name: compileiq\n"
@@ -107,7 +101,7 @@ def test_compose_complete_wheel_uses_one_distribution_and_platform_tag(
     tmp_path,
     _stub_native_abi_scan,
 ):
-    """Publish one CompileIQ wheel containing both legacy and native providers."""
+    """Publish one CompileIQ wheel containing the frontend and the native provider."""
 
     frontend, runtime, manifest = _composition_inputs(tmp_path)
     output = compose_wheel(frontend, runtime, manifest, tmp_path / "complete")
@@ -125,7 +119,7 @@ def test_compose_complete_wheel_uses_one_distribution_and_platform_tag(
     verify_composition_manifest(output, composition_manifest)
     with zipfile.ZipFile(output) as archive:
         names = archive.namelist()
-        assert "compileiq/core/executable/linux/x86_64/bin/_core" in names
+        assert not any(name.startswith("compileiq/core/") for name in names)
         assert "compileiq_native_runtime/_native.cpython-311-x86_64-linux-gnu.so" in names
         assert not any("compileiq_native_runtime-" in name for name in names)
         assert b"Tag: cp311-cp311-manylinux_2_34_x86_64" in archive.read(
@@ -199,42 +193,30 @@ def test_verify_complete_wheel_rejects_filename_metadata_tag_mismatch(tmp_path):
         verify_complete_wheel(mismatched)
 
 
-def test_verify_complete_wheel_rejects_missing_core_for_tagged_platform(tmp_path):
-    frontend, runtime, manifest = _composition_inputs(tmp_path)
-    output = compose_wheel(frontend, runtime, manifest, tmp_path / "complete")
-    mismatched = tmp_path / output.name.replace("x86_64", "aarch64")
-    with zipfile.ZipFile(output) as source, zipfile.ZipFile(mismatched, "w") as destination:
-        for info in source.infolist():
-            contents = source.read(info.filename)
-            if info.filename.endswith(".dist-info/WHEEL"):
-                contents = contents.replace(b"x86_64", b"aarch64")
-            destination.writestr(info, contents)
+def test_verify_complete_wheel_rejects_files_from_the_removed_core(
+    tmp_path,
+    _stub_native_abi_scan,
+):
+    """A frontend built before the core was removed must not compose into a release."""
 
-    with pytest.raises(RuntimeError, match="does not have a bundled core for linux/aarch64"):
-        verify_complete_wheel(mismatched)
-
-
-def test_macos_complete_wheel_allows_no_legacy_core(tmp_path):
-    wheel = _write_wheel(tmp_path / "frontend.whl", {"compileiq/__init__.py": b""})
-
-    with zipfile.ZipFile(wheel) as archive:
-        _verify_core_platform(
-            archive.namelist(),
-            ["cp313-cp313-macosx_15_0_arm64"],
-            archive,
-        )
-
-
-def test_macos_complete_wheel_rejects_a_foreign_legacy_core(tmp_path):
-    wheel = _write_wheel(
-        tmp_path / "frontend.whl",
-        {"compileiq/core/executable/linux/x86_64/bin/_core": b"core"},
+    frontend, runtime, manifest = _composition_inputs(
+        tmp_path,
+        {"compileiq/core/executable/linux/x86_64/bin/_core": b"legacy-core"},
     )
+    output = compose_wheel(frontend, runtime, manifest, tmp_path / "complete")
 
-    with zipfile.ZipFile(wheel) as archive:
-        with pytest.raises(RuntimeError, match="coreless complete wheel unexpectedly contains"):
-            _verify_core_platform(
-                archive.namelist(),
-                ["cp313-cp313-macosx_15_0_arm64"],
-                archive,
-            )
+    with pytest.raises(RuntimeError, match="removed bundled core"):
+        verify_complete_wheel(output)
+
+
+@pytest.mark.parametrize(
+    "platform_tag",
+    ["manylinux_2_34_x86_64", "manylinux_2_34_aarch64", "win_amd64", "macosx_15_0_arm64"],
+)
+def test_every_supported_platform_ships_without_a_bundled_core(platform_tag):
+    _verify_platform(["compileiq/__init__.py"], [f"cp313-cp313-{platform_tag}"])
+
+
+def test_verify_platform_rejects_an_unsupported_platform():
+    with pytest.raises(RuntimeError, match="unsupported platforms"):
+        _verify_platform(["compileiq/__init__.py"], ["cp313-cp313-linux_riscv64"])

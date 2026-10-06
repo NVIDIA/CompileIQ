@@ -62,34 +62,6 @@ jobs:
       - run: poetry install --with typecheck,tracking,unittest
       - run: make typecheck
 
-  verify-core:
-    name: Verify Bundled Core Binaries
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          lfs: true
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - run: python -m compileiq.core.verify_core
-
-  verify-linux-core-abi:
-    name: Verify Linux Core ABI
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          lfs: true
-      - name: Install readelf
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y binutils
-      - name: Check bundled Linux ELF version requirements
-        run: python3 dev/check-linux-core-abi.py
-
   unit-test:
     # Matrix matches `pyproject.toml`'s `python = ">=3.11,<3.15"` and the
     # platforms supported per the run-examples job (Linux x86_64, Windows).
@@ -153,6 +125,8 @@ jobs:
       POETRY_VIRTUALENVS_CREATE: "false"
       GIT_PYTHON_REFRESH: "quiet"
       PYTHONPATH: ${{ github.workspace }}
+      # Real-engine tests fail instead of skipping if the native runtime is missing.
+      CIQ_REQUIRE_AMBER: "1"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -163,7 +137,13 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'poetry.lock'
       - run: pip install poetry
-      - run: poetry install --with unittest,tracking
+      - run: poetry install --with unittest,tracking,native-runtime
+      - name: Install the checked-in native runtime
+        shell: bash
+        run: |
+          python dev/materialize_native_runtime.py \
+            --runtime-directory native-runtime-wheels \
+            $(printf -- '--lane-manifest %s ' native-runtime-wheels/native-runtime-manifest-*.json)
       - name: Run tests with coverage
         continue-on-error: ${{ matrix.known_broken || false }}
         run: |
@@ -234,7 +214,13 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'poetry.lock'
       - run: pip install poetry
-      - run: poetry install
+      - run: poetry install --with native-runtime
+      - name: Install the checked-in native runtime
+        shell: bash
+        run: |
+          python dev/materialize_native_runtime.py \
+            --runtime-directory native-runtime-wheels \
+            $(printf -- '--lane-manifest %s ' native-runtime-wheels/native-runtime-manifest-*.json)
       - name: Run examples
         working-directory: examples
         shell: bash
@@ -279,7 +265,13 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'poetry.lock'
       - run: pip install poetry
-      - run: poetry install
+      - run: poetry install --with native-runtime
+      - name: Install the checked-in native runtime
+        shell: bash
+        run: |
+          python dev/materialize_native_runtime.py \
+            --runtime-directory native-runtime-wheels \
+            $(printf -- '--lane-manifest %s ' native-runtime-wheels/native-runtime-manifest-*.json)
       - name: Run Binary SS Validation
         working-directory: tests/compiler_ss
         run: python validate_binary.py
@@ -301,7 +293,6 @@ jobs:
           linux_x86 = {
               "os": "ubuntu-latest",
               "name": "Linux x86_64",
-              "platform_dir": "linux/x86_64",
               "wheel_platform": "manylinux_2_34_x86_64",
               "artifact_name": "compileiq-frontend-wheel-linux-x86_64",
           }
@@ -310,14 +301,12 @@ jobs:
               {
                   "os": "ubuntu-24.04-arm",
                   "name": "Linux aarch64",
-                  "platform_dir": "linux/aarch64",
                   "wheel_platform": "manylinux_2_34_aarch64",
                   "artifact_name": "compileiq-frontend-wheel-linux-aarch64",
               },
               {
                   "os": "windows-latest",
                   "name": "Windows amd64",
-                  "platform_dir": "win32/amd64",
                   "wheel_platform": "win_amd64",
                   "artifact_name": "compileiq-frontend-wheel-windows-amd64",
               },
@@ -336,7 +325,9 @@ jobs:
           PY
 
   build-and-smoke-test-wheel:
-    # This is an input artifact, not a publishable 1.1 product wheel. Release
+    # This is an input artifact, not a publishable 1.1 product wheel. Since the
+    # bundled core was removed it is pure Python; the smoke test pairs it with
+    # the checked-in native runtime for the runner's platform. Release
     # composition adds the manifested native payload and reruns clean-install
     # acceptance in the native build lane.
     name: Build and smoke test frontend wheel (${{ matrix.name }})
@@ -360,24 +351,6 @@ jobs:
           python-version: "3.12"
           cache: 'pip'
           cache-dependency-path: 'poetry.lock'
-      - name: Remove other platform binaries
-        shell: bash
-        run: |
-          python -c "
-          import shutil, pathlib
-          target = pathlib.Path('compileiq/core/executable/${{ matrix.platform_dir }}').resolve()
-          for d in pathlib.Path('compileiq/core/executable').glob('*/*'):
-              if d.is_dir() and d.resolve() != target:
-                  print(f'Removing {d} as it is not the target platform')
-                  shutil.rmtree(d)
-          "
-      - name: Filter core manifest for platform
-        shell: bash
-        run: |
-          python dev/filter-core-manifest.py \
-            --manifest compileiq/core/executable/core-manifest.json \
-            --platform "${{ matrix.platform_dir }}"
-          python -m compileiq.core.verify_core --allow-missing-platforms
       - run: python -m pip install poetry wheel
       - name: Set version from tag
         if: |
@@ -385,12 +358,16 @@ jobs:
         shell: bash
         run: poetry version "${GITHUB_REF#refs/tags/v}"
       - run: poetry build -f wheel
-      - name: Retag wheel for platform
-        shell: bash
-        run: wheel tags --platform-tag ${{ matrix.wheel_platform }} --remove dist/*.whl
       - name: Install built wheel
         shell: bash
         run: python -m pip install --force-reinstall dist/*.whl
+      - name: Install the checked-in native runtime for this platform
+        shell: bash
+        run: |
+          python -m pip install "pymoo>=0.6.1,<0.7" packaging
+          python dev/materialize_native_runtime.py \
+            --runtime-directory native-runtime-wheels \
+            $(printf -- '--lane-manifest %s ' native-runtime-wheels/native-runtime-manifest-*.json)
       - name: Smoke installed wheel
         shell: bash
         run: |
@@ -409,7 +386,6 @@ jobs:
             --mode both \
             --samples 4 \
             --pool-size 6 \
-            --cull-size 2 \
             --workers 1 \
             --expected-sha256 9a232adcc36a6451a4a30f3fe1dbfb29c4476b7b324bcec87bc0f5cc30bbf70d \
             --expected-size 13904
@@ -436,8 +412,6 @@ jobs:
       - public-artifact-guard
       - lint
       - typecheck
-      - verify-core
-      - verify-linux-core-abi
       - unit-test
       - integration-test
       - fuzz-test

@@ -6,10 +6,12 @@ from compileiq.search_spaces.models import ParamConfig
 
 def _encode_for_core(value: str) -> str:
     """
-    Encodes a string to be used in Core to avoid issues with special characters.
+    Encodes one search-space key segment so nested keys can be flattened with "_"
+    separators and restored later, independent of the characters users choose.
+
+    The name predates the removal of the bundled core; engines still rely on this
+    flattened key format.
     """
-    # We need to add a prefix in case the hex is just a number.
-    # Core will not accept number-only values as valid identifiers.
     return base64.b64encode(value.encode()).decode()
 
 

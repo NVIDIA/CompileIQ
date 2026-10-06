@@ -9,7 +9,7 @@ For installation and end-user docs, see [`README.md`](README.md) and the [Compil
 Every commit must carry a `Signed-off-by:` trailer matching your git `user.name` and `user.email`. The simplest way is to use `-s` on every commit:
 
 ```bash
-git commit -s -m "Add core manifest verification"
+git commit -s -m "Add native runtime manifest verification"
 ```
 
 This requirement applies to commits made on or after this guide lands; existing history is not retroactively re-signed.
@@ -99,16 +99,19 @@ NVIDIA team members may clone `NVIDIA/CompileIQ` directly.
 Install dependencies:
 
 ```bash
-make install           # dev dependencies (linter, typecheck, unittest, tracking)
+git lfs pull           # fetch the checked-in native runtime wheels
+make install           # dev dependencies plus the native amber engine
 make install-examples  # add examples deps
 make install-docs      # add docs deps
 ```
 
+`make install-frontend` installs the dev dependencies without an engine, which is
+enough for `make validate`.
+
 Verify your environment:
 
 ```bash
-make verify-core   # validate bundled core binaries against core-manifest.json
-make validate      # lint + typecheck + verify-core + unit tests
+make validate      # lint + typecheck + unit tests
 ```
 
 For deeper architecture and module-by-module orientation, see [`AGENTS.md`](AGENTS.md).
@@ -149,14 +152,14 @@ Every behavior-changing pull request must add or update tests.
 The test suite has three tiers (see [`tests/`](tests/) and [`AGENTS.md`](AGENTS.md)):
 
 - `tests/unit/` — fast, deterministic, no external deps.
-- `tests/integration/` — mocked-core Search tests with deterministic `@pytest.mark.parametrize`.
+- `tests/integration/`: Search tests with deterministic `@pytest.mark.parametrize`, driven by a scripted pure-Python engine, plus real-engine tests on `amber`.
 - `tests/fuzz/` — [Hypothesis](https://hypothesis.readthedocs.io/)-based with wide parameter ranges. **Excluded from default `pytest` runs** via `addopts = "--ignore=tests/fuzz"` in [`pyproject.toml`](pyproject.toml). Run explicitly. Set `CIQ_FUZZ_EXAMPLES=100` for thorough sweeps (the nightly workflow does this).
 
 Markers (defined in `pyproject.toml`):
 
 - `requires_ray` — needs a running Ray cluster.
 - `requires_ipc` — needs real sockets or subprocesses.
-- `requires_core` — runs the real core binary (not sandbox-compatible).
+- `requires_amber`: runs a real search on the native `amber` runtime. Skipped when it is not installed, unless `CIQ_REQUIRE_AMBER=1` (set in CI) makes a missing runtime fail instead.
 
 Commands:
 
@@ -175,7 +178,7 @@ If your change affects user-facing behavior or public API, preview the docs loca
 
 ## Commit messages
 
-- Imperative subject, ≤ 72 characters: *"Add core manifest verification"*, *"Fix flaky single-objective integration test"*.
+- Imperative subject, ≤ 72 characters: *"Add native runtime manifest verification"*, *"Fix flaky single-objective integration test"*.
 - An optional `type:` prefix is used loosely in this repo — `doc:`, `chore:`, `fix:`. Not validated, not required.
 - Use the commit body to explain *why* when the change is not obvious from the diff.
 - Reference issues with `closes #N` or `refs #N` in the body or the pull-request description.
@@ -188,7 +191,7 @@ If your change affects user-facing behavior or public API, preview the docs loca
 3. Keep pull requests focused — one concern per pull request. Split refactors from behavior changes when feasible.
 4. Update [`docs/`](docs/) for any public-API or user-facing change.
 
-CI must be green before review. Required and informative checks include `lint`, `typecheck`, `verify-core`, `unit-test` (Python 3.11/3.12/3.13/3.14 × Ubuntu/Windows), `integration-test`, `fuzz-test`, `run-examples`, `validate-binary-ss`, and the wheel smoke tests. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for the full matrix.
+CI must be green before review. Required and informative checks include `lint`, `typecheck`, `unit-test` (Python 3.11/3.12/3.13/3.14 × Ubuntu/Windows), `integration-test`, `fuzz-test`, `run-examples`, `validate-binary-ss`, and the wheel smoke tests. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for the full matrix.
 
 ## Code review
 

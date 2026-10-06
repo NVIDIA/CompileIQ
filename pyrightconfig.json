@@ -1,7 +1,6 @@
 {
     "include": ["compileiq", "tests"],
     "exclude": [
-        "compileiq/core/executable",
         "**/__pycache__",
         ".venv"
     ],

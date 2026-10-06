@@ -71,14 +71,13 @@ def _write_candidates(candidates: Sequence[object], output_dir: Path) -> list[di
     return manifest
 
 
-def _new_search(search_space: Path, cache_dir: Path, pool_size: int, cull_size: int) -> Search:
+def _new_search(search_space: Path, cache_dir: Path, pool_size: int) -> Search:
     return Search(
         objective_function=_smoke_objective,
         search_space=search_space,
         search_config=SearchConfiguration(
             generations=1,
             pool_size=pool_size,
-            cull_size=cull_size,
             problem_type="min",
             num_objectives=1,
         ),
@@ -92,9 +91,8 @@ def _run_sample(
     output_dir: Path,
     sample_count: int,
     pool_size: int,
-    cull_size: int,
 ) -> dict[str, Any]:
-    search = _new_search(search_space, output_dir / "cache", pool_size, cull_size)
+    search = _new_search(search_space, output_dir / "cache", pool_size)
     candidates = search.sample(num_samples=sample_count)
     if len(candidates) != sample_count:
         raise RuntimeError(
@@ -110,10 +108,9 @@ def _run_search(
     search_space: Path,
     output_dir: Path,
     pool_size: int,
-    cull_size: int,
     workers: int,
 ) -> dict[str, Any]:
-    search = _new_search(search_space, output_dir / "cache", pool_size, cull_size)
+    search = _new_search(search_space, output_dir / "cache", pool_size)
     results = search.start(num_workers=workers).get_results()
     required_columns = {"score_1", "params", "generation"}
     missing_columns = sorted(required_columns.difference(results.columns))
@@ -142,7 +139,6 @@ def main() -> None:
     parser.add_argument("--mode", choices=("sample", "search", "both"), default="both")
     parser.add_argument("--samples", type=_positive_int, default=8)
     parser.add_argument("--pool-size", type=_positive_int, default=6)
-    parser.add_argument("--cull-size", type=_positive_int, default=2)
     parser.add_argument("--workers", type=_positive_int, default=1)
     parser.add_argument("--expected-sha256", type=_sha256_value)
     parser.add_argument("--expected-size", type=_positive_int)
@@ -150,8 +146,6 @@ def main() -> None:
 
     if not args.search_space.is_file():
         parser.error(f"search-space file does not exist: {args.search_space}")
-    if args.cull_size >= args.pool_size:
-        parser.error("--cull-size must be smaller than --pool-size")
     artifact = args.search_space.read_bytes()
     artifact_sha256 = _sha256(artifact)
     if args.expected_sha256 is not None and artifact_sha256 != args.expected_sha256:
@@ -182,14 +176,12 @@ def main() -> None:
             args.output_dir / "sample",
             args.samples,
             max(args.pool_size, args.samples),
-            args.cull_size,
         )
     if args.mode in {"search", "both"}:
         manifest["search"] = _run_search(
             args.search_space,
             args.output_dir / "search",
             args.pool_size,
-            args.cull_size,
             args.workers,
         )
 

@@ -204,7 +204,6 @@ class CompileIqRuntimeEngine:
             launch_note,
             f"REAL: generations={request.generations} pool_size={request.pool_size}",
             *_tensor_map_notes(meta, tensor_maps),
-            f"REAL: cull_size={request.cull_size} mutate_rate={request.mutate_rate}",
             f"REAL: CompileIQ per-objective task_timeout_s={request.task_timeout}",
         ]
 
@@ -234,19 +233,14 @@ class CompileIqRuntimeEngine:
         baseline_ms = _preflight_launch(objective)
         notes.append(f"REAL: baseline_ms={baseline_ms}")
 
-        search_kwargs: dict = {
-            "problem_type": "min",
-            "generations": request.generations,
-            "pool_size": request.pool_size,
-            "num_objectives": 1,
-            "mutate_rate": request.mutate_rate,
-            "normalize": request.normalize,
-            "init_with_true_random_threshold": request.init_with_true_random_threshold,
-            "enable_large_fail_pool": request.enable_large_fail_pool,
-        }
-        if request.cull_size is not None:
-            search_kwargs["cull_size"] = request.cull_size
-        search_config = SearchConfiguration(**search_kwargs)
+        search_config = SearchConfiguration(
+            problem_type="min",
+            generations=request.generations,
+            pool_size=request.pool_size,
+            num_objectives=1,
+            normalize=request.normalize,
+            init_with_true_random_threshold=request.init_with_true_random_threshold,
+        )
 
         ptxas_space = PtxasSearchSpace(version=cuda_version, tag=search_space_tag)
         search_space: object = ptxas_space
@@ -264,7 +258,7 @@ class CompileIqRuntimeEngine:
                 )
             except TensorMapError as exc:
                 raise SearchError(str(exc)) from exc
-            # Multi-config: core samples ACF + tiles together; the objective
+            # Multi-config: the engine samples ACF + tiles together; the objective
             # receives [acf_hex, tile_dict] in this order.
             search_space = [ptxas_space, tile_space]
             notes.append(

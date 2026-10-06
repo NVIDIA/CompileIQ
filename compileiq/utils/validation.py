@@ -18,7 +18,8 @@ INVALID_SCORE: Literal["*"] = "*"
 
 def validate_inf_nan(val: float) -> float | Literal["*"]:
     """
-    Communication with Core is done through json which does not handle 'inf' and 'nan' when dumped.
+    Scores are stored in results, CSV files, and JSON checkpoints, which do not handle
+    'inf' and 'nan' consistently, so non-finite scores are recorded as invalid.
     """
     if math.isnan(val) or math.isinf(val):
         return INVALID_SCORE

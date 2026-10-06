@@ -8,8 +8,7 @@ non-default choices.
 `include = ["compileiq", "tests"]` checks library code and tests. Fuzz tests stay
 included, with targeted relaxations for noisy Hypothesis call patterns.
 
-`exclude` skips precompiled core binaries, bytecode caches, and local virtual
-environments.
+`exclude` skips bytecode caches and local virtual environments.
 
 ## Python version and platform
 

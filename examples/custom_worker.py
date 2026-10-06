@@ -94,7 +94,6 @@ if __name__ == "__main__":
         normalize=True,
         pool_size=12,
         generations=3,
-        mutate_rate=0.5,
         problem_type="min",
         num_objectives=1,
     )

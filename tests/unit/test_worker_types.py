@@ -16,6 +16,7 @@ from compileiq.worker import (
 from compileiq.ciq import Search
 from compileiq.search_spaces import base as ss
 from compileiq.types import SearchConfiguration
+from tests.utils import SCRIPTED_ENGINE
 
 
 # ---------------------------------------------------------------------------
@@ -26,14 +27,14 @@ WORKER_TYPE_STRINGS = [pytest.param(m.value, m, m.worker_type(), id=m.value) for
 
 
 def _make_search(mocker, tmp_path, **overrides):
-    """Create a Search instance with mocked internals (same pattern as test_ciq.py)."""
-    mocker.patch("compileiq.core.core_comms.socket.socket", return_value=MagicMock())
+    """Create a Search on the scripted test engine with mocked worker internals."""
     mocker.patch("compileiq.worker.multiprocessing.Manager", return_value=MagicMock())
     defaults = dict(
         objective_function=lambda p: 1.0,
         search_space={"lr": ss.range(start=0, end=10)},
         search_config=SearchConfiguration(generations=2),
         cache_folder=tmp_path,
+        engine=SCRIPTED_ENGINE,
     )
     defaults.update(overrides)
     return Search(**defaults)  # pyright: ignore[reportArgumentType]
@@ -66,6 +67,7 @@ class TestWorkerTypesEnum:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.usefixtures("scripted_engine")
 class TestSearchWorkerTypeDispatch:
     def test_accepts_worker_type_enum(self, mocker, tmp_path):
         search = _make_search(mocker, tmp_path, worker_type=WorkerTypes.NATIVE)

@@ -4,15 +4,18 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Project Overview
 
-CompileIQ is NVIDIA's hyperparameter optimizer for tuning compiler controls. It wraps a precompiled optimization core in `compileiq/core/executable/` with a Python API, communicating via socket-based IPC.
+CompileIQ is NVIDIA's hyperparameter optimizer for tuning compiler controls. A Python frontend (`compileiq/`) drives a pluggable search engine through an ask/tell backend interface. The default and only bundled engine, `amber`, is a compiled NSGA-III runtime (`compileiq_native_runtime`) that registers through the `compileiq.backends` entry point; complete wheels embed it, and source checkouts install it from `native-runtime-wheels/` (Git LFS). CompileIQ 1.1 replaced the original search core and its socket IPC with `amber`.
 
 ## Build & Development Commands
 
 A `Makefile` provides common targets. Use `make help` to list them all.
 
 ```bash
-# Install all dev dependencies
+# Install all dev dependencies plus the native amber engine (run `git lfs pull` first)
 make install
+
+# Frontend only, no engine (enough for lint, typecheck, unit tests)
+make install-frontend
 
 # Quick validation (lint + unit tests)
 make validate
@@ -52,39 +55,38 @@ Python version: >=3.11, <3.15. CI covers Python 3.11 through 3.14.
 
 ```
 tests/
-├── conftest.py          # Shared fixtures (mock core, mock sockets, sandbox cache dir)
+├── conftest.py          # Shared fixtures (scripted test engine, sandbox cache dir, amber skip logic)
 ├── utils.py             # Test helpers (objective functions, param generators, validators)
 ├── unit/                # Fast, deterministic, no external deps
-├── integration/         # Mocked-core Search tests, worker tests, legacy config tests
+├── integration/         # Search tests on the scripted engine, worker tests, real-engine tests on amber
 └── fuzz/                # Hypothesis-based exploration with wide parameter ranges
 ```
 
-- **Unit tests** — pure logic, no mocks of Search/core needed.
-- **Integration tests** — exercise the Search API with mocked core/sockets. Deterministic `@pytest.mark.parametrize` with representative configs.
+- **Unit tests**: pure logic; tests that need a Search use the scripted pure-Python engine, so no native payload is required.
+- **Integration tests**: exercise the Search API on the scripted engine (`scripted_engine` fixture) with deterministic `@pytest.mark.parametrize`, plus `requires_amber` tests that run real searches on the native runtime.
 - **Fuzz tests** — Hypothesis with wide ranges (pool_size 6-360, gens 1-5, etc.). **Excluded from default pytest runs** via `addopts = "--ignore=tests/fuzz"` in pyproject.toml. Run explicitly with `make test-fuzz` or `pytest tests/fuzz/ -vvv`. Default `max_examples=20`; set `CIQ_FUZZ_EXAMPLES=100` for thorough runs (nightly CI does this).
 
 ### Pytest markers
 
 - `requires_ray` — test needs a running Ray cluster
 - `requires_ipc` — test needs real sockets or subprocesses
-- `requires_core` — test runs the real core binary (not sandbox-compatible)
+- `requires_amber`: test runs a real search on the native `amber` runtime (skipped when it is not installed, unless `CIQ_REQUIRE_AMBER=1`)
 
 ## Architecture
 
-**Core flow:** User defines an objective function and search space → `Search` (ciq.py) serializes config and launches the core subprocess → core generates parameter candidates → Python workers evaluate the objective function in parallel → scores are sent back to core via socket IPC → repeat for N generations.
+**Search flow:** User defines an objective function and search space → `Search` (ciq.py) resolves the engine (default `amber`) and creates its backend in-process → the backend's `ask()` generates parameter candidates → Python workers evaluate the objective function in parallel → scores go back through `tell()` → repeat for N generations.
 
 Key modules:
 
-- **`compileiq/ciq.py`** — `Search` class, the main entry point. Manages core subprocess lifecycle and socket communication.
+- **`compileiq/ciq.py`**: `Search` class, the main entry point. Owns the ask/evaluate/tell lifecycle, results, and checkpoints.
+- **`compileiq/backends.py`**: Engine selection (`EngineConfig`), backend registration and entry-point discovery, and the `SearchBackend` interface engines implement.
 - **`compileiq/worker.py`** — Worker backends: `MultiProcessWorker` (default, local), `IsoMultiProcessWorker` (one process per task, kill-safe on timeout), `RayWorker` (distributed), `AsyncWorker` (asyncio).
 - **`compileiq/types.py`** — All configuration types and enums (ProblemType, SearchConfiguration, WorkerType, etc.). Uses Pydantic models.
-- **`compileiq/core/core_comms.py`** — `CoreIPC` class handling socket-based message exchange with the core.
-- **`compileiq/core/core_types.py`** — Pydantic models for core IPC messages.
 - **`compileiq/tracker.py`** — Pluggable experiment tracking (LoguruTracker, MLflowTracker, DisabledTracker).
 - **`compileiq/results.py`** — `SearchResult` wrapping pandas DataFrame with optimization-specific methods (get_best_result, pareto_front).
 - **`compileiq/search_spaces/`** — Search space definitions; `base.py` has primitives (range, choice, literal, log_sampling), `compilers.py` has NVIDIA compiler-specific spaces.
 - **`compileiq/utils/`** — Score validation, encoding/decoding helpers.
-- **`compileiq/config/const.py`** — Constants and environment variable configuration (CIQ_SOCKET_TIMEOUT, CIQ_KEEP_CACHE).
+- **`compileiq/config/const.py`**: Constants and environment variable configuration (CIQ_KEEP_CACHE).
 - **`assets/`** — Curated search space binaries and configs for compiler tuning.
 
 ## Code Style
@@ -95,7 +97,6 @@ Key modules:
 
 ## Environment Variables
 
-- `CIQ_SOCKET_TIMEOUT` (default 20): Socket timeout for core communication. Increase for large search spaces.
 - `CIQ_KEEP_CACHE` (default False): Retain `.cache` files after runs.
 - `CIQ_FUZZ_EXAMPLES` (default 20): Hypothesis `max_examples` for fuzz tests. Nightly CI uses 100.
 
@@ -109,7 +110,7 @@ This repository ships an agent-agnostic skill set under `agent-skills/` that any
 
 | Skill | Use when |
 | --- | --- |
-| `compileiq-bootstrap` | First-time setup, socket timeout, or before any other compileiq-* skill. |
+| `compileiq-bootstrap` | First-time setup, a hang on the first evaluation, or before any other compileiq-* skill. |
 | `compileiq-booster-pack` | Try a curated ACF candidate (incl. the Debug pack's O0/O3 injection canary) before paying for a full search. |
 | `compileiq-search-space` | Pick a provider class or pin a release; the `att` variant is curated for **attention** workloads (FA / GQA / MHA / MLA / FlashInfer Batch Decode). |
 | `compileiq-author-objective` | Write or fix the function passed as `objective_function=`; covers PTXAS / NVCC / Triton / Helion / cuTeDSL / FlashInfer injection. |

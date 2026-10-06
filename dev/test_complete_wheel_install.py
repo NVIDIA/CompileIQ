@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 ACCEPTANCE = r"""
+import importlib.util
 import tempfile
 import os
 from importlib import metadata
@@ -23,7 +24,7 @@ import compileiq.search_spaces.base as ss
 import compileiq_native_runtime
 import pymoo
 
-from compileiq.backends import get_backend_registration
+from compileiq.backends import BackendNotFoundError, get_backend_registration
 from compileiq.ciq import Search
 from compileiq.types import SearchConfiguration, Worker
 from compileiq.utils.validation import Score
@@ -87,15 +88,16 @@ assert registration.artifact.backend_version == compileiq_native_runtime.__versi
 with tempfile.TemporaryDirectory(prefix="ciq-complete-wheel-semantic-") as directory:
     root = Path(directory)
     search_space = {"x": ss.range(0, 100)}
+    # The default engine, with no engine= argument, is the native runtime.
     search = Search(
         objective_function=lambda params: float(params["x"]),
         search_space=search_space,
         search_config=SearchConfiguration(generations=2, pool_size=6),
         worker_type=InlineWorker,
-        engine="amber",
         cache_folder=root / "initial",
         disable_progress_bar=True,
     )
+    assert search.provider == "amber", search.provider
     first = search.ask()
     assert len(first) == 6
     search.tell(scores(first))

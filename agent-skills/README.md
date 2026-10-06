@@ -11,7 +11,7 @@ Seven skills, each in its own directory with a `SKILL.md`:
 
 | Skill | Use when |
 |---|---|
-| [`compileiq-bootstrap`](compileiq-bootstrap/) | First-time setup, socket timeout, or before any other skill. |
+| [`compileiq-bootstrap`](compileiq-bootstrap/) | First-time setup, a hang on the first evaluation, or before any other skill. |
 | [`compileiq-booster-pack`](compileiq-booster-pack/) | Try a curated ACF candidate **before** paying for a full search. |
 | [`compileiq-search-space`](compileiq-search-space/) | Choose a provider class or pin a search-space release; covers the attention-focused `att` variant. |
 | [`compileiq-author-objective`](compileiq-author-objective/) | Write or fix the function passed as `objective_function=`. |

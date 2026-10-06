@@ -648,7 +648,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
                     legacy_string += f"(seek_minimum . {value})\n"
                     continue
                 elif isinstance(val, bool):
-                    # Core source expects #t and #f for bool
+                    # The legacy format spells booleans #t and #f
                     val = "#t" if val else "#f"
                 elif isinstance(val, str):
                     # We need to explicit add quotes for strings
@@ -666,11 +666,6 @@ class SearchConfiguration(BaseModel, extra="forbid"):
                     legacy_string += f"({key} . {val})\n"
 
         return legacy_string
-
-    def to_json_dict(self) -> dict:
-        """Convert configuration into JSON dict for core consumption."""
-        class_dict = self.model_dump(mode="json")
-        return {k: v for k, v in class_dict.items() if v is not None}
 
     @classmethod
     def from_legacy(cls, legacy: str):
@@ -720,9 +715,6 @@ class SearchConfiguration(BaseModel, extra="forbid"):
 
 class InternalSearchConfiguration(SearchConfiguration):
     """
-    Used internally to construct the core search-space config.
-    These are fields CompileIQ overwrites and the user should not set by themselves.
+    The validated search configuration that Search hands to the selected engine.
+    Engines and internal extensions may subclass it with fields that users do not set.
     """
-
-    dna_config: str | List[str] = ""
-    enable_result_file: bool = False

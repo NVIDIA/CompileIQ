@@ -2,8 +2,6 @@
 Tests for search space builders in compileiq/search_spaces/base.py.
 """
 
-import json
-import math
 import pytest
 from compileiq.search_spaces import base as ss
 from compileiq.search_spaces.models import (
@@ -13,7 +11,6 @@ from compileiq.search_spaces.models import (
 )
 from compileiq.backends import search_space_identity
 from compileiq.utils.helpers import _literal_dive
-from compileiq.utils._setup_files import _setup_search_space_with_dict
 
 
 # ---------------------------------------------------------------------------
@@ -51,7 +48,7 @@ def test_knockout_prob_present_when_set(fn, kwargs):
 
 
 def test_knockout_threshold_compatibility_read_is_inverted():
-    """Keep the bundled-core complement readable without storing it as shared state."""
+    """Keep the legacy complementary threshold readable without storing it as shared state."""
 
     result = ss.literal(const_value=1, knockout_prob=0.3)
 
@@ -69,20 +66,12 @@ def test_knockout_threshold_compatibility_read_is_inverted():
     ],
 )
 def test_knockout_prob_point_seven_has_exact_quantized_contract(fn, kwargs):
-    """Hand the bundled core an exact 0.3 threshold, so its cutoff is 30, not 31."""
+    """Read the legacy complementary threshold exactly: 0.7 gives 0.3, not 0.30000000000000004."""
 
     result = fn(**kwargs, knockout_prob=0.7)
 
     assert result.knockout_prob == 0.7
     assert result.knockout_threshold == 0.3
-
-    parsed = json.loads(_setup_search_space_with_dict({"flag": result}))
-    threshold = parsed["classes"]["flag"]["knockout_threshold"]
-    assert threshold == 0.3
-
-    cutoff = math.ceil(100 * threshold)
-    assert cutoff == 30
-    assert sum(genotype >= cutoff for genotype in range(100)) == 70
 
 
 @pytest.mark.parametrize(
@@ -201,8 +190,7 @@ def test_literal_dive_no_knockout_by_default():
 
 
 class TestRange:
-    """range() generates a RangeParamConfig model that serializes to
-    JSON for the core binary."""
+    """range() generates a RangeParamConfig model that engines consume."""
 
     def test_basic_output_structure(self):
         result = ss.range(start=0, end=10, step=2)
@@ -213,7 +201,7 @@ class TestRange:
         assert result.step == 2
 
     def test_end_less_than_start_raises(self):
-        """start=10, end=5 makes no sense — catch it before the core sees it."""
+        """start=10, end=5 makes no sense; catch it before an engine sees it."""
         with pytest.raises(ValueError, match="proper range"):
             ss.range(start=10, end=5)
 
@@ -223,7 +211,7 @@ class TestRange:
             ss.range(start=5, end=5)
 
     def test_negative_step_raises(self):
-        """The core only accepts positive steps."""
+        """Range parameters require positive steps."""
         with pytest.raises(ValueError, match="positive step"):
             ss.range(start=0, end=10, step=-1)
 
@@ -295,7 +283,7 @@ class TestRange:
 
 class TestChoice:
     """choice() generates a ChoiceParamConfig model. Values must be properly
-    typed for JSON serialization to the core."""
+    typed for JSON serialization in results and checkpoints."""
 
     def test_basic_int_list(self):
         result = ss.choice([1, 2, 3])
@@ -308,7 +296,7 @@ class TestChoice:
         assert result.vals == ["adam", "sgd"]
 
     def test_bool_converted_to_int(self):
-        """Bools must become 0/1 for the core's parser."""
+        """Bools are normalized to 0/1."""
         result = ss.choice([True, False, 1])
         assert result.vals == [1, 0, 1]
 
@@ -385,87 +373,3 @@ class TestLogSampling:
         result = ss.log_sampling(start=1.0, end=100.0, total=10)
         assert isinstance(result, ChoiceParamConfig)
         assert len(result.vals) == 10
-
-
-# ---------------------------------------------------------------------------
-# JSON search-space serialization, _setup_search_space_with_dict
-# ---------------------------------------------------------------------------
-
-
-def test_setup_search_space_with_dict_produces_valid_json():
-    search_space = {
-        "x": ss.range(start=1.0, end=20.0, step=0.5),
-        "y": ss.choice([1, 2, 3]),
-        "z": ss.literal(const_value=42),
-        "flag": ss.choice(["O0", "O1", "O2"]),
-    }
-    result = _setup_search_space_with_dict(search_space)
-
-    # Must be valid JSON
-    parsed = json.loads(result)
-
-    assert parsed["format"] == "compileiq-search-space-v1"
-    assert "search_space_format" not in parsed
-    assert "classes" in parsed
-    assert "parameter_layout" in parsed
-    assert "dna" not in parsed
-
-    # Parameter layout section has braces and all keys
-    assert parsed["parameter_layout"][0] == "{"
-    assert parsed["parameter_layout"][-1] == "}"
-    assert "x" in parsed["parameter_layout"]
-    assert "y" in parsed["parameter_layout"]
-
-    # String vals are plain strings (no embedded quotes in JSON)
-    flag_vals = parsed["classes"]["flag"]["vals"]
-    assert flag_vals == ["O0", "O1", "O2"]
-
-    # Numbers are numbers, not strings
-    x_class = parsed["classes"]["x"]
-    assert isinstance(x_class["low"], (int, float))
-    assert isinstance(x_class["step"], (int, float))
-
-
-def test_setup_search_space_with_dict_seed_uses_hyphens():
-    search_space = {
-        "x": ss.range(start=0, end=100, step=1, seed_low=10, seed_high=50),
-    }
-    result = _setup_search_space_with_dict(search_space)
-    parsed = json.loads(result)
-
-    x_class = parsed["classes"]["x"]
-    assert "seed-low" in x_class
-    assert "seed-high" in x_class
-    assert "seed_low" not in x_class
-    assert "seed_high" not in x_class
-
-
-@pytest.mark.parametrize(
-    "probability, threshold",
-    [(0.0, 1.0), (0.3, 0.7), (1.0, 0.0)],
-)
-def test_bundled_search_space_serializes_complementary_knockout_threshold(
-    probability,
-    threshold,
-):
-    """Translate semantic probability only when producing bundled-core JSON."""
-
-    parameter = ss.literal("enabled", knockout_prob=probability)
-    before = parameter.model_dump()
-
-    parsed = json.loads(_setup_search_space_with_dict({"flag": parameter}))
-
-    assert parsed["classes"]["flag"]["knockout_threshold"] == pytest.approx(threshold)
-    assert "knockout_prob" not in parsed["classes"]["flag"]
-    assert parameter.model_dump() == before
-
-
-def test_bundled_search_space_omits_absent_knockout_fields():
-    """Do not invent either representation when no knockout policy was requested."""
-
-    parsed = json.loads(
-        _setup_search_space_with_dict({"flag": ss.literal("enabled")})
-    )
-
-    assert "knockout_prob" not in parsed["classes"]["flag"]
-    assert "knockout_threshold" not in parsed["classes"]["flag"]

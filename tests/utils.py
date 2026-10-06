@@ -6,6 +6,7 @@ from compileiq.types import Worker, WorkerTypes, BASELINE_CONFIG, INVALID_SCORE
 from compileiq.worker import MultiProcessWorker, RayWorker, AsyncWorker, IsoMultiProcessWorker
 import pandas as pd
 from typing import Callable
+from compileiq.backends import BackendCandidate, SearchBackend
 
 TEST_WORKERS = [
     pytest.param(WorkerTypes.NATIVE, marks=pytest.mark.requires_ipc),
@@ -157,3 +158,86 @@ def validate_scores(
     df["check"] = df["val_score"] == df["combined"]
     print(df[["val_score", "combined", "check"]])
     assert df["check"].all(), df[["val_score", "combined", "check"]][~df["check"]].to_string()
+
+
+# Name under which the ``scripted_engine`` fixture (tests/conftest.py) registers
+# ``ScriptedBackend``.
+SCRIPTED_ENGINE = "test-scripted"
+
+
+def _nest(flat: dict) -> dict:
+    """Turn ``generate_params`` keys such as ``z_zz1_zzz1`` into nested dictionaries."""
+
+    nested: dict = {}
+    for key, value in flat.items():
+        *parents, leaf = key.split("_")
+        target = nested
+        for parent in parents:
+            target = target.setdefault(parent, {})
+        target[leaf] = value
+    return nested
+
+
+class ScriptedBackend(SearchBackend):
+    """Deterministic pure-Python engine for Search, worker, and tracker tests.
+
+    It stands in for the mocked core IPC these tests drove before CompileIQ 1.1
+    replaced the original core. Each generation issues ``pool_size`` random
+    candidates shaped like the ``mock_search_space`` fixtures (see
+    ``tests.utils.generate_params``) and advances once every issued candidate has a
+    score. It does not optimize, so tests stay hermetic and need no native payload.
+    """
+
+    def __init__(self, *, search_space, search_config, debug=False, options=None):
+        del debug, options
+        self._pool_size = search_config.pool_size
+        self._generations = search_config.generations
+        self._nested = isinstance(search_space, dict) and any(
+            isinstance(value, dict) for value in search_space.values()
+        )
+        self._generation = 0
+        self._batch = 0
+        self._pending: dict[str, BackendCandidate] = {}
+        self._accepted_in_generation = False
+        self.asked_batches: list[list[BackendCandidate]] = []
+
+    @property
+    def current_generation(self) -> int:
+        return self._generation
+
+    @property
+    def pending_candidates(self) -> tuple[BackendCandidate, ...]:
+        return tuple(candidate.model_copy(deep=True) for candidate in self._pending.values())
+
+    @property
+    def is_complete(self) -> bool:
+        return self._generation >= self._generations
+
+    @property
+    def has_accepted_results_in_current_generation(self) -> bool:
+        return self._accepted_in_generation
+
+    def ask(self, num_samples=None):
+        if self.is_complete:
+            return []
+        count = num_samples or self._pool_size
+        self._batch += 1
+        candidates = []
+        for index, flat in enumerate(generate_params(count, nested=self._nested)):
+            params = _nest(flat) if self._nested else flat
+            candidates.append(
+                BackendCandidate(param_id=f"scripted-{self._batch}-{index}", params=params)
+            )
+        self._pending.update({str(candidate.param_id): candidate for candidate in candidates})
+        self.asked_batches.append(candidates)
+        return [candidate.model_copy(deep=True) for candidate in candidates]
+
+    def tell(self, scores):
+        for score in scores:
+            self._pending.pop(str(score.param_id))
+        self._accepted_in_generation = self._accepted_in_generation or any(
+            not score.failed for score in scores
+        )
+        if not self._pending:
+            self._generation += 1
+            self._accepted_in_generation = False

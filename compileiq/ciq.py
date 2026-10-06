@@ -1,6 +1,5 @@
 import pathlib
 import os
-import sys
 import shutil
 import json
 import warnings
@@ -55,12 +54,8 @@ from compileiq.types import (
 )
 from compileiq.search_spaces.compilers import SearchSpaceProvider
 from compileiq.results import SearchResult
-from compileiq.bundled_backend import BundledCoreBackend
-from compileiq.utils._setup_files import get_core_filepaths
 from compileiq.backends import (
-    BackendArtifactInfo,
     BackendCandidate,
-    BackendCapabilities,
     BackendCapabilityError,
     BackendRegistration,
     BackendRestoreResult,
@@ -84,10 +79,6 @@ SearchSpaceInput: TypeAlias = (
 SearchConfigInput: TypeAlias = Dict[str, Any] | SearchConfiguration | pathlib.Path
 ResolvedSearchSpaceInput: TypeAlias = Dict[str, Any] | pathlib.Path | List[Dict | pathlib.Path]
 SearchSpaceResolutionMetadataDict: TypeAlias = dict[str, str | int | None]
-
-# The one provider routed to the in-process bundled core instead of an entry
-# point. If a second identity is ever required, adding an alias is trivial.
-_RUBY_PROVIDER_NAME = "ruby"
 
 # Largest magnitude that fits in a signed 64-bit integer. Visible checkpoint result
 # integers must round-trip across languages, so they are bounded to this range.
@@ -328,8 +319,8 @@ class Search(BaseModel):
     debug: bool = Field(
         default=False,
         description=(
-            "When enabled, the cached log from the core subprocess is not deleted, "
-            "allowing inspection of its output."
+            "Passed to the selected engine, which may emit additional diagnostics "
+            "when enabled."
         ),
     )
     cache_folder: Optional[pathlib.Path] = Field(
@@ -360,12 +351,11 @@ class Search(BaseModel):
         ),
     )
     engine: str | EngineConfig = Field(
-        default="ruby",
+        default="amber",
         description=(
-            "Curated execution engine. The default 'ruby' runs the bundled core and preserves "
-            "1.x behavior; 'amber' selects the native runtime included in complete platform "
-            "wheels. Use EngineConfig(name=..., options={...}) when passing engine-owned "
-            "settings."
+            "Execution engine. The default 'amber' selects the native NSGA-III runtime "
+            "included in complete platform wheels. Use EngineConfig(name=..., options={...}) "
+            "when passing engine-owned settings."
         ),
     )
 
@@ -373,8 +363,6 @@ class Search(BaseModel):
     _create_new_id: Callable = lambda _: (
         datetime.now().strftime("%Y-%m-%d-%H_%M_%S-") + str(uuid4())
     )
-    # CompileIQ Core will give us the id once generation starts
-    run_id: int | None = Field(None, init=False)
     _worker: Worker = PrivateAttr()
     _tracker: BaseTracker = PrivateAttr()
     _worker_type_name: str | None = PrivateAttr(default=None)
@@ -395,8 +383,8 @@ class Search(BaseModel):
     _backend_impl: SearchBackend | None = PrivateAttr(default=None)
     _backend_registration: BackendRegistration | None = PrivateAttr(default=None)
     _reported_backend_candidate_ids: set[str] = PrivateAttr(default_factory=set)
-    _engine_identity: str = PrivateAttr(default="ruby")
-    _provider_identity: str = PrivateAttr(default="ruby")
+    _engine_identity: str = PrivateAttr(default="amber")
+    _provider_identity: str = PrivateAttr(default="amber")
     _engine_options: dict[str, Any] = PrivateAttr(default_factory=dict)
     _engine_options_were_declared: bool = PrivateAttr(default=False)
     _has_activity: bool = PrivateAttr(default=False)
@@ -460,14 +448,6 @@ class Search(BaseModel):
         search_config = cast(SearchConfiguration, self.search_config)
         self._search_config = InternalSearchConfiguration(**search_config.model_dump())
 
-        _, search_space_config_filepath = get_core_filepaths(str(self.cache_folder))
-
-        # Windows workaround with paths
-        if sys.platform == "win32":
-            search_space_config_filepath = search_space_config_filepath.replace("\\", "\\\\")
-
-        self._search_config.dna_config = search_space_config_filepath
-
     @model_validator(mode="after")
     def _setup_search_config(self):
         self._do_setup_search_config()
@@ -520,47 +500,25 @@ class Search(BaseModel):
         self._engine_options = backend_options
         self._engine_options_were_declared = bool(backend_options)
 
-        if self.provider == _RUBY_PROVIDER_NAME:
-            if self._engine_options:
-                raise BackendCapabilityError("The ruby engine does not accept options.")
-            capabilities = BackendCapabilities()
-            self._backend_registration = BackendRegistration(
-                name="ruby",
-                factory=BundledCoreBackend,
-                capabilities=capabilities,
-                artifact=BackendArtifactInfo(
-                    backend_version="ruby",
-                    abi_version=0,
-                    artifact_sha256="0" * 64,
-                ),
+        registration = get_backend_registration(self.provider)
+        if registration.search_config_validator is not None:
+            registration.search_config_validator(cast(SearchConfiguration, self.search_config))
+        self._backend_registration = registration
+        backend_options = dict(self._engine_options)
+        if registration.options_model is not None:
+            backend_options = registration.options_model(**backend_options).model_dump()
+        elif backend_options:
+            raise BackendCapabilityError(
+                f"Engine {registration.name!r} does not accept engine options."
             )
-            assert self.cache_folder is not None
-            self._backend_impl = BundledCoreBackend(
-                search_space=cast(ResolvedSearchSpaceInput, self.search_space),
-                search_config=self._search_config,
-                cache_folder=self.cache_folder,
-                debug=self.debug,
-            )
-        else:
-            registration = get_backend_registration(self.provider)
-            if registration.search_config_validator is not None:
-                registration.search_config_validator(cast(SearchConfiguration, self.search_config))
-            self._backend_registration = registration
-            backend_options = dict(self._engine_options)
-            if registration.options_model is not None:
-                backend_options = registration.options_model(**backend_options).model_dump()
-            elif backend_options:
-                raise BackendCapabilityError(
-                    f"Engine {registration.name!r} does not accept engine options."
-                )
-            self._engine_options = dict(backend_options)
-            self._backend_impl = create_backend(
-                self.provider,
-                search_space=cast(ResolvedSearchSpaceInput, self.search_space),
-                search_config=self._search_config,
-                debug=self.debug,
-                options=backend_options,
-            )
+        self._engine_options = dict(backend_options)
+        self._backend_impl = create_backend(
+            self.provider,
+            search_space=cast(ResolvedSearchSpaceInput, self.search_space),
+            search_config=self._search_config,
+            debug=self.debug,
+            options=backend_options,
+        )
 
         if self.tracker_config.type is None:
             raise ValueError("Tracker is not initialized")
@@ -682,34 +640,18 @@ class Search(BaseModel):
         hijacked_config = self._search_config.model_copy(deep=True)
         hijacked_config.num_objectives = 1
         hijacked_config.pool_size = max(num_samples, 6)
-        hijacked_config.cull_size = 2
-        preview_cache: pathlib.Path | None = None
 
-        if self.provider == _RUBY_PROVIDER_NAME:
-            assert self.cache_folder is not None
-            preview_cache = self.cache_folder / f"preview-{uuid4().hex}"
-            preview_backend: SearchBackend = BundledCoreBackend(
-                search_space=cast(ResolvedSearchSpaceInput, self.search_space),
-                search_config=hijacked_config,
-                cache_folder=preview_cache,
-                debug=self.debug,
-            )
-        else:
-            preview_backend = create_backend(
-                self.provider,
-                search_space=cast(ResolvedSearchSpaceInput, self.search_space),
-                search_config=hijacked_config,
-                options=self._engine_options,
-                debug=self.debug,
-            )
+        preview_backend: SearchBackend = create_backend(
+            self.provider,
+            search_space=cast(ResolvedSearchSpaceInput, self.search_space),
+            search_config=hijacked_config,
+            options=self._engine_options,
+            debug=self.debug,
+        )
         try:
-            candidates = preview_backend.ask(
-                num_samples=None if self.provider == _RUBY_PROVIDER_NAME else num_samples
-            )
+            candidates = preview_backend.ask(num_samples=num_samples)
         finally:
             preview_backend.close()
-            if preview_cache is not None and not KEEP_CACHE_FILES:
-                shutil.rmtree(preview_cache, ignore_errors=True)
 
         return [candidate.params for candidate in candidates[:num_samples]]
 
@@ -764,8 +706,6 @@ class Search(BaseModel):
             raise RuntimeError(
                 f"Backend reused previously reported candidate identifiers: {reused}."
             )
-        if isinstance(self._backend_impl, BundledCoreBackend):
-            self.run_id = self._backend_impl.invocation_id
         return list(candidates)
 
     def _validate_evaluation_candidates(
@@ -1075,9 +1015,7 @@ class Search(BaseModel):
         """Capability-gate checkpoints and require sealing for protected spaces."""
 
         if self._backend_impl is None or self._backend_registration is None:
-            raise BackendCapabilityError(
-                "The bundled ruby engine does not support the sealed checkpoint contract."
-            )
+            raise BackendCapabilityError("The search backend is not initialized.")
         capabilities = self._backend_registration.capabilities
         if not capabilities.checkpoint:
             raise BackendCapabilityError(
@@ -1209,8 +1147,8 @@ class Search(BaseModel):
 
         # Capability-gate first, before reading, parsing, or validating the supplied
         # artifact and before any pristine-target checks. An engine that cannot restore
-        # (for example the bundled ruby core) must fail with the capability error without
-        # touching the caller's file or creating Search activity.
+        # must fail with the capability error without touching the caller's file or
+        # creating Search activity.
         self._require_checkpoint_support()
         assert self._backend_impl is not None
         assert self._backend_registration is not None
@@ -1496,7 +1434,7 @@ class Search(BaseModel):
         checkpoint_path: pathlib.Path | None = None,
         **additional_worker_kwargs,
     ) -> SearchResult:
-        """Run bundled and registered backends through one managed lifecycle."""
+        """Run the registered backend through its managed lifecycle."""
 
         assert self._backend_impl is not None
         self._has_activity = True
@@ -1543,9 +1481,9 @@ class Search(BaseModel):
                         break
                     raise RuntimeError("Backend returned no candidates before search completion.")
 
-                # Some providers, including the bundled core, learn the generation number from
-                # the candidate batch returned by ask(). Use that authoritative value for the
-                # worker, tracker, failure policy, and result rows.
+                # Some providers only learn the generation number from the candidate batch
+                # returned by ask(). Use that authoritative value for the worker, tracker,
+                # failure policy, and result rows.
                 generation = self._backend_impl.current_generation
                 batch_count = refill_counts.get(generation, 0)
                 # Some providers only reveal the authoritative generation in
@@ -1579,8 +1517,6 @@ class Search(BaseModel):
                 next_generation = self._backend_impl.current_generation
                 self._advance_progress(progress, next_generation)
 
-            if isinstance(self._backend_impl, BundledCoreBackend):
-                self._result.clear_duplicates()
             return self._result
         finally:
             progress.close()

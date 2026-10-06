@@ -24,10 +24,10 @@ def _scores(candidates):
     ]
 
 
+@pytest.mark.requires_amber
 def test_compiled_backend_ask_tell_and_checkpoint_continuation(tmp_path):
     """Exercise compiled registration and continuation only through public APIs."""
 
-    pytest.importorskip("compileiq_native_runtime")
     registration = get_backend_registration("amber")
     assert registration.capabilities.checkpoint
     assert registration.capabilities.sealed_checkpoint

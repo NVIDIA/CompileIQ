@@ -17,8 +17,8 @@ from compileiq.utils.validation import (
 
 
 class TestValidateInfNan:
-    """Core communicates over JSON, which has no inf/nan.  This function
-    converts them to INVALID_SCORE ("*") before they reach the wire."""
+    """JSON results and checkpoints have no inf/nan.  This function converts
+    them to INVALID_SCORE ("*") before they are recorded."""
 
     def test_positive_inf_becomes_invalid(self):
         assert validate_inf_nan(float("inf")) == INVALID_SCORE
