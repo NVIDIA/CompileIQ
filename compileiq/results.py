@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 import numpy.typing as npt
-from typing import Dict, List, Literal
+from typing import Any, Dict, List, Literal
 from compileiq.types import ProblemType, MultiScoreComparison, Score, SingleScore, MultiScore
 
 
@@ -154,9 +154,28 @@ class SearchResult:
 
     def _score_values(self, value: SingleScore | MultiScore | None) -> list:
         if self.num_scores > 1:
-            assert isinstance(value, (list, tuple))
+            if not isinstance(value, (list, tuple)) or len(value) != self.num_scores:
+                raise ValueError(f"Expected {self.num_scores} objective values, got {value!r}.")
             return list(value)
         return [value]
+
+    def _row_for_score(
+        self, score: Score, generation_num: int, normalize: bool = False
+    ) -> list[Any]:
+        """Build one ledger row without mutating results before backend acceptance."""
+
+        row = [score.metadata, generation_num]
+        row += self._score_values(score.score)
+        row += [score.params]
+        if normalize:
+            row += self._score_values(score.norm_score)
+        return row
+
+    def _append_rows(self, rows: list[list[Any]]) -> None:
+        """Append rows only after the corresponding scores have been accepted."""
+
+        for row in rows:
+            self.df_results.loc[len(self.df_results)] = row
 
     def add_result(self, score: Score, generation_num: int, normalize: bool = False) -> None:
         """
@@ -167,12 +186,58 @@ class SearchResult:
             generation_num: The generation this score was produced in.
             normalize: Whether normalized scores should also be recorded.
         """
-        row = [score.metadata, generation_num]
-        row += self._score_values(score.score)
-        row += [score.params]
-        if normalize:
-            row += self._score_values(score.norm_score)
-        self.df_results.loc[len(self.df_results)] = row
+        self._append_rows([self._row_for_score(score, generation_num, normalize)])
+
+    def _checkpoint_rows(self) -> list[dict[str, Any]]:
+        """Project user-visible result rows into JSON-compatible checkpoint records."""
+
+        rows = []
+        for _, row in self.df_results.iterrows():
+            rows.append(
+                {
+                    "metadata": row["metadata"],
+                    "generation": int(row["generation"]),
+                    "scores": [
+                        value.item() if isinstance(value, np.generic) else value
+                        for value in (row[column] for column in self.score_columns)
+                    ],
+                    "params": row["params"],
+                    "normalized_scores": (
+                        [
+                            value.item() if isinstance(value, np.generic) else value
+                            for value in (row[column] for column in self.norm_score_columns)
+                        ]
+                        if self.is_normalized
+                        else None
+                    ),
+                }
+            )
+        return rows
+
+    @classmethod
+    def _from_checkpoint_rows(
+        cls,
+        rows: list[dict[str, Any]],
+        *,
+        num_scores: int,
+        problem_type: str | ProblemType,
+        normalize: bool,
+    ) -> "SearchResult":
+        """Restore already validated user-visible checkpoint result rows."""
+
+        result = cls._initialize_empty(
+            num_scores=num_scores,
+            problem_type=problem_type,
+            norm_scores=normalize,
+        )
+        restored_rows = []
+        for row in rows:
+            restored = [row["metadata"], row["generation"], *row["scores"], row["params"]]
+            if normalize:
+                restored += list(row["normalized_scores"])
+            restored_rows.append(restored)
+        result._append_rows(restored_rows)
+        return result
 
     def _numeric_scores_df(self) -> pd.DataFrame:
         score_columns = self.norm_score_columns if self.is_normalized else self.score_columns

@@ -188,7 +188,7 @@ If your change affects user-facing behavior or public API, preview the docs loca
 3. Keep pull requests focused — one concern per pull request. Split refactors from behavior changes when feasible.
 4. Update [`docs/`](docs/) for any public-API or user-facing change.
 
-CI must be green before review. Required and informative checks include `lint`, `typecheck`, `verify-core`, `unit-test` (Python 3.11/3.12/3.13 × Ubuntu/Windows), `integration-test`, `fuzz-test`, `run-examples`, `validate-binary-ss`, and the wheel smoke tests. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for the full matrix.
+CI must be green before review. Required and informative checks include `lint`, `typecheck`, `verify-core`, `unit-test` (Python 3.11/3.12/3.13/3.14 × Ubuntu/Windows), `integration-test`, `fuzz-test`, `run-examples`, `validate-binary-ss`, and the wheel smoke tests. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for the full matrix.
 
 ## Code review
 
@@ -201,4 +201,3 @@ CI must be green before review. Required and informative checks include `lint`, 
 CompileIQ is distributed under the NVIDIA Software License Agreement; see [`LICENSE`](LICENSE), [`EULA`](EULA), and [`NOTICE`](NOTICE) for the full terms. Opening a pull request signifies acceptance of those terms in addition to the DCO sign-off above.
 
 ---
-

@@ -6,7 +6,6 @@ import random
 import json
 from uuid import uuid4
 from tests.utils import generate_params
-from compileiq.ciq import Search
 from compileiq.core.core_types import ParameterSet, CompletionMessage, SingleCandidate
 from compileiq.utils.helpers import _encode_for_core
 import compileiq.search_spaces.base as ss
@@ -51,37 +50,47 @@ def sandbox_cache_dir(tmp_path, monkeypatch):
 
 @pytest.fixture
 def mock_core_start(monkeypatch):
+    """Replace process launch at the bundled-backend ownership boundary."""
+
     def mock_start(*args, **kwargs):
+        """Return a completed-process-shaped object without starting the bundled core."""
+
         mock_proc = MagicMock(spec=subprocess.Popen)
         mock_proc.poll.return_value = 0
         return mock_proc
 
-    monkeypatch.setattr("compileiq.ciq.CoreIPC.start", mock_start)
+    monkeypatch.setattr("compileiq.bundled_backend.CoreIPC.start", mock_start)
 
 
 @pytest.fixture
 def mock_socket_listen(monkeypatch):
+    """Give the bundled adapter a connected socket pair without opening a real port."""
+
     mock_sock = MagicMock(spec=socket.socket)
     mock_sock.accept.return_value = (MagicMock(spec=socket.socket), ("localhost", 0))
     mock_sock.getsockname.return_value = ("localhost", 0)
-    monkeypatch.setattr(
-        Search.__private_attributes__["_listen_socket"],
-        "default_factory",
-        lambda: mock_sock,
-    )
+    monkeypatch.setattr("compileiq.bundled_backend.initialize_socket", lambda: mock_sock)
 
 
 @pytest.fixture
 def mock_send_to_core(monkeypatch):
+    """Suppress bundled-core writes while tests exercise the public Search lifecycle."""
+
     def mock_send(*args, **kwargs):
+        """Stand in for the response write after accepting a candidate batch."""
+
         pass
 
-    monkeypatch.setattr("compileiq.ciq.CoreIPC.send_to_core", mock_send)
+    monkeypatch.setattr("compileiq.bundled_backend.CoreIPC.send_to_core", mock_send)
 
 
 @pytest.fixture
 def mock_receive_from_core(monkeypatch):
+    """Drive deterministic bundled generations through the adapter's IPC receive seam."""
+
     def mock_receive(*args, **kwargs):
+        """Return configured candidate batches until the synthetic search completes."""
+
         # `pool_size`, `max_gen` and `current_gen` come from `pytest_namespace()`
         # and are updated at the test function
         if pytest.current_gen < pytest.max_gen:
@@ -113,26 +122,29 @@ def mock_receive_from_core(monkeypatch):
         else:
             return CompletionMessage(complete=True)
 
-    monkeypatch.setattr("compileiq.ciq.CoreIPC.receive_from_core", mock_receive)
+    monkeypatch.setattr("compileiq.bundled_backend.CoreIPC.receive_from_core", mock_receive)
+
+
+def _collected_tests_require_ray(items):
+    return any(item.get_closest_marker("requires_ray") is not None for item in items)
 
 
 @pytest.fixture(autouse=True, scope="session")
-def manage_ray():
-    try:
-        import os
-        import ray
+def manage_ray(request):
+    # Do not start Ray for unrelated tests. A failed Ray startup can leave child
+    # processes behind after pytest reports success, causing the job to exit 143.
+    if not _collected_tests_require_ray(request.session.items):
+        yield
+        return
 
-        if not ray.is_initialized():
-            ray.init(_temp_dir=os.environ.get("RAY_TMPDIR"), ignore_reinit_error=True)
-    except ImportError:
-        pass
-    except Exception:
-        pass
-    yield
-    try:
-        import ray
+    import os
+    import ray
 
-        if ray.is_initialized():
+    started_ray = not ray.is_initialized()
+    if started_ray:
+        ray.init(_temp_dir=os.environ.get("RAY_TMPDIR"), ignore_reinit_error=True)
+    try:
+        yield
+    finally:
+        if started_ray and ray.is_initialized():
             ray.shutdown()
-    except ImportError:
-        pass

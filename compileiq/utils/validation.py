@@ -45,8 +45,13 @@ class Score(BaseModel):
         "and the score returned by the objective function."
         "Only needed if `normalization=True`",
     )
-    params: str | dict | list[str | dict] = Field(
-        description="The parameters sent to the objective function that generated this score"
+    params: str | dict | list[str | dict] | None = Field(
+        default=None,
+        description=(
+            "Deprecated for Search.tell(): optional compatibility echo of the parameters "
+            "that generated this score. Candidate IDs are authoritative, and Search stores "
+            "the parameters from the issued BackendCandidate."
+        ),
     )
     metadata: str = Field(
         default="",
@@ -80,10 +85,12 @@ class Score(BaseModel):
     @model_validator(mode="after")
     def validate_score_length(self):
         """
-        Validates that the length of the score matches the number of objectives.
+        Validates that raw and normalized scores match the number of objectives.
         """
         # This validation also transforms `SingleScore` into a list of 1 score
         self.score = validate_scores(self.score, self.num_objectives)
+        if self.norm_score is not None:
+            self.norm_score = validate_scores(self.norm_score, self.num_objectives)
 
         return self
 

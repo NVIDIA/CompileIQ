@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ["3.11", "3.12", "3.13"]
+        python: ["3.11", "3.12", "3.13", "3.14"]
         include:
           # Known broken: same root cause as PR-CI fuzz-test
           # [py3.11 on ubuntu-latest]. Tracked:
@@ -37,12 +37,6 @@ jobs:
           - os: ubuntu-latest
             python: "3.11"
             known_broken: true
-        exclude:
-          # Ray (a hard dependency, see pyproject.toml) does not yet
-          # publish Windows wheels for Python 3.13. Re-add when ray
-          # catches up. See ci.yml for the canonical comment.
-          - os: windows-latest
-            python: "3.13"
     env:
       POETRY_VIRTUALENVS_CREATE: "false"
       GIT_PYTHON_REFRESH: "quiet"

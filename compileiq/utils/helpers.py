@@ -149,3 +149,16 @@ def load_compiler_config(file_path: str) -> str:
     """
     with open(file_path, "rb") as f:
         return f.read().hex()
+
+
+class _CyFunctionDetectorMeta(type):
+    """Recognize Cython functions without importing Cython at runtime."""
+
+    def __instancecheck__(self, instance):
+        """Recognize Cython's function runtime type without importing Cython."""
+
+        return instance.__class__.__name__ == "cython_function_or_method"
+
+
+class CyFunctionDetector(metaclass=_CyFunctionDetectorMeta):
+    """Pydantic ignored-type adapter for methods compiled by Cython."""

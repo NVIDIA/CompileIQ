@@ -48,6 +48,7 @@ CompileIQ Documentation
 
    api
    Search Strategy <search_strategy>
+   Complete Wheel Release Composition <release_composition>
 
 
 What is CompileIQ?

@@ -6,7 +6,13 @@ from compileiq.types import (
     WorkerTypes,
     INVALID_SCORE,
 )
-from compileiq.worker import MultiProcessWorker, RayWorker, AsyncWorker, IsoMultiProcessWorker
+from compileiq.worker import (
+    AsyncWorker,
+    IsoMultiProcessWorker,
+    ManualWorker,
+    MultiProcessWorker,
+    RayWorker,
+)
 from compileiq.ciq import Search
 from compileiq.search_spaces import base as ss
 from compileiq.types import SearchConfiguration
@@ -103,6 +109,20 @@ class TestWorkerCreate:
     def test_async_create(self):
         w = AsyncWorker.create(cache_folder="/tmp", normalize=False, tracker=None)
         assert isinstance(w, AsyncWorker)
+
+    def test_manual_create(self):
+        w = ManualWorker.create(cache_folder="/tmp", normalize=False, tracker=None)
+        assert isinstance(w, ManualWorker)
+        assert w.supports_managed_execution is False
+
+    def test_manual_run_rejects_direct_execution(self):
+        objective = MagicMock()
+        w = ManualWorker.create(cache_folder="/tmp", normalize=False, tracker=None)
+
+        with pytest.raises(RuntimeError, match=r"ManualWorker.*Search\.ask\(\).*Search\.tell\(\)"):
+            w.run(function=objective, params_pool=[{"x": 1}], params_ids=["candidate-1"])
+
+        objective.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

@@ -6,23 +6,53 @@ You can either install through PyPI:
 pip install compileiq
 ```
 
-Or, build from the [repo](https://github.com/NVIDIA/CompileIQ) yourself:
+The CompileIQ 1.1 release contract is a single, complete `compileiq`
+distribution: each published platform wheel contains every backend available for
+that platform, with no separate runtime package for users to select or keep
+compatible. Linux and Windows complete wheels contain the bundled `ruby` and native
+`amber` backends. The macOS ARM64 beta wheel contains `amber` only because no macOS
+legacy core is shipped.
+
+For editable repository development, the default bootstrap installs the frontend
+with the bundled `ruby` engine only, so it needs no native payload:
 
 ```bash
-pip install -e .
+make install
 ```
+
+To also materialize the pinned, manifest-verified native `amber` payload checked
+into the repository through Git LFS, fetch the LFS objects and use the complete
+install target:
+
+```bash
+git lfs pull
+make install-complete
+```
+
+The repository contains one manifest-verified native artifact per supported
+runtime cell. The installer selects exactly one artifact compatible with the
+active Python and platform and rejects mismatched or ambiguous cells. Provider
+source is not included. There is no alternate frontend API or second user
+installation contract.
 
 ## Supported Platforms
 
-CompileIQ supports Python 3.11, 3.12, and 3.13. Published wheels include the
-bundled CompileIQ core for:
+CompileIQ 1.1 targets Python 3.11, 3.12, and 3.13. A platform is published only
+when its complete wheel contains every backend available for that platform; no
+same-version incomplete wheel or source fallback is published for a cell whose
+native payload is missing. The current beta CI matrix composes, verifies, and
+clean-installs these cells end to end:
 
-- Linux x86_64
-- Linux aarch64
-- Windows amd64
+- Linux x86_64 / CPython 3.11, 3.12, and 3.13: `ruby` and `amber`
+- Linux ARM64 / CPython 3.11, 3.12, and 3.13: `ruby` and `amber`
+- Windows AMD64 / CPython 3.11, 3.12, and 3.13: `ruby` and `amber`
+- Apple Silicon macOS 15+ / CPython 3.11, 3.12, and 3.13: `amber` only
 
-Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`.
-macOS is not currently a packaged-core target.
+Other platform and Python combinations are outside this beta's supported matrix.
+
+Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`. The
+macOS ARM64 beta wheels are intentionally coreless because the legacy core is
+not packaged for macOS.
 
 ## Runtime Requirements
 

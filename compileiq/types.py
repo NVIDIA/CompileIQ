@@ -256,18 +256,27 @@ class Worker(ABC):
         """Whether this worker supports the `task_timeout` parameter on its `run` method."""
         return self._supports_timeout
 
+    @property
+    def supports_managed_execution(self) -> bool:
+        """Whether this worker can execute objectives through ``evaluate()`` or ``start()``."""
+        return True
+
     @abstractmethod
     def run(
         self,
         *,
         function: Callable,
         params_pool: Sequence[ParamArg],
-        params_ids: Sequence[int],
+        params_ids: Sequence[int | str],
         num_function_returns: int = 1,
         num_workers: int = 1,
         **kwargs,
     ) -> list[Score]:
-        """Execute the objective function across a pool of parameters."""
+        """Execute a parameter pool while preserving backend-owned candidate IDs.
+
+        ``params_ids`` may contain integers or strings. Every returned non-baseline
+        ``Score`` must carry the ID associated with the corresponding input parameter.
+        """
         pass
 
     @classmethod
@@ -380,12 +389,17 @@ class WorkerTypes(StrEnum):
         ASYNC:
             Uses Python's asyncio library to run your workload. The objective function must be
             of type `async` and be prepared to take advantage of concurrency.
+
+        MANUAL:
+            Disables CompileIQ-managed objective execution. Use ``ask()`` to obtain candidates,
+            evaluate them externally, and submit their scores through ``tell()``.
     """
 
     RAY = "ray"
     NATIVE = "native"
     ISOLATED = "isolated"
     ASYNC = "async"
+    MANUAL = "manual"
     DEFAULT = NATIVE
 
     def worker_type(self) -> type[Worker]:
@@ -395,6 +409,7 @@ class WorkerTypes(StrEnum):
             RayWorker,
             AsyncWorker,
             IsoMultiProcessWorker,
+            ManualWorker,
         )
 
         _MAP = {
@@ -402,6 +417,7 @@ class WorkerTypes(StrEnum):
             "ray": RayWorker,
             "isolated": IsoMultiProcessWorker,
             "async": AsyncWorker,
+            "manual": ManualWorker,
         }
         return _MAP[self.value]
 
@@ -547,11 +563,18 @@ class SearchConfiguration(BaseModel, extra="forbid"):
 
     @model_validator(mode="after")
     def set_pool_and_cull_sizes(self):
+        """Derive safe even sizes without marking defaults as caller-supplied.
+
+        Provider validators inspect ``model_fields_set`` to distinguish explicit
+        legacy controls from values CompileIQ derived automatically. Using
+        ``object.__setattr__`` preserves that distinction during model validation.
+        """
+
         target = (2 * self.num_objectives) + 1
         cull_pct = 0.75
         if self.pool_size is None:
             pool_size = max(ceil(target / (1 - cull_pct)), 32)
-            self.pool_size = pool_size + pool_size % 2
+            object.__setattr__(self, "pool_size", pool_size + pool_size % 2)
 
         if self.pool_size is None:
             raise RuntimeError("pool_size must be populated before deriving cull_size")
@@ -563,7 +586,7 @@ class SearchConfiguration(BaseModel, extra="forbid"):
             # Cap so that pool_size - cull_size >= min_survivors
             max_cull = self.pool_size - min_survivors
             max_cull = max_cull - max_cull % 2  # round down to even
-            self.cull_size = max(2, min(cull_size, max_cull))
+            object.__setattr__(self, "cull_size", max(2, min(cull_size, max_cull)))
 
         return self
 

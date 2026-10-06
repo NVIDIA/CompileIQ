@@ -110,11 +110,22 @@ def setup_search_space(
 
 def _setup_search_space_with_dict(search_space_dict: Mapping[str, ParamConfig]) -> str:
     """
-    Creates a JSON string representing the search-space configuration. The JSON
-    follows the core search-space schema and is parsed by core.
+    Project semantic parameter models into the bundled Racket search-space schema.
+
+    The public model stores omission probability. The bundled Racket schema
+    expects the complementary threshold, so convert only at this adapter boundary.
     """
     search_space_list = ["{"] + list(search_space_dict.keys()) + ["}"]
     model = SearchSpaceFileModel(
         classes=dict(search_space_dict), parameter_layout=search_space_list
     )
-    return model.model_dump_json(exclude_none=True, indent=2, by_alias=True)
+    document = model.model_dump(
+        mode="json",
+        exclude_none=True,
+        by_alias=True,
+    )
+    for parameter in document["classes"].values():
+        probability = parameter.pop("knockout_prob", None)
+        if probability is not None:
+            parameter["knockout_threshold"] = 1.0 - probability
+    return json.dumps(document, indent=2)

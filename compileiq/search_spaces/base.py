@@ -29,22 +29,23 @@ def range(
     Search space that follows a range-like format.
 
     Example:
-        `range(0,9,2)` will produce the search space of `[1,3,5,7,9]`
+        `range(0,8,2)` will produce the inclusive search space `[0,2,4,6,8]`.
 
     Args:
         start:
             Similar to a loop, start of the range.
 
         end:
-            Similar to a loop, end of the range. Must respect the step size to not overflow or
-            underflow
+            Inclusive upper bound. Values advance from ``start`` by ``step`` without exceeding
+            this bound; the bound itself does not need to fall on that stepped grid.
 
         step:
             Similar to a loop, how to slide the range window.
 
         knockout_prob:
-            The `knockout_prob` is a percentage value representing the likelihood of the value
-            being dropped and not forwarded to the user objective function.
+            Probability from 0.0 to 1.0 that the parameter is omitted from an initially sampled
+            candidate. Search engines may then evolve the parameter's on/off state, so this
+            is an initialization prior rather than a guaranteed ratio in every candidate batch.
 
         seed_low:
             Range parameters can also specify a secondary subset through `seed_low` and `seed_high`.
@@ -64,27 +65,25 @@ def range(
     """
 
     # Workaround: Core Limitations
-    if step < 0:
+    if step <= 0:
         raise ValueError("Core only accepts positive step sizes for range parameters")
 
     if end <= start:
         raise ValueError("Please provide a proper range value where start < end.")
 
-    knockout_threshold = _probability_to_threshold(knockout_prob)
-
-    # Validating seeding option
-    if seed_low is not None and seed_high is not None:
-        if seed_low < start or seed_high > end or seed_high < seed_low:
-            raise ValueError(
-                "`seed_low` and `seed_high` fall outside the correct range."
-                " Make sure low > start, high < end and high > low."
-            )
-
+    # A single seed bound narrows only that side. Both current engines implement these as
+    # initialization bounds, so the bounds do not need to be emitted values on the stepped grid.
+    if seed_low is not None and not start <= seed_low <= end:
+        raise ValueError("`seed_low` falls outside the configured range.")
+    if seed_high is not None and not start <= seed_high <= end:
+        raise ValueError("`seed_high` falls outside the configured range.")
+    if seed_low is not None and seed_high is not None and seed_high < seed_low:
+        raise ValueError("`seed_high` must be greater than or equal to `seed_low`.")
     return RangeParamConfig(
         low=start,
         high=end,
         step=step,
-        knockout_threshold=knockout_threshold,
+        knockout_prob=knockout_prob,
         seed_low=seed_low,
         seed_high=seed_high,
     )
@@ -106,10 +105,14 @@ def choice(
             A list of values to sample from.
 
         knockout_prob:
-            The `knockout_prob` is a percentage value representing the likelihood of the value
-            being dropped and not forwarded to the user objective function.
+            Probability from 0.0 to 1.0 that the parameter is omitted from an initially sampled
+            candidate. Search engines may then evolve the parameter's on/off state, so this
+            is an initialization prior rather than a guaranteed ratio in every candidate batch.
 
     """
+    if len(choice_list) == 0:
+        raise ValueError("choice_list must contain at least one value.")
+
     processed: list[Any] = []
     for val in choice_list:
         if isinstance(val, bool):
@@ -121,11 +124,9 @@ def choice(
         else:
             processed.append(val)
 
-    knockout_threshold = _probability_to_threshold(knockout_prob)
-
     return ChoiceParamConfig(
         vals=processed,
-        knockout_threshold=knockout_threshold,
+        knockout_prob=knockout_prob,
     )
 
 
@@ -146,8 +147,9 @@ def literal(
             A constant value that will be forwarded to your evaluation.
 
         knockout_prob:
-            The `knockout_prob` is a percentage value representing the likelihood of the value
-            being dropped and not forwarded to the user objective function.
+            Probability from 0.0 to 1.0 that the parameter is omitted from an initially sampled
+            candidate. Search engines may then evolve the parameter's on/off state, so this
+            is an initialization prior rather than a guaranteed ratio in every candidate batch.
     """
     if not isinstance(const_value, (str, int, float)):
         raise ValueError("Literal `const_value` must be a str, int, or float.")
@@ -155,11 +157,9 @@ def literal(
     if isinstance(const_value, bool):
         const_value = int(const_value)
 
-    knockout_threshold = _probability_to_threshold(knockout_prob)
-
     return LiteralParamConfig(
         value=const_value,
-        knockout_threshold=knockout_threshold,
+        knockout_prob=knockout_prob,
     )
 
 
@@ -184,8 +184,9 @@ def log_sampling(
             The larger the total number the bigger the sampler space CompileIQ will use.
 
         knockout_prob:
-            The `knockout_prob` is a percentage value representing the likelihood of the value
-            being dropped and not forwarded to the user objective function.
+            Probability from 0.0 to 1.0 that the parameter is omitted from an initially sampled
+            candidate. Search engines may then evolve the parameter's on/off state, so this
+            is an initialization prior rather than a guaranteed ratio in every candidate batch.
     """
     #  Core does not have native support for logarithmic sampling,
     # so we emulate it by creating a list that follows a log scale.

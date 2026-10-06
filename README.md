@@ -33,16 +33,27 @@ You can either install through [PyPI](https://pypi.org/project/compileiq/):
 pip install compileiq
 ```
 
-Or, build from the the source in this repository yourself:
+The CompileIQ 1.1 release contract is one complete distribution: each published
+platform wheel contains every backend available for that platform, with no separate
+runtime package to install. Linux and Windows complete wheels contain the bundled
+`ruby` and native `amber` backends. The macOS ARM64 beta wheel contains `amber`
+only because no macOS legacy core is shipped. For editable development,
+`make install` sets up the frontend with the bundled `ruby` engine only;
+`make install-complete` also materializes the pinned native payload checked into
+this repository through Git LFS:
 
 ```bash
-pip install -e .
+make install
+git lfs pull
+make install-complete
 ```
 
 ## Supported platforms
 
-CompileIQ supports Python 3.11, 3.12, and 3.13. Published wheels include the
-bundled CompileIQ core for Linux x86_64, Linux aarch64, and Windows amd64.
+CompileIQ 1.1 targets Python 3.11, 3.12, and 3.13. The current beta CI matrix
+composes, verifies, and clean-installs complete wheels for Linux x86_64, Linux
+ARM64, and Windows AMD64 on CPython 3.11, plus macOS ARM64 on CPython 3.13. The
+macOS cell provides `amber` only; the other three cells provide both backends.
 
 Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`. See
 the [installation guide](docs/install.md) for Linux runtime library
