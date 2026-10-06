@@ -14,8 +14,11 @@ compatible. `amber` is the default and the only bundled engine on every platform
 In CompileIQ 1.1, `amber` replaces the original search core, so re-validate results
 tuned with an earlier release. The `SearchConfiguration` settings `cull_size`,
 `mutate_rate`, `objective_weights`, and `enable_large_fail_pool` have no effect since
-1.1; setting one of them to a non-default value raises an error that names the
-matching `EngineConfig` option.
+1.1; `Search` ignores a non-default value with a `FutureWarning` that names the
+closest `amber` option, so 1.0 configurations keep running, and a future release will
+remove these fields. `amber` never repeats a candidate, so a search in a small or
+converged space can end early with a `SearchSpaceExhaustedWarning` and the results
+so far.
 
 For editable repository development, the default bootstrap installs the frontend
 and materializes the pinned, manifest-verified native `amber` payload checked into

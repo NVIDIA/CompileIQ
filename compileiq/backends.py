@@ -69,6 +69,16 @@ class BackendCapabilityError(BackendError):
     """Raised when a backend cannot safely perform a requested operation."""
 
 
+class SearchSpaceExhaustedError(BackendError, ValueError):
+    """Raised when an engine cannot issue another candidate it has not issued before.
+
+    Engines that never repeat a candidate within a search raise this once a small
+    discrete search space, or a converged search, leaves too few unseen candidates for
+    the next batch. ``Search.start()`` ends the search with the results so far instead
+    of failing, unless no candidate has been evaluated yet.
+    """
+
+
 class CheckpointValidationError(BackendError):
     """Raised when a checkpoint cannot be validated or restored safely."""
 

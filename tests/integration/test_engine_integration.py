@@ -605,3 +605,63 @@ def test_ask_tell_out_of_order_advances_without_id_collision(cache_dir):
     first_ids = {str(candidate.param_id) for candidate in first}
     second_ids = {str(candidate.param_id) for candidate in second}
     assert first_ids.isdisjoint(second_ids)
+
+
+# ---------------------------------------------------------------------------
+# Compatibility: SearchConfiguration settings retired in CompileIQ 1.1
+# ---------------------------------------------------------------------------
+
+
+def test_retired_settings_are_ignored_with_a_warning(cache_dir):
+    """A 1.0 configuration that set retired settings still runs on amber, with a FutureWarning."""
+
+    with pytest.warns(FutureWarning, match="have no effect since CompileIQ 1.1 are ignored"):
+        search = Search(
+            objective_function=objective_min,
+            search_space={
+                "x": ss.range(start=1.0, end=20.0, step=0.5),
+                "y": ss.choice([1, 2, 3]),
+                **ROOM_TO_SEARCH,
+            },
+            search_config=SearchConfiguration(
+                generations=2,
+                pool_size=12,
+                cull_size=6,
+                mutate_rate=0.5,
+                problem_type="min",
+                num_objectives=1,
+            ),
+            cache_folder=cache_dir,
+            disable_progress_bar=True,
+        )
+
+    result = search.start()
+    assert not result.get_results().empty
+
+
+def test_search_ends_early_when_a_small_space_runs_out(cache_dir):
+    """amber never repeats a candidate; a 9-point space cannot fill three batches of 8.
+
+    The managed search keeps the first generation's results and warns instead of
+    failing, the way 1.0 scripts with small spaces expect a search to finish.
+    """
+
+    from compileiq.ciq import SearchSpaceExhaustedWarning
+
+    search = Search(
+        objective_function=objective_string_choice,
+        search_space={
+            "booster": ss.choice(["gbtree", "gblinear", "dart"]),
+            "opt_level": ss.choice(["O0", "O1", "O2"]),
+        },
+        search_config=SearchConfiguration(**SMALL_CONFIG, problem_type="min", num_objectives=1),
+        cache_folder=cache_dir,
+        disable_progress_bar=True,
+    )
+
+    with pytest.warns(SearchSpaceExhaustedWarning, match="ran out of candidates"):
+        result = search.start()
+
+    df = result.get_results()
+    assert 1 <= len(df) <= 9
+    assert len({str(params) for params in df["params"]}) == len(df)

@@ -34,8 +34,8 @@ authoritative content lives in each `SKILL.md`.
 - **1.1.0** (unreleased): the native `amber` engine replaces the original search
   core and is the default. `compileiq-bootstrap` and `compileiq-debug` drop
   `CIQ_SOCKET_TIMEOUT`, and `compileiq-debug` adds rows for retired search
-  settings, a missing native runtime, and amber's "Unable to generate N unique
-  candidates" error.
+  settings, a missing native runtime, and searches that end early when amber
+  runs out of untried candidates.
   `compileiq-run-search` replaces `cull_size` and `mutate_rate` guidance with
   amber options. `compileiq-search-space` says "search engine" instead of
   "optimization core".

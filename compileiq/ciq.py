@@ -7,6 +7,7 @@ import base64
 import hashlib
 import hmac
 import math
+import re
 from datetime import datetime
 from tqdm.auto import tqdm
 from uuid import uuid4
@@ -63,6 +64,7 @@ from compileiq.backends import (
     EngineConfig,
     PendingCandidatePolicy,
     SearchBackend,
+    SearchSpaceExhaustedError,
     create_backend,
     get_backend_registration,
     is_protected_search_space,
@@ -79,6 +81,55 @@ SearchSpaceInput: TypeAlias = (
 SearchConfigInput: TypeAlias = Dict[str, Any] | SearchConfiguration | pathlib.Path
 ResolvedSearchSpaceInput: TypeAlias = Dict[str, Any] | pathlib.Path | List[Dict | pathlib.Path]
 SearchSpaceResolutionMetadataDict: TypeAlias = dict[str, str | int | None]
+
+# SearchConfiguration fields that no engine reads since CompileIQ 1.1, each mapped to
+# the amber option with the closest role (not an equivalent). CompileIQ 1.1 accepts and
+# ignores them with a FutureWarning so 1.0 scripts keep running; a later release can
+# remove the fields.
+_RETIRED_SETTINGS: dict[str, str | None] = {
+    "cull_size": "survivor_count",
+    "mutate_rate": "mutation_probability",
+    "objective_weights": "reference_direction_weights",
+    "enable_large_fail_pool": None,
+}
+
+
+def _without_retired_settings(config: SearchConfiguration) -> SearchConfiguration:
+    """Warn about explicitly set retired settings and return a copy without them.
+
+    Only values that differ from what CompileIQ would derive for the same search shape
+    count, so a configuration that merely spells out a default stays silent.
+    """
+
+    defaults = SearchConfiguration(
+        problem_type=config.problem_type,
+        normalize=config.normalize,
+        num_objectives=config.num_objectives,
+        generations=config.generations,
+        pool_size=config.pool_size,
+    )
+    retired = sorted(
+        name
+        for name in _RETIRED_SETTINGS
+        if name in config.model_fields_set and getattr(config, name) != getattr(defaults, name)
+    )
+    if not retired:
+        return config
+    hints = ", ".join(
+        f"{name} (closest amber option: {option})" if option else f"{name} (no amber equivalent)"
+        for name in retired
+        for option in [_RETIRED_SETTINGS[name]]
+    )
+    warnings.warn(
+        "SearchConfiguration settings that have no effect since CompileIQ 1.1 are "
+        f"ignored: {hints}. To tune amber, pass EngineConfig(name='amber', options={{...}}); "
+        "the options are not direct equivalents. A future release will remove these fields.",
+        FutureWarning,
+        stacklevel=4,
+    )
+    kept = config.model_dump(exclude_unset=True, exclude=set(_RETIRED_SETTINGS))
+    return type(config)(**kept)
+
 
 # Largest magnitude that fits in a signed 64-bit integer. Visible checkpoint result
 # integers must round-trip across languages, so they are bounded to this range.
@@ -100,6 +151,23 @@ _OVERRIDABLE_PROVENANCE_KEYS = frozenset({"artifact_sha256", "provider_version"}
 
 class CheckpointCompatibilityWarning(UserWarning):
     """A build-provenance check was bypassed via the unsafe debug override."""
+
+
+class SearchSpaceExhaustedWarning(UserWarning):
+    """A managed search ended early because the engine ran out of untried candidates."""
+
+
+# Native runtime builds that predate SearchSpaceExhaustedError report exhaustion as a
+# plain ValueError with this message.
+_LEGACY_EXHAUSTION_MESSAGE = re.compile(r"^Unable to generate \d+ unique candidates")
+
+
+def _is_search_space_exhausted(error: BaseException) -> bool:
+    """Return whether an engine error means no untried candidates are left."""
+
+    if isinstance(error, SearchSpaceExhaustedError):
+        return True
+    return isinstance(error, ValueError) and bool(_LEGACY_EXHAUSTION_MESSAGE.match(str(error)))
 
 
 class CheckpointSearchConfig(BaseModel):
@@ -319,8 +387,7 @@ class Search(BaseModel):
     debug: bool = Field(
         default=False,
         description=(
-            "Passed to the selected engine, which may emit additional diagnostics "
-            "when enabled."
+            "Passed to the selected engine, which may emit additional diagnostics when enabled."
         ),
     )
     cache_folder: Optional[pathlib.Path] = Field(
@@ -501,8 +568,21 @@ class Search(BaseModel):
         self._engine_options_were_declared = bool(backend_options)
 
         registration = get_backend_registration(self.provider)
+        # Retired settings are ignored for every engine: warn once, and hand the
+        # validator and the backend the same configuration without them.
+        engine_search_config = _without_retired_settings(
+            cast(SearchConfiguration, self.search_config)
+        )
+        if engine_search_config is not self.search_config:
+            # Reset only the retired fields on the internal configuration, so a subclass's
+            # own handling of other fields (for example, extra fields it strips) is kept.
+            self._search_config = self._search_config.model_copy(
+                update={
+                    name: getattr(engine_search_config, name) for name in _RETIRED_SETTINGS
+                }
+            )
         if registration.search_config_validator is not None:
-            registration.search_config_validator(cast(SearchConfiguration, self.search_config))
+            registration.search_config_validator(engine_search_config)
         self._backend_registration = registration
         backend_options = dict(self._engine_options)
         if registration.options_model is not None:
@@ -569,6 +649,24 @@ class Search(BaseModel):
         """Resolved backend provider for diagnostics and checkpoint provenance."""
 
         return self._provider_identity
+
+    @property
+    def run_id(self) -> None:
+        """Deprecated: always ``None`` since CompileIQ 1.1.
+
+        It identified a run in the original core's results database, which CompileIQ 1.1
+        removed; use checkpoints to continue a search.
+        """
+
+        warnings.warn(
+            "Search.run_id is always None: it identified a run in the original core's "
+            "results database, which CompileIQ 1.1 removed. Use save_checkpoint() and "
+            "Search.from_checkpoint() to continue a search. A future release will remove "
+            "run_id.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return None
 
     @property
     def engine_options(self) -> dict[str, Any]:
@@ -1474,7 +1572,29 @@ class Search(BaseModel):
                         f"({refill_limit}) for generation {generation_before_ask}."
                     )
                 pending = self.pending_candidates
-                candidates = list(pending) if pending else self.ask()
+                try:
+                    candidates = list(pending) if pending else self.ask()
+                except Exception as error:
+                    if not _is_search_space_exhausted(error):
+                        raise
+                    if self._result.get_results().empty:
+                        raise SearchSpaceExhaustedError(
+                            f"The engine could not issue a first batch of untried candidates "
+                            f"({error}). The search space has fewer distinct candidates than "
+                            "pool_size; lower pool_size or widen the search space."
+                        ) from error
+                    # Engines that never repeat a candidate can run out in a small or
+                    # converged search. Keep the accepted results instead of failing.
+                    warnings.warn(
+                        f"Ending the search after {generation_before_ask} of "
+                        f"{self._search_config.generations} generations: the engine ran out "
+                        f"of candidates it has not tried ({error}). Returning the results so "
+                        "far. Widen the search space, or lower pool_size or generations, to "
+                        "run every generation.",
+                        SearchSpaceExhaustedWarning,
+                        stacklevel=3,
+                    )
+                    break
                 if not candidates:
                     if self._backend_impl.is_complete:
                         self._advance_progress(progress, self._search_config.generations)

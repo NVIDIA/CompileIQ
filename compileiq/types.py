@@ -520,20 +520,26 @@ class SearchConfiguration(BaseModel, extra="forbid"):
         default=None,
         gt=1,
         multiple_of=2,
-        description="The number of parents in a given generation that will become the progenitors "
-        "of the next generation. The difference between pool size and cull size are the survivors "
-        "of the next generation. If set to None, we calculate it based on pool size.",
+        description="Deprecated: has no effect since CompileIQ 1.1. "
+        "Search ignores a non-default value with a FutureWarning; amber's closest option is "
+        "survivor_count. It was the number of parents in a generation that become the "
+        "progenitors of the next. If set to None, we calculate it based on pool size.",
     )
     mutate_rate: float = Field(
         default=0.25,
         gt=0.0,
         lt=1.0,
-        description="The chance a sampled candidate will be perturbed between iterations.",
+        description="Deprecated: has no effect since CompileIQ 1.1. "
+        "Search ignores a non-default value with a FutureWarning; amber's closest option is "
+        "mutation_probability. It was the chance a sampled candidate is perturbed between "
+        "iterations.",
     )
     objective_weights: Optional[list[float]] = Field(
         default=None,
-        description="If you are doing multiobjective search you may want to weight-in more scores. "
-        "This will affect how we generate the algorithm reference directions.",
+        description="Deprecated: has no effect since CompileIQ 1.1. "
+        "Search ignores a non-default value with a FutureWarning; amber's closest option is "
+        "reference_direction_weights. It weighted objectives when generating reference "
+        "directions.",
     )
     init_with_true_random_threshold: Optional[float] = Field(
         default=0.9,
@@ -543,10 +549,10 @@ class SearchConfiguration(BaseModel, extra="forbid"):
     )
     enable_large_fail_pool: bool = Field(
         default=True,
-        description="When a generation does not achieve at least 20pct of passing solutions it"
-        " will not move into the next. The subsequent sample batch will only contain "
-        "the minimal number of passing samples required for this generation to pass. "
-        "If this is set to True, it will resubmit an entire pool size length batch.",
+        description="Deprecated: has no effect since CompileIQ 1.1. "
+        "Search ignores a non-default value with a FutureWarning; amber always replaces each "
+        "failed candidate one-for-one. It chose whether the original core resubmitted a whole "
+        "pool after a generation with too few passing candidates.",
     )
 
     @model_validator(mode="after")

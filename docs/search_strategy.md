@@ -46,16 +46,20 @@ its remaining optimizer settings through `EngineConfig.options`, for example
 `mutation_probability`, `survivor_count`, `reference_direction_weights`, and
 `seed`. The `SearchConfiguration` fields `cull_size`, `mutate_rate`,
 `objective_weights`, and `enable_large_fail_pool` have no effect since CompileIQ
-1.1; `amber` rejects non-default values for them with an error that names the
-matching option.
+1.1. `Search` ignores a non-default value for them with a
+`FutureWarning` that names the closest `amber` option; those options are not
+direct equivalents, so set them deliberately.
 The defaults are intended to be usable for common cases, but large or
 failure-heavy search spaces may need larger pools, more generations, or
 objective-side guardrails that mark bad candidates as `INVALID_SCORE`.
 
 `amber` never issues the same candidate twice in one search. If a small discrete
-search space, or a search that has converged, leaves too few unseen candidates
-for a batch, `ask()` raises `ValueError: Unable to generate N unique candidates`.
-Lower `pool_size` or `generations`, or widen the search space.
+search space, or a search that has converged, leaves too few unseen candidates for
+the next batch, `start()` ends the search early: it returns the results so far and
+emits a `SearchSpaceExhaustedWarning`. If not even the first batch can be filled, it
+raises `SearchSpaceExhaustedError`. A manual `ask()` raises the engine's error
+instead. Widen the search space, or lower `pool_size` or `generations`, to run every
+generation.
 
 ## Practical Guidance
 

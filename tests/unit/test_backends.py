@@ -2173,3 +2173,245 @@ def test_direct_restore_without_checkpoint_support_rejects_before_parsing(
     assert search.current_generation == 0
     assert search.pending_candidates == ()
     assert search.result.get_results().empty
+
+
+@pytest.fixture
+def strict_validator_backend():
+    """Register a provider whose validator rejects retired settings, as amber's does."""
+
+    name = "test-strict-validator-backend"
+    validated = []
+
+    def validator(search_config):
+        """Record what the provider sees and fail like amber on non-default retired settings."""
+
+        validated.append(search_config)
+        defaults = SearchConfiguration(
+            generations=search_config.generations,
+            pool_size=search_config.pool_size,
+            num_objectives=search_config.num_objectives,
+        )
+        explicit = sorted(
+            name
+            for name in ("cull_size", "mutate_rate", "objective_weights", "enable_large_fail_pool")
+            if name in search_config.model_fields_set
+            and getattr(search_config, name) != getattr(defaults, name)
+        )
+        if explicit:
+            raise BackendCapabilityError(f"explicit retired settings: {explicit}")
+
+    register_backend(
+        name,
+        FakeSealedBackend,
+        capabilities=BackendCapabilities(arbitrary_batch_size=True),
+        artifact=BackendArtifactInfo(
+            backend_version="0.0.1",
+            abi_version=0,
+            artifact_sha256="d" * 64,
+        ),
+        search_config_validator=validator,
+    )
+    try:
+        yield name, validated
+    finally:
+        unregister_backend(name)
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        {"mutate_rate": 0.5},
+        {"cull_size": 2},
+        {"objective_weights": [1.0]},
+        {"enable_large_fail_pool": False},
+        {"mutate_rate": 0.5, "cull_size": 2},
+    ],
+)
+def test_retired_settings_are_ignored_with_a_warning(strict_validator_backend, settings):
+    """Keep 1.0 configurations running: warn, then hide retired settings from the engine."""
+
+    name, validated = strict_validator_backend
+    # With pool_size=10 the derived cull_size is 6, so cull_size=2 is a real override.
+    config = SearchConfiguration(generations=1, pool_size=10, **settings)
+
+    retired_warning = "have no effect since CompileIQ 1.1 are ignored"
+    with pytest.warns(FutureWarning, match=retired_warning) as record:
+        search = Search(
+            objective_function=lambda params: params["x"],
+            search_space={"x": ss.range(0, 10)},
+            search_config=config,
+            worker_type=SynchronousWorker,
+            engine=name,
+            disable_progress_bar=True,
+        )
+
+    message = str(record[0].message)
+    for setting in settings:
+        assert setting in message
+    assert not validated[-1].model_fields_set & set(settings)
+    # The caller's configuration object is left as given.
+    assert search.search_config is config
+    assert all(getattr(config, key) == value for key, value in settings.items())
+
+
+def test_retired_settings_never_reach_a_backend_without_a_validator():
+    """The warning and the stripping don't depend on the engine declaring a validator."""
+
+    name = "test-recording-backend-no-validator"
+    received = []
+
+    class RecordingBackend(FakeSealedBackend):
+        def __init__(self, *, search_config, **kwargs):
+            received.append(search_config)
+            super().__init__(search_config=search_config, **kwargs)
+
+    register_backend(
+        name,
+        RecordingBackend,
+        capabilities=BackendCapabilities(arbitrary_batch_size=True),
+        artifact=BackendArtifactInfo(
+            backend_version="0.0.1",
+            abi_version=0,
+            artifact_sha256="e" * 64,
+        ),
+    )
+    try:
+        derived = SearchConfiguration(generations=1, pool_size=10)
+        config = SearchConfiguration(generations=1, pool_size=10, mutate_rate=0.5, cull_size=2)
+        with pytest.warns(FutureWarning, match="have no effect since CompileIQ 1.1 are ignored"):
+            Search(
+                objective_function=lambda params: params["x"],
+                search_space={"x": ss.range(0, 10)},
+                search_config=config,
+                worker_type=SynchronousWorker,
+                engine=name,
+                disable_progress_bar=True,
+            )
+    finally:
+        unregister_backend(name)
+
+    assert received[-1].mutate_rate == derived.mutate_rate
+    assert received[-1].cull_size == derived.cull_size
+
+
+def test_explicit_default_retired_settings_stay_silent(strict_validator_backend, recwarn):
+    """Spelling out a value CompileIQ would derive anyway is not a retired setting."""
+
+    name, validated = strict_validator_backend
+    derived = SearchConfiguration(generations=1, pool_size=8)
+    config = SearchConfiguration(
+        generations=1,
+        pool_size=8,
+        cull_size=derived.cull_size,
+        mutate_rate=derived.mutate_rate,
+        enable_large_fail_pool=True,
+    )
+
+    Search(
+        objective_function=lambda params: params["x"],
+        search_space={"x": ss.range(0, 10)},
+        search_config=config,
+        worker_type=SynchronousWorker,
+        engine=name,
+        disable_progress_bar=True,
+    )
+
+    assert not [warning for warning in recwarn if issubclass(warning.category, FutureWarning)]
+    assert validated[-1] is config
+
+
+class ExhaustingBackend(FakeSealedBackend):
+    """Run out of untried candidates once a configured generation is reached."""
+
+    exhaust_at_generation = 1
+    error_factory = staticmethod(
+        lambda: ValueError(
+            "Unable to generate 6 unique candidates after 10 attempts. "
+            "The search space may be exhausted."
+        )
+    )
+
+    def ask(self, num_samples=None):
+        """Raise the engine's exhaustion error instead of issuing a batch."""
+
+        if self._generation >= self.exhaust_at_generation:
+            raise self.error_factory()
+        return super().ask(num_samples)
+
+
+@pytest.fixture
+def exhausting_backend():
+    """Register ``ExhaustingBackend`` and restore its class settings afterwards."""
+
+    name = "test-exhausting-backend"
+    register_backend(
+        name,
+        ExhaustingBackend,
+        capabilities=BackendCapabilities(arbitrary_batch_size=True),
+        artifact=BackendArtifactInfo(
+            backend_version="0.0.1",
+            abi_version=0,
+            artifact_sha256="e" * 64,
+        ),
+    )
+    try:
+        yield name
+    finally:
+        unregister_backend(name)
+        ExhaustingBackend.exhaust_at_generation = 1
+        ExhaustingBackend.error_factory = staticmethod(
+            lambda: ValueError(
+                "Unable to generate 6 unique candidates after 10 attempts. "
+                "The search space may be exhausted."
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "error_factory",
+    [
+        lambda: ValueError("Unable to generate 6 unique candidates after 10 attempts."),
+        lambda: backends_module.SearchSpaceExhaustedError("no untried candidates left"),
+    ],
+)
+def test_start_ends_early_with_results_when_engine_runs_out(exhausting_backend, error_factory):
+    """Return accepted results with a warning instead of failing a long search."""
+
+    ExhaustingBackend.error_factory = staticmethod(error_factory)
+    ExhaustingBackend.exhaust_at_generation = 2
+    search = make_search(provider=exhausting_backend, generations=5)
+
+    with pytest.warns(ciq_module.SearchSpaceExhaustedWarning, match="after 2 of 5 generations"):
+        result = search.start()
+
+    assert len(result.get_results()) == 12
+
+
+def test_start_reports_exhaustion_before_any_result(exhausting_backend):
+    """A space smaller than one batch is a configuration error, not an early end."""
+
+    ExhaustingBackend.exhaust_at_generation = 0
+    search = make_search(provider=exhausting_backend, generations=3)
+
+    with pytest.raises(backends_module.SearchSpaceExhaustedError, match="fewer distinct"):
+        search.start()
+
+
+def test_unrelated_value_errors_still_fail_the_search(exhausting_backend):
+    """Only exhaustion ends a search early; other engine errors propagate."""
+
+    ExhaustingBackend.error_factory = staticmethod(lambda: ValueError("engine bug"))
+    search = make_search(provider=exhausting_backend, generations=3)
+
+    with pytest.raises(ValueError, match="engine bug"):
+        search.start()
+
+
+def test_run_id_is_a_deprecated_none(fake_backend):
+    """Scripts that printed or saved run_id keep running; there is no run ID any more."""
+
+    name, _ = fake_backend
+    search = make_search(provider=name)
+
+    with pytest.warns(FutureWarning, match="run_id is always None"):
+        assert search.run_id is None

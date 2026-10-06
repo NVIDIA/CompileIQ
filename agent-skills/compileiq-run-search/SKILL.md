@@ -91,11 +91,12 @@ config = SearchConfiguration(
 The default engine, `amber`, owns its optimizer settings. Leave the
 `SearchConfiguration` fields `cull_size`, `mutate_rate`, `objective_weights`,
 and `enable_large_fail_pool` unset: they have no effect since CompileIQ 1.1, and
-`amber` rejects non-default values. Pass amber options
+`Search` ignores them with a `FutureWarning`. Pass amber options
 (`mutation_probability`, `survivor_count`, `reference_direction_weights`,
 `seed`) through `engine=EngineConfig(name="amber", options={...})` instead.
 `amber` never repeats a candidate, so keep `pool_size * generations` well below
-the number of distinct points in a small discrete space.
+the number of distinct points in a small discrete space; otherwise `start()` ends
+early with a `SearchSpaceExhaustedWarning` and returns the results so far.
 
 **Sanity rule of thumb:** if `pool_size * generations < 50`, you are exploring,
 not optimizing. If `> 2000`, you are probably overfitting to measurement noise
