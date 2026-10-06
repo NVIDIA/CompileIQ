@@ -2,10 +2,18 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping
+from decimal import Decimal
 from numbers import Real
 from typing import Any, Literal, Union
 
 from pydantic import AliasChoices, BaseModel, Field, model_validator
+
+
+def _probability_to_threshold(knockout_prob: float | None) -> float | None:
+    """Convert omission probability without introducing a binary-float artifact."""
+    if knockout_prob is None:
+        return None
+    return float(Decimal("1") - Decimal(str(knockout_prob)))
 
 
 class ParamConfigBase(BaseModel, populate_by_name=True):
@@ -69,9 +77,7 @@ class ParamConfigBase(BaseModel, populate_by_name=True):
     def knockout_threshold(self) -> float | None:
         """Return the legacy bundled-core threshold for compatibility reads."""
 
-        if self.knockout_prob is None:
-            return None
-        return 1.0 - self.knockout_prob
+        return _probability_to_threshold(self.knockout_prob)
 
 
 class RangeParamConfig(ParamConfigBase):

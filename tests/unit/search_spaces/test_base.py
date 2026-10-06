@@ -68,6 +68,32 @@ def test_knockout_threshold_compatibility_read_is_inverted():
         (ss.log_sampling, {"start": 0.001, "end": 1.0}),
     ],
 )
+def test_knockout_prob_point_seven_has_exact_quantized_contract(fn, kwargs):
+    """Hand the bundled core an exact 0.3 threshold, so its cutoff is 30, not 31."""
+
+    result = fn(**kwargs, knockout_prob=0.7)
+
+    assert result.knockout_prob == 0.7
+    assert result.knockout_threshold == 0.3
+
+    parsed = json.loads(_setup_search_space_with_dict({"flag": result}))
+    threshold = parsed["classes"]["flag"]["knockout_threshold"]
+    assert threshold == 0.3
+
+    cutoff = math.ceil(100 * threshold)
+    assert cutoff == 30
+    assert sum(genotype >= cutoff for genotype in range(100)) == 70
+
+
+@pytest.mark.parametrize(
+    "fn,kwargs",
+    [
+        (ss.range, {"start": 0, "end": 10}),
+        (ss.choice, {"choice_list": [1, 2, 3]}),
+        (ss.literal, {"const_value": 5}),
+        (ss.log_sampling, {"start": 0.001, "end": 1.0}),
+    ],
+)
 @pytest.mark.parametrize("knockout_prob", [-0.01, 1.01])
 def test_knockout_probability_rejects_out_of_range_values(fn, kwargs, knockout_prob):
     """Apply the same public probability domain to every search-space builder."""

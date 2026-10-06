@@ -12,7 +12,11 @@ from compileiq.config.const import (
 from compileiq.types import InternalSearchConfiguration
 from compileiq.utils.helpers import flatten_nested_dict
 from compileiq.search_spaces.compilers import SearchSpaceProvider
-from compileiq.search_spaces.models import ParamConfig, SearchSpaceFileModel
+from compileiq.search_spaces.models import (
+    ParamConfig,
+    SearchSpaceFileModel,
+    _probability_to_threshold,
+)
 
 
 def _core_path(path: pathlib.PurePath) -> str:
@@ -127,5 +131,5 @@ def _setup_search_space_with_dict(search_space_dict: Mapping[str, ParamConfig]) 
     for parameter in document["classes"].values():
         probability = parameter.pop("knockout_prob", None)
         if probability is not None:
-            parameter["knockout_threshold"] = 1.0 - probability
+            parameter["knockout_threshold"] = _probability_to_threshold(probability)
     return json.dumps(document, indent=2)

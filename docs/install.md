@@ -37,21 +37,21 @@ installation contract.
 
 ## Supported Platforms
 
-CompileIQ 1.1 targets Python 3.11, 3.12, and 3.13. A platform is published only
+CompileIQ 1.1 targets Python 3.11, 3.12, 3.13, and 3.14. A platform is published only
 when its complete wheel contains every backend available for that platform; no
 same-version incomplete wheel or source fallback is published for a cell whose
 native payload is missing. The current beta CI matrix composes, verifies, and
 clean-installs these cells end to end:
 
-- Linux x86_64 / CPython 3.11, 3.12, and 3.13: `ruby` and `amber`
-- Linux ARM64 / CPython 3.11, 3.12, and 3.13: `ruby` and `amber`
-- Windows AMD64 / CPython 3.11, 3.12, and 3.13: `ruby` and `amber`
-- Apple Silicon macOS 15+ / CPython 3.11, 3.12, and 3.13: `amber` only
+- Linux x86_64 / CPython 3.11, 3.12, 3.13, and 3.14: `ruby` and `amber`
+- Linux ARM64 / CPython 3.11, 3.12, 3.13, and 3.14: `ruby` and `amber`
+- Windows AMD64 / CPython 3.11, 3.12, 3.13, and 3.14: `ruby` and `amber`
+- Apple Silicon macOS 15+ / CPython 3.11, 3.12, 3.13, and 3.14: `amber` only
 
-Other platform and Python combinations are outside this beta's supported matrix.
+Other platform and Python combinations are outside this release's supported matrix.
 
 Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`. The
-macOS ARM64 beta wheels are intentionally coreless because the legacy core is
+macOS ARM64 release wheels are intentionally coreless because the legacy core is
 not packaged for macOS.
 
 ## Runtime Requirements

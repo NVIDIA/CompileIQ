@@ -50,10 +50,10 @@ make install-complete
 
 ## Supported platforms
 
-CompileIQ 1.1 targets Python 3.11, 3.12, and 3.13. The current beta CI matrix
+CompileIQ 1.1 targets Python 3.11, 3.12, 3.13, and 3.14. The beta CI matrix
 composes, verifies, and clean-installs complete wheels for Linux x86_64, Linux
-ARM64, and Windows AMD64 on CPython 3.11, plus macOS ARM64 on CPython 3.13. The
-macOS cell provides `amber` only; the other three cells provide both backends.
+ARM64, Windows AMD64, and macOS ARM64 on each of those Python versions. The
+macOS cells provide `amber` only; the other platforms provide both backends.
 
 Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`. See
 the [installation guide](docs/install.md) for Linux runtime library

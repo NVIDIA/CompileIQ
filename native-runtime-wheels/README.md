@@ -29,15 +29,19 @@ make install-complete \
 | Linux x86_64 | CPython 3.11 | `cp311-cp311-linux_x86_64` |
 | Linux x86_64 | CPython 3.12 | `cp312-cp312-linux_x86_64` |
 | Linux x86_64 | CPython 3.13 | `cp313-cp313-linux_x86_64` |
+| Linux x86_64 | CPython 3.14 | `cp314-cp314-linux_x86_64` |
 | Linux aarch64 | CPython 3.11 | `cp311-cp311-linux_aarch64` |
 | Linux aarch64 | CPython 3.12 | `cp312-cp312-linux_aarch64` |
 | Linux aarch64 | CPython 3.13 | `cp313-cp313-linux_aarch64` |
+| Linux aarch64 | CPython 3.14 | `cp314-cp314-linux_aarch64` |
 | Windows AMD64 | CPython 3.11 | `cp311-cp311-win_amd64` |
 | Windows AMD64 | CPython 3.12 | `cp312-cp312-win_amd64` |
 | Windows AMD64 | CPython 3.13 | `cp313-cp313-win_amd64` |
+| Windows AMD64 | CPython 3.14 | `cp314-cp314-win_amd64` |
 | macOS 15+ arm64 | CPython 3.11 | `cp311-cp311-macosx_15_0_arm64` |
 | macOS 15+ arm64 | CPython 3.12 | `cp312-cp312-macosx_15_0_arm64` |
 | macOS 15+ arm64 | CPython 3.13 | `cp313-cp313-macosx_15_0_arm64` |
+| macOS 15+ arm64 | CPython 3.14 | `cp314-cp314-macosx_15_0_arm64` |
 
 Every wheel is an exact CI output promoted without renaming or rebuilding it.
 The checked-in manifests retain the opaque producing pipeline and job IDs plus

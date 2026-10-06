@@ -84,7 +84,7 @@ For bug reports, include the CompileIQ version (`pip show compileiq`), Python ve
 
 ## Development setup
 
-Prerequisites: Python 3.11–3.13, [Poetry](https://python-poetry.org/), `git`, and either Linux or Windows (the supported CI hosts).
+Prerequisites: Python 3.11–3.14, [Poetry](https://python-poetry.org/), `git`, and either Linux or Windows (the supported CI hosts).
 
 External contributors fork [`NVIDIA/CompileIQ`](https://github.com/NVIDIA/CompileIQ) and add an upstream remote:
 

@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import Any, Optional, Annotated, Sequence
 from annotated_types import Gt
 import numpy as np
@@ -8,13 +7,6 @@ from compileiq.search_spaces.models import (
     ChoiceParamConfig,
     LiteralParamConfig,
 )
-
-
-def _probability_to_threshold(knockout_prob: Optional[float]) -> Optional[float]:
-    """Convert omission probability without introducing a binary-float artifact."""
-    if knockout_prob is None:
-        return None
-    return float(Decimal("1") - Decimal(str(knockout_prob)))
 
 
 def range(
