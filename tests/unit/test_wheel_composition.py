@@ -183,6 +183,70 @@ def test_compose_complete_wheel_rejects_unverified_runtime(tmp_path):
         compose_wheel(frontend, runtime, manifest, tmp_path / "complete")
 
 
+def _checked_in_manifest(tmp_path: Path, runtime: Path) -> Path:
+    """Write the runtime-only manifest shape kept under native-runtime-wheels/."""
+
+    manifest = tmp_path / "native-runtime-manifest-cp311-cp311-linux_x86_64.json"
+    manifest.write_text(
+        json.dumps({"schema_version": 1, "outputs": {"native_runtime": _file_record(runtime)}})
+    )
+    return manifest
+
+
+def test_compose_from_checked_in_manifest_with_a_frontend_built_here(
+    tmp_path,
+    _stub_native_abi_scan,
+):
+    """Public CI composes its own frontend wheel with the checked-in runtime manifests."""
+
+    frontend, runtime, _ = _composition_inputs(tmp_path)
+    manifest = _checked_in_manifest(tmp_path, runtime)
+
+    with pytest.raises(RuntimeError, match="missing wheel provenance"):
+        compose_wheel(frontend, runtime, manifest, tmp_path / "complete")
+
+    output = compose_wheel(
+        frontend,
+        runtime,
+        manifest,
+        tmp_path / "complete",
+        frontend_from_this_build=True,
+    )
+    composition_manifest = tmp_path / "complete" / "composition-manifest.json"
+    write_composition_manifest(output, frontend, runtime, manifest, composition_manifest)
+    verify_complete_wheel(output)
+    verify_composition_manifest(output, composition_manifest)
+    recorded = json.loads(composition_manifest.read_text())
+    assert recorded["inputs"]["frontend"] == _file_record(frontend)
+
+
+def test_frontend_from_this_build_still_verifies_runtime_and_any_frontend_record(tmp_path):
+    frontend, runtime, lane_manifest = _composition_inputs(tmp_path)
+    with frontend.open("ab") as destination:
+        destination.write(b"rebuilt")
+
+    with pytest.raises(RuntimeError, match="frontend wheel SHA-256"):
+        compose_wheel(
+            frontend,
+            runtime,
+            lane_manifest,
+            tmp_path / "complete",
+            frontend_from_this_build=True,
+        )
+
+    checked_in = _checked_in_manifest(tmp_path, runtime)
+    with runtime.open("ab") as destination:
+        destination.write(b"tampered")
+    with pytest.raises(RuntimeError, match="native runtime wheel SHA-256"):
+        compose_wheel(
+            frontend,
+            runtime,
+            checked_in,
+            tmp_path / "complete",
+            frontend_from_this_build=True,
+        )
+
+
 def test_verify_complete_wheel_rejects_filename_metadata_tag_mismatch(tmp_path):
     frontend, runtime, manifest = _composition_inputs(tmp_path)
     output = compose_wheel(frontend, runtime, manifest, tmp_path / "complete")

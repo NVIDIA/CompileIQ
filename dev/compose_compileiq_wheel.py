@@ -140,20 +140,36 @@ def verify_lane_manifest(
     manifest_path: Path,
     frontend_wheel: Path,
     runtime_wheel: Path,
+    *,
+    frontend_from_this_build: bool = False,
 ) -> dict[str, object]:
-    """Verify both composition inputs against the native-runtime lane manifest."""
+    """Verify the composition inputs against the native-runtime lane manifest.
+
+    A release-lane manifest binds both input wheels. The checked-in public
+    manifests under ``native-runtime-wheels/`` bind only the runtime wheel; with
+    ``frontend_from_this_build`` the caller attests that it built the frontend
+    wheel from this checkout, and the composition manifest records its digest.
+    A frontend record, when present, is always verified.
+    """
 
     manifest = json.loads(manifest_path.read_text())
     if manifest.get("schema_version") != 1:
         raise RuntimeError("unsupported release-lane manifest schema")
     try:
-        public_record = manifest["inputs"]["public_compileiq"]["wheel"]
+        public_record = (
+            None
+            if frontend_from_this_build and "inputs" not in manifest
+            else manifest["inputs"]["public_compileiq"]["wheel"]
+        )
         runtime_record = manifest["outputs"]["native_runtime"]
     except (KeyError, TypeError) as exc:
         raise RuntimeError("release-lane manifest is missing wheel provenance") from exc
-    if not isinstance(public_record, dict) or not isinstance(runtime_record, dict):
+    if (public_record is not None and not isinstance(public_record, dict)) or not isinstance(
+        runtime_record, dict
+    ):
         raise RuntimeError("release-lane wheel provenance must be JSON objects")
-    verify_file_record(frontend_wheel, public_record, "frontend wheel")
+    if public_record is not None:
+        verify_file_record(frontend_wheel, public_record, "frontend wheel")
     verify_file_record(runtime_wheel, runtime_record, "native runtime wheel")
     return manifest
 
@@ -222,13 +238,20 @@ def compose_wheel(
     runtime_wheel: Path,
     lane_manifest: Path,
     output_dir: Path,
+    *,
+    frontend_from_this_build: bool = False,
 ) -> Path:
     """Return a manifest-verified, platform-specific complete CompileIQ wheel."""
 
     frontend_wheel = frontend_wheel.resolve()
     runtime_wheel = runtime_wheel.resolve()
     lane_manifest = lane_manifest.resolve()
-    verify_lane_manifest(lane_manifest, frontend_wheel, runtime_wheel)
+    verify_lane_manifest(
+        lane_manifest,
+        frontend_wheel,
+        runtime_wheel,
+        frontend_from_this_build=frontend_from_this_build,
+    )
 
     with zipfile.ZipFile(frontend_wheel) as frontend, zipfile.ZipFile(runtime_wheel) as runtime:
         frontend_names = frontend.namelist()
@@ -352,12 +375,22 @@ def main() -> int:
     parser.add_argument("--lane-manifest", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--output-manifest", required=True, type=Path)
+    parser.add_argument(
+        "--frontend-from-this-build",
+        action="store_true",
+        help=(
+            "accept a lane manifest that binds only the runtime wheel, such as the "
+            "checked-in native-runtime-wheels/ manifests, because the caller built "
+            "the frontend wheel from this checkout"
+        ),
+    )
     args = parser.parse_args()
     output = compose_wheel(
         args.frontend_wheel,
         args.runtime_wheel,
         args.lane_manifest,
         args.output_dir,
+        frontend_from_this_build=args.frontend_from_this_build,
     )
     write_composition_manifest(
         output,
