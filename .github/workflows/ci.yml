@@ -424,12 +424,52 @@ jobs:
 
   # This job is a work around to make sure that all the checks have passed before we mark the PR as ready for review.
   # This is needed because GitHub does not allow us to set a condition on the PR to be marked as ready for review based on the status of the checks.
+  # The only status check the repository rules require; keep the name "CI Pass".
+  # It needs every job directly and always runs, so a failed or cancelled job
+  # anywhere fails it instead of leaving it skipped (which GitHub treats as
+  # passing). It only reads its dependencies' results, so it runs on the ARM
+  # runner, which picks up jobs in seconds.
   ci-pass:
     name: CI Pass
-    runs-on: ubuntu-latest
-    needs: [verify-core, verify-linux-core-abi, integration-test, fuzz-test, run-examples, validate-binary-ss, build-and-smoke-test-wheel]
+    if: always()
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 5
+    needs:
+      - lint
+      - typecheck
+      - verify-core
+      - verify-linux-core-abi
+      - unit-test
+      - integration-test
+      - fuzz-test
+      - run-examples
+      - validate-binary-ss
+      - smoke-test-wheel-matrix
+      - build-and-smoke-test-wheel
     steps:
-      - run: echo "All checks passed"
+      - name: Require every job to succeed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+          # Jobs that may be skipped on purpose (none today).
+          ALLOWED_SKIPS: ""
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+
+          needs = json.loads(os.environ["NEEDS"])
+          allowed_skips = set(os.environ["ALLOWED_SKIPS"].split())
+          for name, need in sorted(needs.items()):
+              print(f"{name}: {need['result']}")
+          bad = {
+              name: need["result"]
+              for name, need in needs.items()
+              if need["result"] != "success"
+              and not (need["result"] == "skipped" and name in allowed_skips)
+          }
+          if bad:
+              raise SystemExit(f"Not every job succeeded: {bad}")
+          PY
 
   upload-github-release-wheels:
     name: Upload wheels to GitHub release
