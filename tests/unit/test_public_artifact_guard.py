@@ -242,3 +242,23 @@ def test_public_runtime_wheels_are_lfs_tracked_without_capturing_manifests() -> 
 
     assert ("native-runtime-wheels/*.whl " "filter=lfs diff=lfs merge=lfs -text") in attributes
     assert "native-runtime-manifest-*.json filter=lfs" not in attributes
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "message"),
+    [
+        ("platform_tag", "bogus_platform", "does not match its python/abi/platform tags"),
+        ("python_tag", 311, "runtime tags must all be strings"),
+    ],
+)
+def test_public_artifact_guard_rejects_inconsistent_runtime_tags(
+    tmp_path: Path, key: str, value: object, message: str
+) -> None:
+    runtime = _write_runtime_matrix(tmp_path)
+    manifest_path = next(runtime.glob("native-runtime-manifest-*.json"))
+    manifest = json.loads(manifest_path.read_text())
+    manifest["runtime"][key] = value
+    manifest_path.write_text(json.dumps(manifest))
+
+    with pytest.raises(RuntimeError, match=message):
+        check(tmp_path)

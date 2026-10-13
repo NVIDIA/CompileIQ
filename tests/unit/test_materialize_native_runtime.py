@@ -245,3 +245,38 @@ def test_materialize_rejects_a_runtime_that_cannot_register(
 
     with pytest.raises(RuntimeError, match="could not register against this CompileIQ frontend"):
         materialize_native_runtime.materialize(wheel, [manifest], [])
+
+
+@pytest.mark.parametrize("missing", ["lane-manifest", "runtime-wheel"])
+def test_main_reports_missing_inputs_without_a_traceback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    missing: str,
+) -> None:
+    """A nonexistent --lane-manifest or --runtime-wheel is an ERROR line, not a traceback."""
+
+    compatible_tag = next(sys_tags())
+    wheel = tmp_path / f"compileiq_native_runtime-1.1.0-{compatible_tag}.whl"
+    wheel.write_bytes(b"wheel payload" * 200)
+    manifest = _manifest(tmp_path, wheel)
+    if missing == "lane-manifest":
+        manifest = tmp_path / "absent-manifest.json"
+    else:
+        wheel = tmp_path / "absent.whl"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "materialize_native_runtime.py",
+            "--runtime-wheel",
+            str(wheel),
+            "--lane-manifest",
+            str(manifest),
+        ],
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        materialize_native_runtime.main()
+
+    assert excinfo.value.code == 1
+    assert capsys.readouterr().err.startswith("ERROR: ")

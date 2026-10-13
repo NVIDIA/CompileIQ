@@ -201,8 +201,20 @@ def _check_runtime_matrix(repository: Path, markers: PrivateMarkers) -> None:
             {"python_tag", "abi_tag", "platform_tag", "wheel_tag"},
             f"{manifest_path.name} runtime",
         )
-        wheel_tag = runtime["wheel_tag"]
-        if not isinstance(wheel_tag, str) or wheel_tag not in EXPECTED_RUNTIME_TAGS:
+        python_tag, abi_tag, platform_tag, wheel_tag = (
+            runtime["python_tag"],
+            runtime["abi_tag"],
+            runtime["platform_tag"],
+            runtime["wheel_tag"],
+        )
+        if not all(isinstance(tag, str) for tag in (python_tag, abi_tag, platform_tag, wheel_tag)):
+            raise RuntimeError(f"{manifest_path.name} runtime tags must all be strings")
+        if wheel_tag != f"{python_tag}-{abi_tag}-{platform_tag}":
+            raise RuntimeError(
+                f"{manifest_path.name} wheel_tag {wheel_tag!r} does not match its "
+                f"python/abi/platform tags {python_tag!r}-{abi_tag!r}-{platform_tag!r}"
+            )
+        if wheel_tag not in EXPECTED_RUNTIME_TAGS:
             raise RuntimeError(f"unexpected public runtime tag in {manifest_path}: {wheel_tag!r}")
         if manifest_path.name != f"native-runtime-manifest-{wheel_tag}.json":
             raise RuntimeError(f"public runtime manifest filename does not match {wheel_tag}")

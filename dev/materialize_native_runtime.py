@@ -194,7 +194,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         materialize(args.runtime_wheel, args.lane_manifest, args.runtime_directory)
-    except RuntimeError as exc:
+    except (RuntimeError, OSError) as exc:
         parser.exit(1, f"ERROR: {exc}\n")
     print("verified native runtime materialized for editable development")
     return 0

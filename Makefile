@@ -53,6 +53,10 @@ materialize-native-runtime: ## Install a verified CI payload or build the explic
 			PYTHON="$$python_path"; \
 		"$$python_path" -m pip install --no-index --no-deps --force-reinstall \
 			--find-links "$(NATIVE_RUNTIME_SOURCE)/dist" compileiq-native-runtime; \
+		"$$python_path" -c "from compileiq.backends import get_backend_registration; \
+			registration = get_backend_registration('amber'); \
+			assert registration.name == 'amber'" \
+			|| { echo "ERROR: the installed native runtime could not register its amber backend." >&2; exit 1; }; \
 	elif [ -n "$(strip $(NATIVE_RUNTIME_MANIFESTS))" ]; then \
 		poetry run python dev/materialize_native_runtime.py \
 			$(if $(NATIVE_RUNTIME_WHEEL),--runtime-wheel "$(NATIVE_RUNTIME_WHEEL)",) \
