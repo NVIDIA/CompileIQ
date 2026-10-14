@@ -13,7 +13,52 @@ tuner = Search(
 )
 ```
 
-Built-in worker classes are available in `compileiq.worker`: `MultiProcessWorker` (default), `IsoMultiProcessWorker`, `RayWorker`, and `AsyncWorker`.
+Built-in worker classes are available in `compileiq.worker`: `MultiProcessWorker` (default), `IsoMultiProcessWorker`, `RayWorker`, `AsyncWorker`, and `ManualWorker`.
+
+## Manual Worker
+
+Use `WorkerTypes.MANUAL` when another system evaluates candidates and CompileIQ
+should only manage optimizer state. It makes accidental calls to `evaluate()` or
+`start()` fail before CompileIQ runs the objective function or asks the optimizer
+for managed work.
+
+```python
+from compileiq.ciq import Search
+from compileiq.types import WorkerTypes
+from compileiq.utils.validation import Score
+
+
+def managed_execution_disabled(_config):
+    raise RuntimeError("This search is evaluated externally")
+
+
+def run_externally(_config):
+    return 0.0  # Replace with an externally measured objective value.
+
+
+tuner = Search(
+    objective_function=managed_execution_disabled,
+    search_space=search_space_config,
+    search_config=main_config,
+    worker_type=WorkerTypes.MANUAL,
+)
+
+candidates = tuner.ask()
+scores = [
+    Score(
+        score=run_externally(candidate.params),
+        params=candidate.params,
+        param_id=candidate.param_id,
+        num_objectives=1,
+    )
+    for candidate in candidates
+]
+tuner.tell(scores)
+```
+
+`objective_function` remains a required `Search` argument, but `ManualWorker`
+never invokes it. Checkpoints record the manual worker choice, so restoring a
+checkpoint without a worker override preserves this execution guard.
 
 ## Native Worker (MultiProcessWorker)
 
@@ -175,7 +220,11 @@ The `run` method will receive:
 * `params_pool` is a list (usually of size `pool_size`) with all parameters CompileIQ sampled for this generation.
 * `params_ids` is a list of IDs (one per element in `params_pool`) used to uniquely identify each evaluation.
 * `num_function_returns` is the number of expected returns, i.e., the number of objectives defined by the user
-* `**kwargs` these are any additional keyword parameters you pass to `.start()`
+* `**kwargs` contains additional worker-specific keyword parameters passed to
+  `.start()` that are not consumed by Search
+* `num_workers` and `task_timeout` are named Search controls that are also passed
+  through the standard `.run()` arguments; Search-only controls such as
+  `checkpoint_path` are not forwarded
 
 It expects a list of `Score` objects as a return. `Score` contains metadata so we can associate the parameters with their scores.
 
@@ -327,6 +376,10 @@ tuner = Search(
 results = tuner.start()
 ```
 
-> Any arguments passed to `.start()` are accessible through `**kwargs` for the `.run` method
+> Additional worker-specific keyword arguments passed to `.start()` are
+> accessible through `**kwargs` in `.run()`. The existing `num_workers` and
+> `task_timeout` controls are also passed through the standard `.run()`
+> arguments. Search-only controls, such as `checkpoint_path`, are consumed by
+> Search and are not forwarded to the worker.
 
 > You can find an updated running example in [our repository](https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/ptx_spill.py/custom_worker.py).

@@ -383,6 +383,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_composition.html">Complete Wheel Release Composition</a></li>
 </ul>
 </div>
 </nav></div>
@@ -440,21 +441,46 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>compileiq
 </pre></div>
 </div>
-<p>Or, build from the <a class="reference external" href="https://github.com/NVIDIA/CompileIQ">repo</a> yourself:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+<p>The CompileIQ 1.1 release contract is a single, complete <code class="docutils literal notranslate"><span class="pre">compileiq</span></code>
+distribution: each published platform wheel contains every backend available for
+that platform, with no separate runtime package for users to select or keep
+compatible. Linux and Windows complete wheels contain the bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and native
+<code class="docutils literal notranslate"><span class="pre">amber</span></code> backends. The macOS ARM64 beta wheel contains <code class="docutils literal notranslate"><span class="pre">amber</span></code> only because no macOS
+legacy core is shipped.</p>
+<p>For editable repository development, the default bootstrap installs the frontend
+with the bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> engine only, so it needs no native payload:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>install
 </pre></div>
 </div>
+<p>To also materialize the pinned, manifest-verified native <code class="docutils literal notranslate"><span class="pre">amber</span></code> payload checked
+into the repository through Git LFS, fetch the LFS objects and use the complete
+install target:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>lfs<span class="w"> </span>pull
+make<span class="w"> </span>install-complete
+</pre></div>
+</div>
+<p>The repository contains one manifest-verified native artifact per supported
+runtime cell. The installer selects exactly one artifact compatible with the
+active Python and platform and rejects mismatched or ambiguous cells. Provider
+source is not included. There is no alternate frontend API or second user
+installation contract.</p>
 <section id="supported-platforms">
 <h2>Supported Platforms<a class="headerlink" href="#supported-platforms" title="Link to this heading">#</a></h2>
-<p>CompileIQ supports Python 3.11, 3.12, and 3.13. Published wheels include the
-bundled CompileIQ core for:</p>
+<p>CompileIQ 1.1 targets Python 3.11, 3.12, 3.13, and 3.14. A platform is published only
+when its complete wheel contains every backend available for that platform; no
+same-version incomplete wheel or source fallback is published for a cell whose
+native payload is missing. The current beta CI matrix composes, verifies, and
+clean-installs these cells end to end:</p>
 <ul class="simple">
-<li><p>Linux x86_64</p></li>
-<li><p>Linux aarch64</p></li>
-<li><p>Windows amd64</p></li>
+<li><p>Linux x86_64 / CPython 3.11, 3.12, 3.13, and 3.14: <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and <code class="docutils literal notranslate"><span class="pre">amber</span></code></p></li>
+<li><p>Linux ARM64 / CPython 3.11, 3.12, 3.13, and 3.14: <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and <code class="docutils literal notranslate"><span class="pre">amber</span></code></p></li>
+<li><p>Windows AMD64 / CPython 3.11, 3.12, 3.13, and 3.14: <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and <code class="docutils literal notranslate"><span class="pre">amber</span></code></p></li>
+<li><p>Apple Silicon macOS 15+ / CPython 3.11, 3.12, 3.13, and 3.14: <code class="docutils literal notranslate"><span class="pre">amber</span></code> only</p></li>
 </ul>
-<p>Linux wheels target glibc 2.34 or newer and are tagged <code class="docutils literal notranslate"><span class="pre">manylinux_2_34</span></code>.
-macOS is not currently a packaged-core target.</p>
+<p>Other platform and Python combinations are outside this release’s supported matrix.</p>
+<p>Linux wheels target glibc 2.34 or newer and are tagged <code class="docutils literal notranslate"><span class="pre">manylinux_2_34</span></code>. The
+macOS ARM64 release wheels are intentionally coreless because the legacy core is
+not packaged for macOS.</p>
 </section>
 <section id="runtime-requirements">
 <h2>Runtime Requirements<a class="headerlink" href="#runtime-requirements" title="Link to this heading">#</a></h2>

@@ -65,6 +65,7 @@
 
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Complete wheel release composition" href="release_composition.html" />
     <link rel="prev" title="API Documentation" href="api.html" />
 
 
@@ -382,6 +383,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Search Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_composition.html">Complete Wheel Release Composition</a></li>
 </ul>
 </div>
 </nav></div>
@@ -457,8 +459,8 @@ instead of requiring you to search that space manually.</p>
 <ol class="arabic simple">
 <li><p>CompileIQ samples an initial pool of candidates.</p></li>
 <li><p>Workers evaluate each candidate by calling your objective function.</p></li>
-<li><p>Scores are returned to the core over local socket IPC.</p></li>
-<li><p>The core uses the scores to choose another pool of candidates.</p></li>
+<li><p>Scores are submitted to the selected search engine with <code class="docutils literal notranslate"><span class="pre">tell()</span></code>.</p></li>
+<li><p>The engine uses the scores to choose another pool of candidates.</p></li>
 <li><p>The process repeats until the configured number of generations completes.</p></li>
 </ol>
 <p>Larger <code class="docutils literal notranslate"><span class="pre">pool_size</span></code> values give CompileIQ more candidates to compare per
@@ -473,10 +475,14 @@ objective function, correctness checks, and timeout behavior are reliable.</p>
 <li><p>Explore enough of the search space to avoid getting stuck on an early result.</p></li>
 <li><p>Refine promising regions so the final candidates are useful.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">mutate_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">pool_size</span></code>, <code class="docutils literal notranslate"><span class="pre">cull_size</span></code>, and <code class="docutils literal notranslate"><span class="pre">init_with_true_random_threshold</span></code>
-control this balance. The defaults are intended to be usable for common cases,
-but large or failure-heavy search spaces may need larger pools, more generations,
-or objective-side guardrails that mark bad candidates as <code class="docutils literal notranslate"><span class="pre">INVALID_SCORE</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pool_size</span></code> and <code class="docutils literal notranslate"><span class="pre">generations</span></code> are common controls. The bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> engine also
+uses <code class="docutils literal notranslate"><span class="pre">mutate_rate</span></code> and <code class="docutils literal notranslate"><span class="pre">cull_size</span></code>. Seed windows declared by <code class="docutils literal notranslate"><span class="pre">seed_low</span></code> and
+<code class="docutils literal notranslate"><span class="pre">seed_high</span></code>, including <code class="docutils literal notranslate"><span class="pre">init_with_true_random_threshold</span></code>, have the same public
+initialization meaning for <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and <code class="docutils literal notranslate"><span class="pre">amber</span></code>. The native <code class="docutils literal notranslate"><span class="pre">amber</span></code> engine owns its
+remaining optimizer settings through <code class="docutils literal notranslate"><span class="pre">EngineConfig.options</span></code>.
+The defaults are intended to be usable for common cases, but large or
+failure-heavy search spaces may need larger pools, more generations, or
+objective-side guardrails that mark bad candidates as <code class="docutils literal notranslate"><span class="pre">INVALID_SCORE</span></code>.</p>
 </section>
 <section id="practical-guidance">
 <h2>Practical Guidance<a class="headerlink" href="#practical-guidance" title="Link to this heading">#</a></h2>
@@ -495,12 +501,12 @@ to measurements. More generations let the search refine promising regions over
 time, but they also multiply the total number of objective evaluations. Start
 with a short run to validate correctness, then scale the run once the objective
 function, cache behavior, and timeout handling are reliable.</p>
-<p><code class="docutils literal notranslate"><span class="pre">cull_size</span></code> controls how much of the current pool is used as signal for later
+<p>For the bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> engine, <code class="docutils literal notranslate"><span class="pre">cull_size</span></code> controls how much of the current pool is used as signal for later
 generations. Smaller values focus the search more aggressively around the best
 observed candidates. Larger values preserve more variety, which can help when
 the score is noisy or when many candidates fail for reasons unrelated to
 performance.</p>
-<p><code class="docutils literal notranslate"><span class="pre">mutate_rate</span></code> controls how often later candidates are perturbed away from the
+<p>For <code class="docutils literal notranslate"><span class="pre">ruby</span></code>, <code class="docutils literal notranslate"><span class="pre">mutate_rate</span></code> controls how often later candidates are perturbed away from the
 regions that already look promising. Too little mutation can leave the search
 stuck around an early result. Too much mutation can make the search keep
 exploring after it has enough signal to refine useful candidates.</p>
@@ -512,6 +518,320 @@ adjusting <code class="docutils literal notranslate"><span class="pre">mutate_ra
 <p>When tuning compiler controls, always add correctness checks, compile/runtime
 timeouts, and repeatable benchmarking before trusting a candidate. A fast but
 incorrect candidate is still a failed candidate.</p>
+</section>
+<section id="versioned-search-engines">
+<h2>Versioned Search Engines<a class="headerlink" href="#versioned-search-engines" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Search</span></code> uses the curated <code class="docutils literal notranslate"><span class="pre">ruby</span></code> engine by default, preserving bundled 1.x
+behavior. Complete platform-specific CompileIQ wheels also include the native
+runtime selected by the curated <code class="docutils literal notranslate"><span class="pre">amber</span></code> engine. Both engines use the same public
+installation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>compileiq
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+    <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;amber&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>An engine name selects a complete optimizer implementation. Opaque names such as
+<code class="docutils literal notranslate"><span class="pre">ruby</span></code> and <code class="docutils literal notranslate"><span class="pre">amber</span></code> keep that public identity stable without binding it to an
+algorithm label. A provider that later offers multiple independently selectable
+optimizers can register each one under a distinct engine name.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">EngineConfig</span></code> when an engine also accepts engine-owned settings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">EngineConfig</span>
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+    <span class="n">engine</span><span class="o">=</span><span class="n">EngineConfig</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;amber&quot;</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="mi">17</span><span class="p">},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The bundled adapter and registered backends use the same stateful <code class="docutils literal notranslate"><span class="pre">ask()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">tell()</span></code> lifecycle. Every backend accepts a non-empty subset of outstanding
+candidate IDs in any order. The bundled adapter buffers those subsets until it
+can send the legacy core one complete response; native backends may consume each
+subset immediately. Backends separately declare whether they can issue another
+batch while earlier IDs remain outstanding. CompileIQ rejects empty, duplicate,
+unknown, already-reported, and colliding candidate identifiers, mismatched
+candidate parameters, and mismatched objective counts before backend state
+changes. <code class="docutils literal notranslate"><span class="pre">sample()</span></code> uses a
+separate ephemeral backend, so it cannot advance the optimizer used by a later
+search.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">amber</span></code>, <code class="docutils literal notranslate"><span class="pre">pool_size</span></code> is the initial generation target and the normal batch
+size of a bare <code class="docutils literal notranslate"><span class="pre">ask()</span></code> while earlier candidates remain pending. It is not a hard
+upper bound on one generation. An explicit <code class="docutils literal notranslate"><span class="pre">ask(num_samples=n)</span></code> returns exactly
+<code class="docutils literal notranslate"><span class="pre">n</span></code> candidates: it fills currently unfilled target positions first, then expands
+the generation target by any excess. A bare <code class="docutils literal notranslate"><span class="pre">ask()</span></code> while candidates are pending
+issues another <code class="docutils literal notranslate"><span class="pre">pool_size</span></code> batch under the same fill-then-expand rule. When no
+candidates are pending but target positions remain unfilled, a bare <code class="docutils literal notranslate"><span class="pre">ask()</span></code>
+returns exactly the unfilled count.</p>
+<p>For example, with <code class="docutils literal notranslate"><span class="pre">pool_size=8</span></code>, <code class="docutils literal notranslate"><span class="pre">ask(num_samples=4)</span></code>, followed by <code class="docutils literal notranslate"><span class="pre">ask()</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">ask(num_samples=1)</span></code> returns 4, 8, and 1 candidates in the same enlarged
+13-candidate generation. Pending candidates are never used as parents, and the
+generation advances only after every target position is filled and every issued
+candidate resolves. Failed or explicitly discarded candidates vacate their
+positions and are replaced one-for-one without creating checkpoint-specific ask
+behavior.</p>
+<p>For manual orchestration, <code class="docutils literal notranslate"><span class="pre">tuner.pending_candidates</span></code> exposes a read-only snapshot
+of outstanding work and <code class="docutils literal notranslate"><span class="pre">tuner.result</span></code> exposes accepted history. This includes
+state restored from a checkpoint. Scores are associated by candidate ID, not by
+list position. Parameters need not be echoed in a score; when supplied they are
+validated for compatibility, while the parameters stored with the issued
+candidate remain authoritative.</p>
+<p>Select <code class="docutils literal notranslate"><span class="pre">WorkerTypes.MANUAL</span></code> when candidate evaluation happens outside CompileIQ.
+In this mode, <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> and <code class="docutils literal notranslate"><span class="pre">start()</span></code> fail before running the objective or
+requesting a managed batch; <code class="docutils literal notranslate"><span class="pre">ask()</span></code>, <code class="docutils literal notranslate"><span class="pre">tell()</span></code>, result inspection, and checkpointing
+remain available:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkerTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.utils.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Score</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">managed_execution_disabled</span><span class="p">(</span><span class="n">_config</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This search is evaluated externally&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_externally</span><span class="p">(</span><span class="n">_config</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">0.0</span>  <span class="c1"># Replace with an externally measured objective value.</span>
+
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">managed_execution_disabled</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">WorkerTypes</span><span class="o">.</span><span class="n">MANUAL</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">candidates</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">ask</span><span class="p">()</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">Score</span><span class="p">(</span>
+        <span class="n">score</span><span class="o">=</span><span class="n">run_externally</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">params</span><span class="p">),</span>
+        <span class="n">param_id</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">param_id</span><span class="p">,</span>
+        <span class="n">num_objectives</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span>
+<span class="p">]</span>
+<span class="n">tuner</span><span class="o">.</span><span class="n">tell</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+<span class="n">best</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">best_result</span>
+</pre></div>
+</div>
+<p>With an executable worker, <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> can instead run any pending subset
+without submitting it, advancing the engine, or changing results. Tell order is
+irrelevant:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">executable_tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">WorkerTypes</span><span class="o">.</span><span class="n">NATIVE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">candidates</span> <span class="o">=</span> <span class="n">executable_tuner</span><span class="o">.</span><span class="n">ask</span><span class="p">()</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">executable_tuner</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+<span class="n">executable_tuner</span><span class="o">.</span><span class="n">tell</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">best_result</span></code> is a convenience for <code class="docutils literal notranslate"><span class="pre">tuner.result.get_best_result()</span></code>: it returns
+one result dictionary for a single-objective search and the Pareto-front list for
+a multi-objective search. Other result queries remain on <code class="docutils literal notranslate"><span class="pre">SearchResult</span></code>.
+Managed execution returns that object, so the corresponding one-call form is
+<code class="docutils literal notranslate"><span class="pre">search.start().get_best_result()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">knockout_prob</span></code> is a probability from 0.0 to 1.0 that a parameter is absent in
+the initially sampled population. Native evolutionary search may subsequently
+evolve that binary on/off state; the value is not a fixed quota for every batch.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">amber</span></code> engine supports sealed optimizer checkpoints. A checkpoint continues
+the saved Search; it is not a warm start or a fresh search seeded from prior
+information. Those are separate future capabilities and should use visibly
+different API names.</p>
+<p>Checkpoint creation is explicit. During manual <code class="docutils literal notranslate"><span class="pre">ask()</span></code> / <code class="docutils literal notranslate"><span class="pre">tell()</span></code> orchestration,
+call <code class="docutils literal notranslate"><span class="pre">save_checkpoint()</span></code> whenever the current state should be captured:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">checkpoint</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">(</span><span class="s2">&quot;search.checkpoint&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The call captures the current state without first draining workers, waiting for
+late results, cancelling remote jobs, or altering pending candidates.</p>
+<p>For managed execution (where <code class="docutils literal notranslate"><span class="pre">start()</span></code> runs the ask, evaluate, and tell loop),
+provide an optional path to atomically replace a checkpoint after every
+successfully accepted batch:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">&quot;search.checkpoint&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With no <code class="docutils literal notranslate"><span class="pre">checkpoint_path</span></code>, <code class="docutils literal notranslate"><span class="pre">start()</span></code> creates no automatic checkpoints. An engine
+that does not support checkpointing rejects the option before starting work.
+CompileIQ also checks the configured result-history and population projection
+against checkpoint-v1 limits before evaluating candidates. If that projection
+is too large, reduce <code class="docutils literal notranslate"><span class="pre">generations</span></code> or <code class="docutils literal notranslate"><span class="pre">pool_size</span></code>, or run without managed
+checkpointing. The projection is deliberately conservative for a search space
+that may exhaust early; refills or manually expanded generations can also grow
+history beyond the nominal projection. The save-time limit therefore remains
+authoritative. Manual <code class="docutils literal notranslate"><span class="pre">save_checkpoint()</span></code> cannot predict an unbounded
+<code class="docutils literal notranslate"><span class="pre">ask()</span></code>/<code class="docutils literal notranslate"><span class="pre">tell()</span></code> history, but reports that limit clearly before sealing or
+creating an artifact.</p>
+<p>CompileIQ does not impose a separate total checkpoint file-size limit for this
+local API. The checkpoint schema, bounded fields and collections, duplicate-key
+rejection, integrity checks, and backend-owned validation still apply. Services
+or other untrusted ingestion boundaries should enforce their own resource limits
+before passing a checkpoint to CompileIQ.</p>
+<p>Managed checkpoints are quiescent: no candidates issued by Search remain
+pending. A failed batch may leave ordinary target positions unfilled in the same
+generation; that state is included before the next batch is asked. Manual
+<code class="docutils literal notranslate"><span class="pre">save_checkpoint()</span></code> remains available when pending work must be captured.</p>
+<p>The default restore policy resubmits candidates that were pending when a manual
+checkpoint was created:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">resumed</span> <span class="o">=</span> <span class="n">Search</span><span class="o">.</span><span class="n">from_checkpoint</span><span class="p">(</span>
+    <span class="n">checkpoint</span><span class="p">,</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">resumed</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The saved search configuration and backend-owned optimizer options are restored
+automatically. The objective function and search space remain caller-supplied
+executable inputs. Checkpoints record only the canonical type names for built-in
+workers and trackers, not their objects, credentials, clients, or configuration.
+<code class="docutils literal notranslate"><span class="pre">from_checkpoint()</span></code> reconstructs those built-in types with default settings. A
+custom or unknown worker requires an explicit <code class="docutils literal notranslate"><span class="pre">worker_type</span></code>; pass
+<code class="docutils literal notranslate"><span class="pre">tracker_config</span></code> to retain non-default tracker settings such as a logging level
+or tracking URI. Explicit worker and tracker arguments override the saved type
+names.</p>
+<p>The supplied search space must have the saved identity. Incompatible engine,
+provider, configuration, and provider option overrides are rejected.
+The saved <code class="docutils literal notranslate"><span class="pre">exit_on_failure</span></code> value is restored as the execution-policy default,
+while an explicit <code class="docutils literal notranslate"><span class="pre">exit_on_failure=True</span></code> or <code class="docutils literal notranslate"><span class="pre">exit_on_failure=False</span></code> argument
+overrides it. Direct <code class="docutils literal notranslate"><span class="pre">restore_checkpoint()</span></code> retains the fresh target Search’s
+configured policy.
+<code class="docutils literal notranslate"><span class="pre">Search.from_checkpoint(...)</span></code> is the canonical restore API.</p>
+<p>For development against an intentionally rebuilt provider, the canonical restore
+API offers one narrow, unsafe provenance override:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">resumed</span> <span class="o">=</span> <span class="n">Search</span><span class="o">.</span><span class="n">from_checkpoint</span><span class="p">(</span>
+    <span class="n">checkpoint</span><span class="p">,</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space</span><span class="p">,</span>
+    <span class="n">allow_unsafe_provenance_mismatch</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This option is off by default and is intended only for debugging. It changes
+<code class="docutils literal notranslate"><span class="pre">provider_version</span></code> and <code class="docutils literal notranslate"><span class="pre">artifact_sha256</span></code> mismatches from errors into one
+<code class="docutils literal notranslate"><span class="pre">CheckpointCompatibilityWarning</span></code> that reports the saved and current values. The
+equivalent process setting is
+<code class="docutils literal notranslate"><span class="pre">CIQ_UNSAFE_ALLOW_CHECKPOINT_PROVENANCE_MISMATCH=1</span></code>; it is read when restore is
+called.</p>
+<p>The override does not bypass checkpoint-format parsing, ABI, engine, provider,
+search-space identity, search configuration, sealed-state checksum
+or authentication, or provider-owned state validation. A restore using it comes
+from a non-matching build and should not be treated as an ordinary compatible
+continuation. Intentional ABI or optimizer-state migrations require a
+provider-specific migration mechanism or a future resealing tool, not this
+facade-level provenance option.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">RESUBMIT</span></code>, CompileIQ sends every restored pending candidate through the
+newly configured worker using the same candidate identifier and parameters. It
+does not ask the optimizer for replacements first. This is <em>at-least-once</em>
+evaluation: CompileIQ does not reattach to an old worker or remote job, and it
+does not promise the same job-level timing or execution trajectory. CompileIQ
+does not discover results that arrive only on the original execution branch. A
+manual caller may explicitly submit such a result while its candidate ID remains
+pending in the restored Search.</p>
+<p>To abandon the old pending work instead, restore with an explicit discard
+policy:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">resumed</span> <span class="o">=</span> <span class="n">Search</span><span class="o">.</span><span class="n">from_checkpoint</span><span class="p">(</span>
+    <span class="n">checkpoint</span><span class="p">,</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">worker_type</span><span class="p">,</span>
+    <span class="n">pending_policy</span><span class="o">=</span><span class="s2">&quot;discard&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">DISCARD</span></code> removes those candidates from both public pending state and native
+optimizer state. Their identifiers are no longer accepted by <code class="docutils literal notranslate"><span class="pre">tell()</span></code>. The
+generation target does not shrink, so each discarded candidate creates one
+ordinary unfilled position. With no other candidates pending, the next bare
+<code class="docutils literal notranslate"><span class="pre">ask()</span></code> fills every unfilled position, including any that already existed before
+the checkpoint. There is no checkpoint-only replacement mode.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Behavior</p></th>
+<th class="head"><p>Resubmit, the default</p></th>
+<th class="head"><p>Discard, explicit</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Saved pending IDs and parameters</p></td>
+<td><p>Preserved</p></td>
+<td><p>Removed</p></td>
+</tr>
+<tr class="row-odd"><td><p>First work after restore</p></td>
+<td><p>Same candidates through the new worker</p></td>
+<td><p>Fill the generation’s ordinary unfilled positions</p></td>
+</tr>
+<tr class="row-even"><td><p>Original remote jobs</p></td>
+<td><p>Not reattached or cancelled</p></td>
+<td><p>Not reattached or cancelled</p></td>
+</tr>
+<tr class="row-odd"><td><p>Duplicate execution risk</p></td>
+<td><p>Yes; evaluation is at least once</p></td>
+<td><p>Original work may be wasted while replacements run</p></td>
+</tr>
+<tr class="row-even"><td><p>Result completed on the original branch</p></td>
+<td><p>Not discovered automatically; a manual caller may submit it while the ID remains pending</p></td>
+<td><p>Rejected because the ID is no longer pending</p></td>
+</tr>
+<tr class="row-odd"><td><p>Optimizer trajectory</p></td>
+<td><p>Preserves the saved outstanding set</p></td>
+<td><p>May diverge and advance sampling state</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For example, if candidate ID <code class="docutils literal notranslate"><span class="pre">41</span></code> with parameters <code class="docutils literal notranslate"><span class="pre">{x:</span> <span class="pre">0.2}</span></code> is pending,
+resubmit evaluates that same ID and parameters through the new worker. Discard
+removes ID <code class="docutils literal notranslate"><span class="pre">41</span></code>, rejects a later score for it, and leaves its target position
+unfilled. If every other target position was already occupied, the next bare
+ask returns one replacement; a partially issued generation may have additional
+unfilled positions to return at the same time.</p>
+<p>If a workflow must checkpoint only at a quiescent boundary, fail closed instead
+of draining automatically:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">checkpoint</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">(</span>
+    <span class="s2">&quot;search.checkpoint&quot;</span><span class="p">,</span>
+    <span class="n">require_no_pending</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>When candidates are outstanding, this raises before backend sealing and does not
+create or replace an artifact. CompileIQ does not cancel jobs, drain workers, or
+reattach to worker state as part of checkpoint creation or restoration.</p>
+<p>The same checkpoint artifact carries the accumulated user-visible
+<code class="docutils literal notranslate"><span class="pre">SearchResult</span></code>. Completed accepted scores are restored automatically, and
+<code class="docutils literal notranslate"><span class="pre">resumed.start()</span></code> appends later accepted scores to that history. Pending,
+discarded, rejected, duplicate, and late scores do not create result rows.
+Protected search results retain the same opaque formatted candidate payloads
+shown through the ordinary <code class="docutils literal notranslate"><span class="pre">SearchResult</span></code>; raw protected knob names and values
+are not added to the checkpoint.</p>
+<p>Checkpoints include public compatibility metadata and an opaque backend-sealed
+execution-state document. The native document follows the strict
+<code class="docutils literal notranslate"><span class="pre">compileiq-checkpoint-v1</span></code> contract: unknown fields and generic metadata are
+forbidden, sizes and nesting are bounded, protected genotype names are excluded,
+and the native checkpoint-sealing component validates and canonicalizes the
+complete document before sealing and after unsealing. The user-visible result ledger is separately schema- and
+resource-validated and is never used to reconstruct optimizer state. Restore
+fails closed when the engine, provider, runtime artifact, ABI, search
+configuration, search-space identity, checksum, or sealed data does not match.</p>
+<p>At a quiescent boundary with no pending candidates, restoring the sealed native
+optimizer and RNG state provides exact optimizer continuation. A checkpoint with
+pending work preserves candidate identity, but the at-least-once resubmission
+policy means CompileIQ does not claim preservation of the exact execution
+trajectory. Exact continuation assumes a compatible native runtime environment;
+it does not promise identical trajectories across runtime, dependency, Python,
+or platform upgrades. Direct <code class="docutils literal notranslate"><span class="pre">restore_checkpoint()</span></code> is limited to a fresh, compatible
+<code class="docutils literal notranslate"><span class="pre">Search</span></code>; it does not merge unrelated active state or result history. The
+bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> engine does not support this checkpoint contract.</p>
 </section>
 </section>
 
@@ -533,6 +853,15 @@ incorrect candidate is still a failed candidate.</p>
         <p class="prev-next-subtitle">previous</p>
         <p class="prev-next-title">API Documentation</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="release_composition.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Complete wheel release composition</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -559,6 +888,7 @@ incorrect candidate is still a failed candidate.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-search-progresses">How a Search Progresses</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exploration-and-refinement">Exploration And Refinement</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-guidance">Practical Guidance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#versioned-search-engines">Versioned Search Engines</a></li>
 </ul>
   </nav></div>
 

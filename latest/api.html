@@ -383,6 +383,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_composition.html">Complete Wheel Release Composition</a></li>
 </ul>
 </div>
 </nav></div>
@@ -438,6 +439,305 @@
 <h1>API Documentation<a class="headerlink" href="#api-documentation" title="Link to this heading">#</a></h1>
 <section id="module-compileiq.ciq">
 <span id="compileiq-ciq"></span><h2>compileiq.ciq<a class="headerlink" href="#module-compileiq.ciq" title="Link to this heading">#</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointCompatibilityWarning">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">compileiq.ciq.</span></span><span class="sig-name descname"><span class="pre">CheckpointCompatibilityWarning</span></span><a class="headerlink" href="#compileiq.ciq.CheckpointCompatibilityWarning" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#UserWarning" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserWarning</span></code></a></p>
+<p>A build-provenance check was bypassed via the unsafe debug override.</p>
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointSearchConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">compileiq.ciq.</span></span><span class="sig-name descname"><span class="pre">CheckpointSearchConfig</span></span><a class="headerlink" href="#compileiq.ciq.CheckpointSearchConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Bounded public search shape needed before the sealed state is restored.</p>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointSearchConfig.problem_type">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">problem_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.15)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'min'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'max'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointSearchConfig.problem_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointSearchConfig.normalize">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalize</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointSearchConfig.normalize" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointSearchConfig.num_objectives">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_objectives</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointSearchConfig.num_objectives" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ge</strong> = 1</p></li>
+<li><p><strong>le</strong> = 64</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointSearchConfig.generations">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointSearchConfig.generations" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ge</strong> = 1</p></li>
+<li><p><strong>le</strong> = 4294967295</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointSearchConfig.pool_size">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pool_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointSearchConfig.pool_size" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ge</strong> = 6</p></li>
+<li><p><strong>le</strong> = 4096</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointResultRow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">compileiq.ciq.</span></span><span class="sig-name descname"><span class="pre">CheckpointResultRow</span></span><a class="headerlink" href="#compileiq.ciq.CheckpointResultRow" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>One bounded user-visible SearchResult row stored outside optimizer state.</p>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointResultRow.metadata">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointResultRow.metadata" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_length</strong> = 1048576</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointResultRow.generation">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointResultRow.generation" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ge</strong> = 0</p></li>
+<li><p><strong>le</strong> = 4294967295</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointResultRow.scores">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.15)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Strict</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.15)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Strict</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.15)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'*'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointResultRow.scores" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = 1</p></li>
+<li><p><strong>max_length</strong> = 64</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointResultRow.params">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointResultRow.params" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointResultRow.normalized_scores">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalized_scores</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.15)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Strict</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.15)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Strict</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.15)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'*'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointResultRow.normalized_scores" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = 1</p></li>
+<li><p><strong>max_length</strong> = 64</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointResultLedger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">compileiq.ciq.</span></span><span class="sig-name descname"><span class="pre">CheckpointResultLedger</span></span><a class="headerlink" href="#compileiq.ciq.CheckpointResultLedger" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Validated user-visible history carried in the single checkpoint artifact.</p>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointResultLedger.rows">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#compileiq.ciq.CheckpointResultRow" title="compileiq.ciq.CheckpointResultRow"><span class="pre">CheckpointResultRow</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Optional]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointResultLedger.rows" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_length</strong> = 262144</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">compileiq.ciq.</span></span><span class="sig-name descname"><span class="pre">CheckpointEnvelope</span></span><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Safe outer metadata required to reconstruct a Search before unsealing.</p>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.format">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.15)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'compileiq-checkpoint-v1'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.format" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.engine">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">engine</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.engine" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = 1</p></li>
+<li><p><strong>max_length</strong> = 128</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.provider">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provider</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.provider" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = 1</p></li>
+<li><p><strong>max_length</strong> = 128</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.provider_version">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provider_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.provider_version" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = 1</p></li>
+<li><p><strong>max_length</strong> = 128</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.abi_version">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">abi_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.abi_version" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ge</strong> = 0</p></li>
+<li><p><strong>le</strong> = 4294967295</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.artifact_sha256">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">artifact_sha256</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.artifact_sha256" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> = ^[0-9a-f]{64}$</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.search_space_identity">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">search_space_identity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.search_space_identity" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> = ^[0-9a-f]{64}$</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.search_config">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">search_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#compileiq.ciq.CheckpointSearchConfig" title="compileiq.ciq.CheckpointSearchConfig"><span class="pre">CheckpointSearchConfig</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.search_config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.exit_on_failure">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exit_on_failure</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.exit_on_failure" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.worker_type_name">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_type_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.worker_type_name" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = 1</p></li>
+<li><p><strong>max_length</strong> = 128</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.tracker_type_name">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tracker_type_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.tracker_type_name" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = 1</p></li>
+<li><p><strong>max_length</strong> = 128</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.result_ledger">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">result_ledger</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#compileiq.ciq.CheckpointResultLedger" title="compileiq.ciq.CheckpointResultLedger"><span class="pre">CheckpointResultLedger</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.result_ledger" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.sealed_blob_sha256">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sealed_blob_sha256</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.sealed_blob_sha256" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> = ^[0-9a-f]{64}$</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.CheckpointEnvelope.sealed_blob">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sealed_blob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.ciq.CheckpointEnvelope.sealed_blob" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Constraints<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = 1</p></li>
+<li><p><strong>max_length</strong> = 25165824</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class pydantic_model">
 <dt class="sig sig-object py" id="compileiq.ciq.Search">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">compileiq.ciq.</span></span><span class="sig-name descname"><span class="pre">Search</span></span><a class="headerlink" href="#compileiq.ciq.Search" title="Link to this definition">#</a></dt>
@@ -466,7 +766,7 @@ then call <cite>start()</cite> to run the search and retrieve the results.</p>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="compileiq.ciq.Search.worker_type">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#compileiq.types.WorkerTypes" title="compileiq.types.WorkerTypes"><span class="pre">WorkerTypes</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#type" title="(in Python v3.15)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#compileiq.types.Worker" title="compileiq.types.Worker"><span class="pre">Worker</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">WorkerTypes.NATIVE</span></em><a class="headerlink" href="#compileiq.ciq.Search.worker_type" title="Link to this definition">#</a></dt>
-<dd><p>Selects which worker implementation runs your objective function. Built-in options via WorkerTypes: NATIVE (default, local multiprocessing), RAY (distributed via Ray), or ASYNC (asyncio concurrency). A Worker subclass can also be passed directly for custom implementations.</p>
+<dd><p>Selects which worker implementation runs your objective function. Built-in options via WorkerTypes: NATIVE (default, local multiprocessing), ISOLATED (fresh local process per task), RAY (distributed via Ray), ASYNC (asyncio concurrency), or MANUAL (external ask/tell execution only). A Worker subclass can also be passed directly for custom implementations.</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -506,6 +806,12 @@ then call <cite>start()</cite> to run the search and retrieve the results.</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.engine">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">engine</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">EngineConfig</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ruby'</span></em><a class="headerlink" href="#compileiq.ciq.Search.engine" title="Link to this definition">#</a></dt>
+<dd><p>Curated execution engine. The default ‘ruby’ runs the bundled core and preserves 1.x behavior; ‘amber’ selects the native runtime included in complete platform wheels. Use EngineConfig(name=…, options={…}) when passing engine-owned settings.</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="compileiq.ciq.Search.run_id">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#compileiq.ciq.Search.run_id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -514,6 +820,36 @@ then call <cite>start()</cite> to run the search and retrieve the results.</p>
 <dt class="sig sig-object py" id="compileiq.ciq.Search.current_generation">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_generation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#compileiq.ciq.Search.current_generation" title="Link to this definition">#</a></dt>
 <dd><p>Current generation of the search, starting at 0.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.provider">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provider</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="headerlink" href="#compileiq.ciq.Search.provider" title="Link to this definition">#</a></dt>
+<dd><p>Resolved backend provider for diagnostics and checkpoint provenance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.engine_options">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">engine_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#compileiq.ciq.Search.engine_options" title="Link to this definition">#</a></dt>
+<dd><p>Validated provider-owned settings active for this search.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.pending_candidates">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pending_candidates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">BackendCandidate</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#compileiq.ciq.Search.pending_candidates" title="Link to this definition">#</a></dt>
+<dd><p>Outstanding candidates, including work restored for resubmission.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.result">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#compileiq.results.SearchResult" title="compileiq.results.SearchResult"><span class="pre">SearchResult</span></a></em><a class="headerlink" href="#compileiq.ciq.Search.result" title="Link to this definition">#</a></dt>
+<dd><p>Accumulated accepted results, including history restored from a checkpoint.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.best_result">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">best_result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#compileiq.ciq.Search.best_result" title="Link to this definition">#</a></dt>
+<dd><p>Return the best completed result or multi-objective Pareto front so far.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -532,10 +868,109 @@ from the search space provided by the user.</p>
 <dd class="field-odd"><p><strong>num_samples</strong> (<cite>int</cite>) – Number of samples to retrieve from the search space.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A list of parameter sets sampled from the search space, in the same format as the
-parameters sent to the objective function during a normal search.</p>
+<dd class="field-even"><p>A list of parameter sets sampled from the search space, in the same format as the</p>
 </dd>
 </dl>
+<p>parameters sent to the objective function during a normal search.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.ask">
+<span class="sig-name descname"><span class="pre">ask</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">BackendCandidate</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#compileiq.ciq.Search.ask" title="Link to this definition">#</a></dt>
+<dd><p>Ask a registered backend for candidates without running the objective function.</p>
+<p>Batch sizing and repeated-ask behavior are provider-owned capabilities.
+<code class="docutils literal notranslate"><span class="pre">num_samples</span></code> requests that exact batch size from providers supporting
+arbitrary batches. When omitted, the provider selects its next natural
+batch from its current state. Providers separately declare whether a new
+batch may be issued while earlier candidates remain pending.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">BackendCandidate</span><span class="p"><span class="pre">]</span></span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">task_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">worker_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#compileiq.utils.validation.Score" title="compileiq.utils.validation.Score"><span class="pre">Score</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#compileiq.ciq.Search.evaluate" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate pending candidates without submitting them to the optimizer.</p>
+<p><code class="docutils literal notranslate"><span class="pre">candidates</span></code> may be any non-empty subset returned by <a class="reference internal" href="#compileiq.ciq.Search.ask" title="compileiq.ciq.Search.ask"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ask()</span></code></a>, in
+any order. Candidate IDs and parameters are validated before the worker
+runs. The returned scores remain caller-owned until passed to
+<a class="reference internal" href="#compileiq.ciq.Search.tell" title="compileiq.ciq.Search.tell"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tell()</span></code></a>; this method does not apply optimizer failure policy,
+advance backend state, remove pending candidates, or append results.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.tell">
+<span class="sig-name descname"><span class="pre">tell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#compileiq.utils.validation.Score" title="compileiq.utils.validation.Score"><span class="pre">Score</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#compileiq.ciq.Search.tell" title="Link to this definition">#</a></dt>
+<dd><p>Submit scores for pending candidates using their stable <code class="docutils literal notranslate"><span class="pre">param_id</span></code> values.</p>
+<p>List order is irrelevant, and every provider accepts any non-empty
+subset of outstanding IDs. <code class="docutils literal notranslate"><span class="pre">Score.params</span></code> is an optional compatibility
+echo: when supplied it is validated, but the provider’s detached pending
+snapshot is authoritative for backend submissions and stored result rows.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.save_checkpoint">
+<span class="sig-name descname"><span class="pre">save_checkpoint</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><span class="pre">PathLike</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>,</dd>
+<dd><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">require_no_pending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><span class="pre">Path</span></a></span></span><a class="headerlink" href="#compileiq.ciq.Search.save_checkpoint" title="Link to this definition">#</a></dt>
+<dd><p>Atomically save visible results and backend-sealed execution state.</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">require_no_pending</span></code> to fail before sealing or artifact creation
+when any candidate remains outstanding.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.restore_checkpoint">
+<span class="sig-name descname"><span class="pre">restore_checkpoint</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><span class="pre">PathLike</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>,</dd>
+<dd><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">pending_policy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PendingCandidatePolicy</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PendingCandidatePolicy.RESUBMIT</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">allow_unsafe_provenance_mismatch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#compileiq.ciq.Search.restore_checkpoint" title="Link to this definition">#</a></dt>
+<dd><p>Restore compatible state, optionally accepting unsafe build-provenance drift.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compileiq.ciq.Search.from_checkpoint">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_checkpoint</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><span class="pre">PathLike</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>,</dd>
+<dd><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">objective_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><span class="pre">Callable</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">search_space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><span class="pre">Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><span class="pre">Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#compileiq.search_spaces.compilers.SearchSpaceProvider" title="compileiq.search_spaces.compilers.SearchSpaceProvider"><span class="pre">SearchSpaceProvider</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#compileiq.search_spaces.compilers.SearchSpaceProvider" title="compileiq.search_spaces.compilers.SearchSpaceProvider"><span class="pre">SearchSpaceProvider</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">worker_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#compileiq.types.WorkerTypes" title="compileiq.types.WorkerTypes"><span class="pre">WorkerTypes</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#type" title="(in Python v3.15)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#compileiq.types.Worker" title="compileiq.types.Worker"><span class="pre">Worker</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tracker_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#compileiq.types.TrackerConfig" title="compileiq.types.TrackerConfig"><span class="pre">TrackerConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">pending_policy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PendingCandidatePolicy</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PendingCandidatePolicy.RESUBMIT</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">exit_on_failure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">allow_unsafe_provenance_mismatch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">search_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#compileiq.ciq.Search" title="compileiq.ciq.Search"><span class="pre">Search</span></a></span></span><a class="headerlink" href="#compileiq.ciq.Search.from_checkpoint" title="Link to this definition">#</a></dt>
+<dd><p>Restore a search, reconstructing safe built-in execution types when possible.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -545,25 +980,17 @@ parameters sent to the objective function during a normal search.</p>
 <dl>
 <dd><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">task_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><span class="pre">PathLike</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">additional_worker_kwargs</span></span></em>,</dd>
 </dl>
 
 <span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#compileiq.results.SearchResult" title="compileiq.results.SearchResult"><span class="pre">SearchResult</span></a></span></span><a class="headerlink" href="#compileiq.ciq.Search.start" title="Link to this definition">#</a></dt>
-<dd><p>The CompileIQ core is started as a subprocess through here.</p>
-<p>The communication between python process and the subprocess is done through sockets:</p>
-<ol class="arabic simple">
-<li><p>During __init__ we prepare the python socket server for communication with the
-core subprocess.</p></li>
-<li><p>The <cite>search_space.json</cite> and <cite>main_config.json</cite> files are created inside the cache
-folder. (Core needs these.)</p></li>
-<li><p>We start the core process with the correct environment variables and wait for
-communication.</p></li>
-<li><p>The core process will start sending parameter candidates which we will execute
-using multiprocess.</p></li>
-<li><p>The Python process returns the scores through the socket.</p></li>
-<li><p>At some point the core process sends a completion flag indicating the end of the
-tune process.</p></li>
-</ol>
+<dd><p>Run the selected engine through its managed ask, evaluate, and tell lifecycle.</p>
+<p>Restored pending candidates are evaluated first through the newly configured worker.
+Otherwise the engine produces each candidate batch, the worker evaluates it, and the
+accepted scores are submitted until the configured generation limit is reached.
+The returned result contains both restored history and newly accepted evaluations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -574,6 +1001,9 @@ is <cite>False</cite>.</p></li>
 If the timeout is reached, the worker will treat it as a failed execution and return
 a failed Score. This is useful to prevent workers from hanging indefinitely on
 certain parameter sets.</p></li>
+<li><p><strong>checkpoint_path</strong> – When set, atomically replace this checkpoint after each successfully accepted
+managed batch. The selected engine must support checkpointing. No automatic
+checkpoint is created when this parameter is None.</p></li>
 <li><p><strong>**additional_worker_kwargs</strong> – <p>Additional keyword arguments forwarded to the worker’s <code class="docutils literal notranslate"><span class="pre">run()</span></code> method.
 Each worker accepts the kwargs it cares about. For example:</p>
 <ul>
@@ -880,6 +1310,12 @@ that need to re-establish tracker state (e.g., RayWorker remote tasks).</p>
 <dd><p>Whether this worker supports the <cite>task_timeout</cite> parameter on its <cite>run</cite> method.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="compileiq.types.Worker.supports_managed_execution">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports_managed_execution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></em><a class="headerlink" href="#compileiq.types.Worker.supports_managed_execution" title="Link to this definition">#</a></dt>
+<dd><p>Whether this worker can execute objectives through <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> or <code class="docutils literal notranslate"><span class="pre">start()</span></code>.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="compileiq.types.Worker.run">
 <em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span>
@@ -888,14 +1324,16 @@ that need to re-establish tracker state (e.g., RayWorker remote tasks).</p>
 <dd><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><span class="pre">Callable</span></a></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">params_pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>,</dd>
-<dd><em class="sig-param"><span class="n"><span class="pre">params_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">params_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">num_function_returns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>,</dd>
 </dl>
 
 <span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#compileiq.utils.validation.Score" title="compileiq.utils.validation.Score"><span class="pre">Score</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#compileiq.types.Worker.run" title="Link to this definition">#</a></dt>
-<dd><p>Execute the objective function across a pool of parameters.</p>
+<dd><p>Execute a parameter pool while preserving backend-owned candidate IDs.</p>
+<p><code class="docutils literal notranslate"><span class="pre">params_ids</span></code> may contain integers or strings. Every returned non-baseline
+<code class="docutils literal notranslate"><span class="pre">Score</span></code> must carry the ID associated with the corresponding input parameter.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1020,6 +1458,13 @@ Ray Documentation:</p>
 <span class="sig-name descname"><span class="pre">ASYNC</span></span><a class="headerlink" href="#compileiq.types.WorkerTypes.ASYNC" title="Link to this definition">#</a></dt>
 <dd><p>Uses Python’s asyncio library to run your workload. The objective function must be
 of type <cite>async</cite> and be prepared to take advantage of concurrency.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="compileiq.types.WorkerTypes.MANUAL">
+<span class="sig-name descname"><span class="pre">MANUAL</span></span><a class="headerlink" href="#compileiq.types.WorkerTypes.MANUAL" title="Link to this definition">#</a></dt>
+<dd><p>Disables CompileIQ-managed objective execution. Use <code class="docutils literal notranslate"><span class="pre">ask()</span></code> to obtain candidates,
+evaluate them externally, and submit their scores through <code class="docutils literal notranslate"><span class="pre">tell()</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1359,8 +1804,8 @@ These are fields CompileIQ overwrites and the user should not set by themselves.
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="compileiq.utils.validation.Score.params">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#compileiq.utils.validation.Score.params" title="Link to this definition">#</a></dt>
-<dd><p>The parameters sent to the objective function that generated this score</p>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#compileiq.utils.validation.Score.params" title="Link to this definition">#</a></dt>
+<dd><p>Deprecated for Search.tell(): optional compatibility echo of the parameters that generated this score. Candidate IDs are authoritative, and Search stores the parameters from the issued BackendCandidate.</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1428,16 +1873,17 @@ and <cite>num_objectives</cite> reported by the user at <cite>SearchConfiguratio
 <span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">RangeParamConfig</span></span></span><a class="headerlink" href="#compileiq.search_spaces.base.range" title="Link to this definition">#</a></dt>
 <dd><p>Search space that follows a range-like format.</p>
 <p class="rubric">Example</p>
-<p><cite>range(0,9,2)</cite> will produce the search space of <cite>[1,3,5,7,9]</cite></p>
+<p><cite>range(0,8,2)</cite> will produce the inclusive search space <cite>[0,2,4,6,8]</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>start</strong> – Similar to a loop, start of the range.</p></li>
-<li><p><strong>end</strong> – Similar to a loop, end of the range. Must respect the step size to not overflow or
-underflow</p></li>
+<li><p><strong>end</strong> – Inclusive upper bound. Values advance from <code class="docutils literal notranslate"><span class="pre">start</span></code> by <code class="docutils literal notranslate"><span class="pre">step</span></code> without exceeding
+this bound; the bound itself does not need to fall on that stepped grid.</p></li>
 <li><p><strong>step</strong> – Similar to a loop, how to slide the range window.</p></li>
-<li><p><strong>knockout_prob</strong> – The <cite>knockout_prob</cite> is a percentage value representing the likelihood of the value
-being dropped and not forwarded to the user objective function.</p></li>
+<li><p><strong>knockout_prob</strong> – Probability from 0.0 to 1.0 that the parameter is omitted from an initially sampled
+candidate. Search engines may then evolve the parameter’s on/off state, so this
+is an initialization prior rather than a guaranteed ratio in every candidate batch.</p></li>
 <li><p><strong>seed_low</strong> – Range parameters can also specify a secondary subset through <cite>seed_low</cite> and <cite>seed_high</cite>.
 Instead of sampling from the full range, CompileIQ will initialize with values
 inside this smaller range. This can speed your search if your problem has too many
@@ -1473,8 +1919,9 @@ Legacy version called this Enum</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>choice_list</strong> – A list of values to sample from.</p></li>
-<li><p><strong>knockout_prob</strong> – The <cite>knockout_prob</cite> is a percentage value representing the likelihood of the value
-being dropped and not forwarded to the user objective function.</p></li>
+<li><p><strong>knockout_prob</strong> – Probability from 0.0 to 1.0 that the parameter is omitted from an initially sampled
+candidate. Search engines may then evolve the parameter’s on/off state, so this
+is an initialization prior rather than a guaranteed ratio in every candidate batch.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1499,8 +1946,9 @@ advantage of knockout, like on and off flags from compilers.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>const_value</strong> – A constant value that will be forwarded to your evaluation.</p></li>
-<li><p><strong>knockout_prob</strong> – The <cite>knockout_prob</cite> is a percentage value representing the likelihood of the value
-being dropped and not forwarded to the user objective function.</p></li>
+<li><p><strong>knockout_prob</strong> – Probability from 0.0 to 1.0 that the parameter is omitted from an initially sampled
+candidate. Search engines may then evolve the parameter’s on/off state, so this
+is an initialization prior rather than a guaranteed ratio in every candidate batch.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1526,8 +1974,9 @@ being dropped and not forwarded to the user objective function.</p></li>
 <li><p><strong>end</strong> – Similar to a loop, end of the range. Must respect the step size to not overflow or
 underflow</p></li>
 <li><p><strong>total</strong> – The larger the total number the bigger the sampler space CompileIQ will use.</p></li>
-<li><p><strong>knockout_prob</strong> – The <cite>knockout_prob</cite> is a percentage value representing the likelihood of the value
-being dropped and not forwarded to the user objective function.</p></li>
+<li><p><strong>knockout_prob</strong> – Probability from 0.0 to 1.0 that the parameter is omitted from an initially sampled
+candidate. Search engines may then evolve the parameter’s on/off state, so this
+is an initialization prior rather than a guaranteed ratio in every candidate batch.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2331,6 +2780,44 @@ will continue.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-compileiq.ciq">compileiq.ciq</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointCompatibilityWarning"><code class="docutils literal notranslate"><span class="pre">CheckpointCompatibilityWarning</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointSearchConfig"><code class="docutils literal notranslate"><span class="pre">CheckpointSearchConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointSearchConfig.problem_type"><code class="docutils literal notranslate"><span class="pre">problem_type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointSearchConfig.normalize"><code class="docutils literal notranslate"><span class="pre">normalize</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointSearchConfig.num_objectives"><code class="docutils literal notranslate"><span class="pre">num_objectives</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointSearchConfig.generations"><code class="docutils literal notranslate"><span class="pre">generations</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointSearchConfig.pool_size"><code class="docutils literal notranslate"><span class="pre">pool_size</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointResultRow"><code class="docutils literal notranslate"><span class="pre">CheckpointResultRow</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointResultRow.metadata"><code class="docutils literal notranslate"><span class="pre">metadata</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointResultRow.generation"><code class="docutils literal notranslate"><span class="pre">generation</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointResultRow.scores"><code class="docutils literal notranslate"><span class="pre">scores</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointResultRow.params"><code class="docutils literal notranslate"><span class="pre">params</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointResultRow.normalized_scores"><code class="docutils literal notranslate"><span class="pre">normalized_scores</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointResultLedger"><code class="docutils literal notranslate"><span class="pre">CheckpointResultLedger</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointResultLedger.rows"><code class="docutils literal notranslate"><span class="pre">rows</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope"><code class="docutils literal notranslate"><span class="pre">CheckpointEnvelope</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.format"><code class="docutils literal notranslate"><span class="pre">format</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.engine"><code class="docutils literal notranslate"><span class="pre">engine</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.provider"><code class="docutils literal notranslate"><span class="pre">provider</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.provider_version"><code class="docutils literal notranslate"><span class="pre">provider_version</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.abi_version"><code class="docutils literal notranslate"><span class="pre">abi_version</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.artifact_sha256"><code class="docutils literal notranslate"><span class="pre">artifact_sha256</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.search_space_identity"><code class="docutils literal notranslate"><span class="pre">search_space_identity</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.search_config"><code class="docutils literal notranslate"><span class="pre">search_config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.exit_on_failure"><code class="docutils literal notranslate"><span class="pre">exit_on_failure</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.worker_type_name"><code class="docutils literal notranslate"><span class="pre">worker_type_name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.tracker_type_name"><code class="docutils literal notranslate"><span class="pre">tracker_type_name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.result_ledger"><code class="docutils literal notranslate"><span class="pre">result_ledger</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.sealed_blob_sha256"><code class="docutils literal notranslate"><span class="pre">sealed_blob_sha256</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.CheckpointEnvelope.sealed_blob"><code class="docutils literal notranslate"><span class="pre">sealed_blob</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search"><code class="docutils literal notranslate"><span class="pre">Search</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.objective_function"><code class="docutils literal notranslate"><span class="pre">objective_function</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.search_space"><code class="docutils literal notranslate"><span class="pre">search_space</span></code></a></li>
@@ -2342,9 +2829,21 @@ will continue.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.dump_results"><code class="docutils literal notranslate"><span class="pre">dump_results</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.disable_progress_bar"><code class="docutils literal notranslate"><span class="pre">disable_progress_bar</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.exit_on_failure"><code class="docutils literal notranslate"><span class="pre">exit_on_failure</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.engine"><code class="docutils literal notranslate"><span class="pre">engine</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.run_id"><code class="docutils literal notranslate"><span class="pre">run_id</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.current_generation"><code class="docutils literal notranslate"><span class="pre">current_generation</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.provider"><code class="docutils literal notranslate"><span class="pre">provider</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.engine_options"><code class="docutils literal notranslate"><span class="pre">engine_options</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.pending_candidates"><code class="docutils literal notranslate"><span class="pre">pending_candidates</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.result"><code class="docutils literal notranslate"><span class="pre">result</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.best_result"><code class="docutils literal notranslate"><span class="pre">best_result</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.sample"><code class="docutils literal notranslate"><span class="pre">sample()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.ask"><code class="docutils literal notranslate"><span class="pre">ask()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.tell"><code class="docutils literal notranslate"><span class="pre">tell()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.save_checkpoint"><code class="docutils literal notranslate"><span class="pre">save_checkpoint()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.restore_checkpoint"><code class="docutils literal notranslate"><span class="pre">restore_checkpoint()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.from_checkpoint"><code class="docutils literal notranslate"><span class="pre">from_checkpoint()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.start"><code class="docutils literal notranslate"><span class="pre">start()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.search_space_resolution_metadata"><code class="docutils literal notranslate"><span class="pre">search_space_resolution_metadata</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.ciq.Search.model_post_init"><code class="docutils literal notranslate"><span class="pre">model_post_init()</span></code></a></li>
@@ -2396,6 +2895,7 @@ will continue.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.Worker.tracker"><code class="docutils literal notranslate"><span class="pre">tracker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.Worker.respects_num_workers"><code class="docutils literal notranslate"><span class="pre">respects_num_workers</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.Worker.supports_timeout"><code class="docutils literal notranslate"><span class="pre">supports_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.Worker.supports_managed_execution"><code class="docutils literal notranslate"><span class="pre">supports_managed_execution</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.Worker.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.Worker.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.Worker.normalize_scores"><code class="docutils literal notranslate"><span class="pre">normalize_scores()</span></code></a></li>
@@ -2408,6 +2908,7 @@ will continue.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.WorkerTypes.ISOLATED"><code class="docutils literal notranslate"><span class="pre">ISOLATED</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.WorkerTypes.RAY"><code class="docutils literal notranslate"><span class="pre">RAY</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.WorkerTypes.ASYNC"><code class="docutils literal notranslate"><span class="pre">ASYNC</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.WorkerTypes.MANUAL"><code class="docutils literal notranslate"><span class="pre">MANUAL</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#compileiq.types.WorkerTypes.worker_type"><code class="docutils literal notranslate"><span class="pre">worker_type()</span></code></a></li>
 </ul>
 </li>
