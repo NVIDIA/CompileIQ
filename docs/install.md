@@ -7,13 +7,12 @@ pip install compileiq
 ```
 
 The CompileIQ 1.1 release contract is a single, complete `compileiq`
-distribution: each published platform wheel contains the native `amber` engine
-(NSGA-III), with no separate runtime package for users to select or keep
+distribution: each published platform wheel contains the native `amber` engine,
+with no separate runtime package for users to select or keep
 compatible. `amber` is the default and the only bundled engine on every platform.
 
-In CompileIQ 1.1, `amber` replaces the original search core, so re-validate results
-tuned with an earlier release. The `SearchConfiguration` settings `cull_size`,
-`mutate_rate`, `objective_weights`, and `enable_large_fail_pool` have no effect since
+In CompileIQ 1.1, `amber` replaces the original search core.
+The `SearchConfiguration` settings `cull_size`, `mutate_rate`, `objective_weights`, and `enable_large_fail_pool` have no effect since
 1.1; `Search` ignores a non-default value with a `FutureWarning` that names the
 closest `amber` option, so 1.0 configurations keep running, and a future release will
 remove these fields. `amber` never repeats a candidate, so a search in a small or

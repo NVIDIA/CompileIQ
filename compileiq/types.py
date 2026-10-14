@@ -556,18 +556,6 @@ class SearchConfiguration(BaseModel, extra="forbid"):
     )
 
     @model_validator(mode="after")
-    def validate_weights(self):
-        if self.objective_weights is not None:
-            if len(self.objective_weights) != self.num_objectives:
-                raise ValueError(
-                    f"Length of objective weights ({self.objective_weights}) "
-                    f"must be equal to num_objectives ({self.num_objectives})"
-                )
-            if sum(self.objective_weights) != 1.0:
-                raise ValueError("Objective Weights must add up to 1.0")
-        return self
-
-    @model_validator(mode="after")
     def set_pool_and_cull_sizes(self):
         """Derive safe even sizes without marking defaults as caller-supplied.
 
@@ -643,7 +631,16 @@ class SearchConfiguration(BaseModel, extra="forbid"):
         return self
 
     def to_legacy(self) -> str:
-        """Convert configuration into expected legacy format"""
+        """Convert configuration into expected legacy format
+
+        Deprecated: will be removed in a future release.
+        """
+        warnings.warn(
+            "SearchConfiguration.to_legacy is deprecated and will be removed in a "
+            "future release.",
+            FutureWarning,
+            stacklevel=2,
+        )
         class_dict = self.model_dump()
 
         legacy_string = f";THIS FILE WAS GENERATED USING COMPILEIQ {version('compileiq')}\n\n"
@@ -678,12 +675,20 @@ class SearchConfiguration(BaseModel, extra="forbid"):
         """
         Converts legacy lisp-like format into the SearchConfiguration Object.
 
+        Deprecated: will be removed in a future release.
+
         Warning:
             It will ignore all fields that are not available at SearchConfiguration
 
         Warning:
             It will raise exceptions if using fields that are unsupported in CompileIQ
         """
+        warnings.warn(
+            "SearchConfiguration.from_legacy is deprecated and will be removed in a "
+            "future release.",
+            FutureWarning,
+            stacklevel=2,
+        )
         if legacy.endswith(".config") and pathlib.Path(legacy).exists():
             with open(legacy, "r") as f:
                 legacy_str = f.read()

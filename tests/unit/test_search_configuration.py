@@ -10,47 +10,6 @@ from compileiq.types import (
 
 
 # ---------------------------------------------------------------------------
-# validate_weights — objective weight sanity checks
-# ---------------------------------------------------------------------------
-
-
-class TestValidateWeights:
-    """Objective weights let users bias multi-objective searches.  They must
-    match num_objectives in length and sum to exactly 1.0."""
-
-    def test_valid_weights_pass(self):
-        cfg = SearchConfiguration(
-            generations=1,
-            num_objectives=2,
-            objective_weights=[0.6, 0.4],
-        )
-        assert cfg.objective_weights == [0.6, 0.4]
-
-    def test_length_mismatch_raises(self):
-        """3 weights for 2 objectives is a user config error."""
-        with pytest.raises(ValueError, match="must be equal to num_objectives"):
-            SearchConfiguration(
-                generations=1,
-                num_objectives=2,
-                objective_weights=[0.3, 0.3, 0.4],
-            )
-
-    def test_weights_not_summing_to_one_raises(self):
-        with pytest.raises(ValueError, match="must add up to 1.0"):
-            SearchConfiguration(
-                generations=1,
-                num_objectives=2,
-                objective_weights=[0.5, 0.3],
-            )
-
-    def test_none_weights_is_valid(self):
-        """Omitting weights entirely is fine — the optimizer treats all
-        objectives equally."""
-        cfg = SearchConfiguration(generations=1, num_objectives=2)
-        assert cfg.objective_weights is None
-
-
-# ---------------------------------------------------------------------------
 # set_pool_and_cull_sizes — auto-calculation from num_objectives
 # ---------------------------------------------------------------------------
 
@@ -134,6 +93,7 @@ class TestSetPoolAndCullSizes:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.filterwarnings("ignore:SearchConfiguration.*is deprecated:FutureWarning")
 class TestLegacyRoundTrip:
     """Search still accepts a path to a lisp-like legacy .config file as
     ``search_config``.  to_legacy() writes that format and from_legacy() reads
@@ -209,6 +169,28 @@ class TestLegacyRoundTrip:
         cfg = SearchConfiguration(generations=1, problem_type=ProblemType.MIN)
         legacy = cfg.to_legacy()
         assert "seek_minimum" in legacy
+
+    def test_to_legacy_warns_that_it_is_deprecated(self):
+        cfg = SearchConfiguration(generations=1)
+        with pytest.warns(FutureWarning, match="to_legacy is deprecated.*future release"):
+            cfg.to_legacy()
+
+    def test_from_legacy_warns_that_it_is_deprecated(self, tmp_path):
+        config_path = tmp_path / "test.config"
+        config_path.write_text("(generations . 3)\n")
+        with pytest.warns(FutureWarning, match="from_legacy is deprecated.*future release"):
+            restored = SearchConfiguration.from_legacy(str(config_path))
+        assert restored.generations == 3
+
+
+class TestDeprecatedObjectiveWeights:
+    """objective_weights has no effect since 1.1, so it is no longer validated."""
+
+    def test_weights_are_not_validated(self):
+        cfg = SearchConfiguration(
+            generations=1, num_objectives=2, objective_weights=[0.5, 0.3, 0.1]
+        )
+        assert cfg.objective_weights == [0.5, 0.3, 0.1]
 
 
 # ---------------------------------------------------------------------------

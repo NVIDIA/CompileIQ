@@ -34,10 +34,9 @@ pip install compileiq
 ```
 
 The CompileIQ 1.1 release contract is one complete distribution: each published
-platform wheel contains the native `amber` engine (NSGA-III), which is the default
+platform wheel contains the native `amber` engine, which is the default
 and the only bundled engine, with no separate runtime package to install.
-In CompileIQ 1.1, `amber` replaces the original search core, so re-validate results
-tuned with an earlier release.
+In CompileIQ 1.1, `amber` replaces the original search core.
 
 For editable development, `make install` installs the frontend and materializes
 the pinned native payload checked into this repository through Git LFS, so fetch

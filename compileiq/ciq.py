@@ -420,7 +420,7 @@ class Search(BaseModel):
     engine: str | EngineConfig = Field(
         default="amber",
         description=(
-            "Execution engine. The default 'amber' selects the native NSGA-III runtime "
+            "Execution engine. The default 'amber' selects the native runtime "
             "included in complete platform wheels. Use EngineConfig(name=..., options={...}) "
             "when passing engine-owned settings."
         ),

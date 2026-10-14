@@ -122,8 +122,7 @@ tuner = Search(
 )
 ```
 
-In CompileIQ 1.1, `amber` replaced the original search core. Re-validate results
-tuned with an earlier release on `amber`.
+In CompileIQ 1.1, `amber` replaced the original search core.
 
 An engine name selects a complete optimizer implementation. Opaque names such as
 `amber` keep that public identity stable without binding it to an algorithm
