@@ -11,7 +11,8 @@ function, a search space, and a `SearchConfiguration`.
 - A `candidate` is one sampled parameter set from that space.
 - A `pool` is the batch of candidates evaluated in one iteration.
 - A `generation` is one search iteration.
-- `mutate_rate` controls how aggressively later candidates explore new values.
+- The `engine` is the optimizer that chooses candidates. The default, `amber`, is a
+  native NSGA-III implementation.
 
 For example, two parameters with ranges from 1 to 100 and step size 1 create
 10,000 possible candidates. CompileIQ samples and evaluates a manageable subset
@@ -37,14 +38,28 @@ CompileIQ balances two needs:
 - Explore enough of the search space to avoid getting stuck on an early result.
 - Refine promising regions so the final candidates are useful.
 
-`pool_size` and `generations` are common controls. The bundled `ruby` engine also
-uses `mutate_rate` and `cull_size`. Seed windows declared by `seed_low` and
-`seed_high`, including `init_with_true_random_threshold`, have the same public
-initialization meaning for `ruby` and `amber`. The native `amber` engine owns its
-remaining optimizer settings through `EngineConfig.options`.
+`pool_size` and `generations` are common controls. Seed windows declared by
+`seed_low` and `seed_high` bias candidates toward a declared range, and
+`init_with_true_random_threshold` sets how often they apply unless the
+`seeded_range_probability` option overrides it. The `amber` engine owns
+its remaining optimizer settings through `EngineConfig.options`, for example
+`mutation_probability`, `survivor_count`, `reference_direction_weights`, and
+`seed`. The `SearchConfiguration` fields `cull_size`, `mutate_rate`,
+`objective_weights`, and `enable_large_fail_pool` have no effect since CompileIQ
+1.1. `Search` ignores a non-default value for them with a
+`FutureWarning` that names the closest `amber` option; those options are not
+direct equivalents, so set them deliberately.
 The defaults are intended to be usable for common cases, but large or
 failure-heavy search spaces may need larger pools, more generations, or
 objective-side guardrails that mark bad candidates as `INVALID_SCORE`.
+
+`amber` never issues the same candidate twice in one search. If a small discrete
+search space, or a search that has converged, leaves too few unseen candidates for
+the next batch, `start()` ends the search early: it returns the results so far and
+emits a `SearchSpaceExhaustedWarning`. If not even the first batch can be filled, it
+raises `SearchSpaceExhaustedError`. A manual `ask()` raises the engine's error
+instead. Widen the search space, or lower `pool_size` or `generations`, to run every
+generation.
 
 ## Practical Guidance
 
@@ -54,7 +69,7 @@ spaces and searches that combine application parameters with compiler controls,
 where the objective function needs to handle a specific input shape.
 
 Think about `pool_size` as the amount of evidence CompileIQ gathers in each
-generation. A larger pool gives the core more candidates to compare before it
+generation. A larger pool gives the engine more candidates to compare before it
 chooses the next direction. Small pools are useful for smoke tests and expensive
 workloads, but they can miss useful regions of a large search space. When the
 objective is stable and affordable, increasing `pool_size` is often the first
@@ -66,22 +81,23 @@ time, but they also multiply the total number of objective evaluations. Start
 with a short run to validate correctness, then scale the run once the objective
 function, cache behavior, and timeout handling are reliable.
 
-For the bundled `ruby` engine, `cull_size` controls how much of the current pool is used as signal for later
-generations. Smaller values focus the search more aggressively around the best
-observed candidates. Larger values preserve more variety, which can help when
-the score is noisy or when many candidates fail for reasons unrelated to
-performance.
+For `amber`, the `survivor_count` option controls how many candidates survive
+into the next generation's parent pool. Smaller values focus the search more
+aggressively around the best observed candidates. Larger values preserve more
+variety, which can help when the score is noisy or when many candidates fail for
+reasons unrelated to performance.
 
-For `ruby`, `mutate_rate` controls how often later candidates are perturbed away from the
-regions that already look promising. Too little mutation can leave the search
-stuck around an early result. Too much mutation can make the search keep
-exploring after it has enough signal to refine useful candidates.
+The `mutation_probability` option controls how often variables of new candidates
+are perturbed away from the regions that already look promising. Too little
+mutation can leave the search stuck around an early result. Too much mutation can
+make the search keep exploring after it has enough signal to refine useful
+candidates.
 
 If later candidates appear less varied than the initial pool, the search may be
 spending more effort near regions that have already scored well. If the best
 score stops improving, the failure rate rises, or every sampled candidate looks
 similar too early, consider increasing `pool_size`, running more generations, or
-adjusting `mutate_rate`.
+adjusting `mutation_probability`.
 
 When tuning compiler controls, always add correctness checks, compile/runtime
 timeouts, and repeatable benchmarking before trusting a candidate. A fast but
@@ -89,10 +105,9 @@ incorrect candidate is still a failed candidate.
 
 ## Versioned Search Engines
 
-`Search` uses the curated `ruby` engine by default, preserving bundled 1.x
-behavior. Complete platform-specific CompileIQ wheels also include the native
-runtime selected by the curated `amber` engine. Both engines use the same public
-installation:
+`Search` uses the `amber` engine by default: the native NSGA-III runtime included
+in every complete platform-specific CompileIQ wheel. It needs nothing beyond the
+public installation:
 
 ```bash
 python -m pip install compileiq
@@ -103,13 +118,15 @@ tuner = Search(
     objective_function=objective,
     search_space=search_space,
     search_config=config,
-    engine="amber",
+    engine="amber",  # the default; shown for clarity
 )
 ```
 
+In CompileIQ 1.1, `amber` replaced the original search core.
+
 An engine name selects a complete optimizer implementation. Opaque names such as
-`ruby` and `amber` keep that public identity stable without binding it to an
-algorithm label. A provider that later offers multiple independently selectable
+`amber` keep that public identity stable without binding it to an algorithm
+label. A provider that later offers multiple independently selectable
 optimizers can register each one under a distinct engine name.
 
 Use `EngineConfig` when an engine also accepts engine-owned settings:
@@ -128,11 +145,9 @@ tuner = Search(
 )
 ```
 
-The bundled adapter and registered backends use the same stateful `ask()` and
-`tell()` lifecycle. Every backend accepts a non-empty subset of outstanding
-candidate IDs in any order. The bundled adapter buffers those subsets until it
-can send the legacy core one complete response; native backends may consume each
-subset immediately. Backends separately declare whether they can issue another
+Every registered backend uses the same stateful `ask()` and `tell()` lifecycle
+and accepts a non-empty subset of outstanding candidate IDs in any order; a
+backend may consume each subset immediately or buffer it. Backends separately declare whether they can issue another
 batch while earlier IDs remain outstanding. CompileIQ rejects empty, duplicate,
 unknown, already-reported, and colliding candidate identifiers, mismatched
 candidate parameters, and mismatched objective counts before backend state
@@ -415,5 +430,6 @@ policy means CompileIQ does not claim preservation of the exact execution
 trajectory. Exact continuation assumes a compatible native runtime environment;
 it does not promise identical trajectories across runtime, dependency, Python,
 or platform upgrades. Direct `restore_checkpoint()` is limited to a fresh, compatible
-`Search`; it does not merge unrelated active state or result history. The
-bundled `ruby` engine does not support this checkpoint contract.
+`Search`; it does not merge unrelated active state or result history. An engine
+that does not advertise checkpoint support rejects both calls before reading the
+artifact.

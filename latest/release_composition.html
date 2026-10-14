@@ -440,19 +440,17 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>compileiq
 </pre></div>
 </div>
-<p>Linux and Windows complete wheels contain both the bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> backend and
-the native <code class="docutils literal notranslate"><span class="pre">amber</span></code> backend. The Apple Silicon macOS 15+ beta wheels are
-intentionally coreless because no macOS legacy core is shipped; they provide the
-compiled <code class="docutils literal notranslate"><span class="pre">amber</span></code> backend. The native build may produce an independently auditable
-<code class="docutils literal notranslate"><span class="pre">compileiq-native-runtime</span></code> wheel, but that wheel is an intermediate artifact,
-not a second package for users to install.</p>
+<p>Every complete wheel contains the pure-Python frontend and the compiled native
+<code class="docutils literal notranslate"><span class="pre">amber</span></code> backend, which is the default and only bundled engine. No platform ships
+separate core binaries, so Linux, Windows, and macOS wheels are composed the same way. The native build
+may produce an independently auditable <code class="docutils literal notranslate"><span class="pre">compileiq-native-runtime</span></code> wheel, but that
+wheel is an intermediate artifact, not a second package for users to install.</p>
 <section id="release-graph">
 <h2>Release graph<a class="headerlink" href="#release-graph" title="Link to this heading">#</a></h2>
 <p>The release lane performs these steps in order:</p>
 <ol class="arabic simple">
-<li><p>Build the frontend wheel containing the public API and, where available, the
-matching bundled core. Record its filename, size, SHA-256 digest, and source
-commit.</p></li>
+<li><p>Build the pure-Python frontend wheel containing the public API. Record its
+filename, size, SHA-256 digest, and source commit.</p></li>
 <li><p>Build and audit the native runtime wheel, then bind it to the native source
 and static-library provenance in the lane manifest.</p></li>
 <li><p>Run <code class="docutils literal notranslate"><span class="pre">dev/compose_compileiq_wheel.py</span></code>. It verifies both input wheels against
@@ -461,7 +459,8 @@ point, and runtime-only dependencies into the frontend wheel.</p></li>
 <li><p>Retag the output with the native platform tag, mark it as non-pure, and
 regenerate its wheel <code class="docutils literal notranslate"><span class="pre">RECORD</span></code>. A composition manifest binds the resulting
 wheel back to both verified inputs.</p></li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">dev/verify_complete_wheel.py</span></code>, followed by
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">dev/verify_complete_wheel.py</span></code>, which also rejects any file left over
+from the removed bundled core, followed by
 <code class="docutils literal notranslate"><span class="pre">dev/test_complete_wheel_install.py</span></code> in a clean environment. The acceptance
 environment installs only the composed <code class="docutils literal notranslate"><span class="pre">compileiq</span></code> wheel and its ordinary
 public dependencies.</p></li>
@@ -476,17 +475,18 @@ cell.</p>
 </section>
 <section id="editable-development">
 <h2>Editable development<a class="headerlink" href="#editable-development" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> installs the editable frontend with the bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> engine
-only. <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install-complete</span></code> additionally materializes the pinned native payload
-from a wheel plus its lane manifest; the manifest is verified before
-installation. Native-runtime developers can explicitly set <code class="docutils literal notranslate"><span class="pre">NATIVE_RUNTIME_SOURCE</span></code>
-to build and audit a local payload instead.</p>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> installs the editable frontend and materializes the pinned native
+payload from a wheel plus its lane manifest; the manifest is verified before
+installation. <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install-complete</span></code> is an alias for it, and
+<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install-frontend</span></code> installs the frontend alone, without an engine.
+Native-runtime developers can explicitly set <code class="docutils literal notranslate"><span class="pre">NATIVE_RUNTIME_SOURCE</span></code> to build and
+audit a local payload instead.</p>
 <p>The public source tree carries one generated manifest and CI-produced runtime
 wheel per platform and Python cell through Git LFS. <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install-complete</span></code>
 consumes a compatible checked-in artifact only after
 verifying its filename, size, digest, and successful backend registration. If a
-verified compatible artifact is unavailable, the complete install fails rather
-than creating a ruby-only environment. Provider-source build instructions and
+verified compatible artifact is unavailable, the install fails rather than
+creating an environment without an engine. Provider-source build instructions and
 artifact transport coordinates remain with the provider and release systems;
 they are not part of the public installation contract.</p>
 </section>

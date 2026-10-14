@@ -442,21 +442,26 @@
 </pre></div>
 </div>
 <p>The CompileIQ 1.1 release contract is a single, complete <code class="docutils literal notranslate"><span class="pre">compileiq</span></code>
-distribution: each published platform wheel contains every backend available for
-that platform, with no separate runtime package for users to select or keep
-compatible. Linux and Windows complete wheels contain the bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and native
-<code class="docutils literal notranslate"><span class="pre">amber</span></code> backends. The macOS ARM64 beta wheel contains <code class="docutils literal notranslate"><span class="pre">amber</span></code> only because no macOS
-legacy core is shipped.</p>
+distribution: each published platform wheel contains the native <code class="docutils literal notranslate"><span class="pre">amber</span></code> engine,
+with no separate runtime package for users to select or keep
+compatible. <code class="docutils literal notranslate"><span class="pre">amber</span></code> is the default and the only bundled engine on every platform.</p>
+<p>In CompileIQ 1.1, <code class="docutils literal notranslate"><span class="pre">amber</span></code> replaces the original search core.
+The <code class="docutils literal notranslate"><span class="pre">SearchConfiguration</span></code> settings <code class="docutils literal notranslate"><span class="pre">cull_size</span></code>, <code class="docutils literal notranslate"><span class="pre">mutate_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">objective_weights</span></code>, and <code class="docutils literal notranslate"><span class="pre">enable_large_fail_pool</span></code> have no effect since
+1.1; <code class="docutils literal notranslate"><span class="pre">Search</span></code> ignores a non-default value with a <code class="docutils literal notranslate"><span class="pre">FutureWarning</span></code> that names the
+closest <code class="docutils literal notranslate"><span class="pre">amber</span></code> option, so 1.0 configurations keep running, and a future release will
+remove these fields. <code class="docutils literal notranslate"><span class="pre">amber</span></code> never repeats a candidate, so a search in a small or
+converged space can end early with a <code class="docutils literal notranslate"><span class="pre">SearchSpaceExhaustedWarning</span></code> and the results
+so far.</p>
 <p>For editable repository development, the default bootstrap installs the frontend
-with the bundled <code class="docutils literal notranslate"><span class="pre">ruby</span></code> engine only, so it needs no native payload:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>install
+and materializes the pinned, manifest-verified native <code class="docutils literal notranslate"><span class="pre">amber</span></code> payload checked into
+the repository through Git LFS, so fetch the LFS objects first:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>lfs<span class="w"> </span>pull
+make<span class="w"> </span>install
 </pre></div>
 </div>
-<p>To also materialize the pinned, manifest-verified native <code class="docutils literal notranslate"><span class="pre">amber</span></code> payload checked
-into the repository through Git LFS, fetch the LFS objects and use the complete
-install target:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>lfs<span class="w"> </span>pull
-make<span class="w"> </span>install-complete
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install-complete</span></code> remains as an alias for <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code>. To install only
+the frontend, without an engine, for linting, type checking, and unit tests, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>install-frontend
 </pre></div>
 </div>
 <p>The repository contains one manifest-verified native artifact per supported
@@ -472,27 +477,25 @@ same-version incomplete wheel or source fallback is published for a cell whose
 native payload is missing. The current beta CI matrix composes, verifies, and
 clean-installs these cells end to end:</p>
 <ul class="simple">
-<li><p>Linux x86_64 / CPython 3.11, 3.12, 3.13, and 3.14: <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and <code class="docutils literal notranslate"><span class="pre">amber</span></code></p></li>
-<li><p>Linux ARM64 / CPython 3.11, 3.12, 3.13, and 3.14: <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and <code class="docutils literal notranslate"><span class="pre">amber</span></code></p></li>
-<li><p>Windows AMD64 / CPython 3.11, 3.12, 3.13, and 3.14: <code class="docutils literal notranslate"><span class="pre">ruby</span></code> and <code class="docutils literal notranslate"><span class="pre">amber</span></code></p></li>
-<li><p>Apple Silicon macOS 15+ / CPython 3.11, 3.12, 3.13, and 3.14: <code class="docutils literal notranslate"><span class="pre">amber</span></code> only</p></li>
+<li><p>Linux x86_64 / CPython 3.11, 3.12, 3.13, and 3.14</p></li>
+<li><p>Linux ARM64 / CPython 3.11, 3.12, 3.13, and 3.14</p></li>
+<li><p>Windows AMD64 / CPython 3.11, 3.12, 3.13, and 3.14</p></li>
+<li><p>Apple Silicon macOS 15+ / CPython 3.11, 3.12, 3.13, and 3.14</p></li>
 </ul>
+<p>Every cell provides the same <code class="docutils literal notranslate"><span class="pre">amber</span></code> engine.</p>
 <p>Other platform and Python combinations are outside this release’s supported matrix.</p>
-<p>Linux wheels target glibc 2.34 or newer and are tagged <code class="docutils literal notranslate"><span class="pre">manylinux_2_34</span></code>. The
-macOS ARM64 release wheels are intentionally coreless because the legacy core is
-not packaged for macOS.</p>
+<p>Linux wheels target glibc 2.34 or newer and are tagged <code class="docutils literal notranslate"><span class="pre">manylinux_2_34</span></code>.</p>
 </section>
 <section id="runtime-requirements">
 <h2>Runtime Requirements<a class="headerlink" href="#runtime-requirements" title="Link to this heading">#</a></h2>
-<p>On Linux, the bundled core expects the platform C/C++ runtime libraries and
-zlib to be available on the host. Package names vary by distribution; on
-Debian/Ubuntu, the direct runtime packages for the current Linux wheels are:</p>
+<p>On Linux, the native runtime expects the platform C/C++ runtime libraries to be
+available on the host. Package names vary by distribution; on Debian/Ubuntu, the
+direct runtime packages for the current Linux wheels are:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>update
 sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>libc6<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>libgcc-s1<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>libstdc++6<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>zlib1g
+<span class="w">  </span>libstdc++6
 </pre></div>
 </div>
 <p>On Windows, install the Microsoft Visual C++ Redistributable 2015 or newer
@@ -512,7 +515,7 @@ Aider, Windsurf) can use to drive optimization campaigns. The skills follow the
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compileiq-bootstrap</span></code></p></td>
-<td><p>First-time setup, socket timeout, or before any other skill</p></td>
+<td><p>First-time setup, a hang on the first evaluation, or before any other skill</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compileiq-booster-pack</span></code></p></td>
 <td><p>Try a curated ACF candidate before paying for a full search</p></td>
@@ -559,45 +562,30 @@ for the full layout and authoring conventions.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>CIQ_SOCKET_TIMEOUT</p></td>
-<td><p>20</p></td>
-<td><p>int</p></td>
-<td><p>Controls how long CompileIQ waits for a core response. If you experience timeouts because your search space is too big, consider increasing this value.</p></td>
-</tr>
-<tr class="row-odd"><td><p>CIQ_KEEP_CACHE</p></td>
+<tr class="row-even"><td><p>CIQ_KEEP_CACHE</p></td>
 <td><p>False</p></td>
 <td><p>bool</p></td>
 <td><p>If set to True, <code class="docutils literal notranslate"><span class="pre">.cache</span></code> files will not be deleted.</p></td>
 </tr>
-<tr class="row-even"><td><p>CIQ_PROCESS_MODE</p></td>
+<tr class="row-odd"><td><p>CIQ_PROCESS_MODE</p></td>
 <td><p>“forkserver”</p></td>
 <td><p>str</p></td>
 <td><p>User can set this to “fork” to better separate processes and deal with threads. <code class="docutils literal notranslate"><span class="pre">IsoMultiProcessWorker</span></code> uses <code class="docutils literal notranslate"><span class="pre">fork</span></code> as the default.</p></td>
 </tr>
-<tr class="row-odd"><td><p>CIQ_SEARCH_SPACES_DIR</p></td>
+<tr class="row-even"><td><p>CIQ_SEARCH_SPACES_DIR</p></td>
 <td><p>unset</p></td>
 <td><p>path</p></td>
 <td><p>Reads compiler search-space <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> and <code class="docutils literal notranslate"><span class="pre">.bin</span></code> files from a local mirror instead of GitHub.</p></td>
 </tr>
-<tr class="row-even"><td><p>CIQ_SEARCH_SPACES_REPO</p></td>
+<tr class="row-odd"><td><p>CIQ_SEARCH_SPACES_REPO</p></td>
 <td><p>NVIDIA/CompileIQ</p></td>
 <td><p>str</p></td>
 <td><p>GitHub repository used for search-space release lookups, useful for staging or a future dedicated asset repo.</p></td>
 </tr>
-<tr class="row-odd"><td><p>CIQ_SS_LATEST_TTL_DAYS</p></td>
+<tr class="row-even"><td><p>CIQ_SS_LATEST_TTL_DAYS</p></td>
 <td><p>7</p></td>
 <td><p>float</p></td>
 <td><p>Reuses the cached GitHub <code class="docutils literal notranslate"><span class="pre">latest</span></code> search-space release tag for this many days, reducing anonymous REST API calls that can be throttled on shared IPs. Set to <code class="docutils literal notranslate"><span class="pre">0</span></code> to check GitHub every time.</p></td>
-</tr>
-<tr class="row-even"><td><p>CIQ_CORE_BINARY</p></td>
-<td><p>unset</p></td>
-<td><p>path</p></td>
-<td><p>Uses an explicit core executable for local core development instead of the bundled binary.</p></td>
-</tr>
-<tr class="row-odd"><td><p>CIQ_CORE_MANIFEST</p></td>
-<td><p>unset</p></td>
-<td><p>path</p></td>
-<td><p>Optionally verifies <code class="docutils literal notranslate"><span class="pre">CIQ_CORE_BINARY</span></code> against a local core manifest rooted next to the platform directories.</p></td>
 </tr>
 </tbody>
 </table>

@@ -34,7 +34,6 @@ if __name__ == "__main__":
     main_config = SearchConfiguration(
         pool_size=12,      # Size of population
         generations=3,      # Number of iterations
-        mutate_rate=0.5,   # Mutation probability
         problem_type="min", # Minimize objective
         num_objectives=1,   # Single objective
     )
@@ -65,7 +64,6 @@ if __name__ == "__main__":
 3. **Search Configuration**
     - `pool_size`: Number of solutions in each generation
     - `generations`: Number of iterations
-    - `mutate_rate`: Probability of mutation
     - `problem_type`: "min" or "max"
     - `num_objectives`: Number of objectives to optimize
 
@@ -99,7 +97,6 @@ if __name__ == "__main__":
     main_config = SearchConfiguration(
         pool_size=12,
         generations=3,
-        mutate_rate=0.5,
         problem_type="min",
         num_objectives=2, # Updating num of objectives
     )
