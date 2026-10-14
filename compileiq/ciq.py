@@ -404,15 +404,6 @@ class Search(BaseModel):
     # Pydantic config
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
-    @field_validator("search_space", mode="after")
-    def validate_windows(cls, value):
-        if sys.platform == "win32":
-            if isinstance(value, list):
-                # If using multiple configs
-                raise ValueError("Windows does not support multiple config search spaces")
-
-        return value
-
     @field_validator("search_config", mode="after")
     def normalize_search_config(cls, value: SearchConfigInput) -> SearchConfigInput:
         if isinstance(value, SearchConfiguration):
