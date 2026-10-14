@@ -18,6 +18,7 @@ import pytest
 import compileiq.search_spaces.base as ss
 from compileiq.ciq import Search
 from compileiq.types import SearchConfiguration, INVALID_SCORE
+from compileiq.utils.validation import Score
 
 
 # ---------------------------------------------------------------------------
@@ -558,3 +559,77 @@ def test_mixed_types_with_real_core(cache_dir):
             assert params["booster"] in ["gbtree", "gblinear", "dart"]
             assert isinstance(params["lr"], (int, float))
             break
+
+
+# ---------------------------------------------------------------------------
+# Manual ask/tell lifecycle: bundled ruby adapter, out-of-order subsets
+# ---------------------------------------------------------------------------
+
+
+def test_ruby_ask_tell_out_of_order_advances_without_id_collision(cache_dir):
+    """Drive the real bundled ruby core through a manual ask/tell lifecycle.
+
+    One generation's batch is reported as two out-of-order subsets, then the next
+    generation is requested. The adapter must advance the bundled core's
+    generation across the two-subset report and must namespace candidate IDs so
+    identifiers never collide across generations.
+
+    Runs only where the core binary exists (see module-level ``requires_core``
+    skip); otherwise it is auto-skipped, so it exercises the real adapter in CI.
+    """
+
+    search = Search(
+        objective_function=lambda config: config["x"],
+        search_space={"x": ss.range(start=1.0, end=20.0, step=0.5)},
+        search_config=SearchConfiguration(
+            **SMALL_CONFIG,
+            problem_type="min",
+            num_objectives=1,
+        ),
+        cache_folder=cache_dir,
+        disable_progress_bar=True,
+        engine="ruby",
+    )
+
+    def score_for(candidate):
+        """Build a valid single-objective score bound to a candidate's identity."""
+
+        return Score(
+            score=float(candidate.params["x"]),
+            params=candidate.params,
+            param_id=candidate.param_id,
+            num_objectives=1,
+        )
+
+    first = search.ask()
+    assert len(first) == SMALL_CONFIG["pool_size"]
+    assert search._backend_impl is not None  # the ruby engine sets the impl at construction
+    generation_before = search._backend_impl.current_generation
+
+    midpoint = len(first) // 2
+    subset_a = first[:midpoint]
+    subset_b = first[midpoint:]
+
+    # Report the later subset first, each subset reversed, to exercise
+    # order-independent subset reporting. The bundled adapter buffers subsets
+    # until the whole batch is present, then sends one ordered core response.
+    search.tell([score_for(candidate) for candidate in reversed(subset_b)])
+    assert len(search.pending_candidates) == len(subset_a)  # batch not yet complete
+    search.tell([score_for(candidate) for candidate in reversed(subset_a)])
+    assert search.pending_candidates == ()  # batch complete
+
+    second = search.ask()
+    # The bundled GA carries survivors across generations, so the next-generation
+    # ask only returns the new offspring needing evaluation -- fewer than the full
+    # pool. The contract under test is that it advanced and produced fresh work.
+    assert len(second) > 0
+
+    # The adapter advanced the bundled core to the next generation ...
+    assert search._backend_impl is not None
+    assert search._backend_impl.current_generation == generation_before + 1
+
+    # ... and public candidate IDs never collide across generations, even though
+    # the bundled core may reuse its internal integer IDs.
+    first_ids = {str(candidate.param_id) for candidate in first}
+    second_ids = {str(candidate.param_id) for candidate in second}
+    assert first_ids.isdisjoint(second_ids)

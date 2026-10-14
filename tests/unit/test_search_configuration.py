@@ -75,6 +75,20 @@ class TestSetPoolAndCullSizes:
         assert cfg.cull_size < cfg.pool_size
         assert (cfg.pool_size - cfg.cull_size) >= 1 + 2 * cfg.num_objectives
 
+    def test_derived_sizes_are_not_marked_as_caller_supplied(self):
+        """Preserve the signal used by provider-specific configuration validation.
+
+        The native provider inspects ``model_fields_set`` so it can reject an
+        explicitly supplied bundled-core control such as ``cull_size`` while
+        accepting the same value when CompileIQ derives it as a default.
+        """
+
+        derived = SearchConfiguration(generations=1, pool_size=40)
+        explicit = SearchConfiguration(generations=1, pool_size=40, cull_size=10)
+
+        assert "cull_size" not in derived.model_fields_set
+        assert "cull_size" in explicit.model_fields_set
+
     def test_explicit_pool_auto_cull_large_num_objectives(self):
         """When pool_size is user-provided but small relative to num_objectives,
         auto-cull must still leave enough survivors rather than blindly using 50%."""

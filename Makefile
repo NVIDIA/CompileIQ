@@ -1,8 +1,9 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install install-examples install-docs install-release lint lint-fix format format-check \
+.PHONY: help install install-complete materialize-native-runtime install-examples install-examples-complete install-docs install-release lint lint-fix format format-check \
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
-        docs docs-serve docs-preview build clean validate \
+        docs docs-serve docs-preview build compose-complete-wheel verify-complete-wheel \
+        test-complete-wheel-install clean validate \
         verify-core update-core \
         setup-compileiq-package-release \
         setup-search-space-release update-search-space-catalog \
@@ -20,11 +21,62 @@
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-install: ## Install all dev dependencies
+# An explicit materialization override. Without one, the lane manifest names
+# the exact wheel selected from the preferred runtime directories below.
+NATIVE_RUNTIME_WHEEL ?=
+NATIVE_RUNTIME_MANIFEST ?=
+NATIVE_RUNTIME_SOURCE ?=
+NATIVE_RUNTIME_DIRECTORY ?= native-runtime-wheels
+NATIVE_RUNTIME_CI_MANIFESTS = \
+	$(wildcard dist/native-runtime/native-runtime-lane-manifest*.json)
+NATIVE_RUNTIME_CHECKED_IN_MANIFESTS = \
+	$(wildcard $(NATIVE_RUNTIME_DIRECTORY)/native-runtime-manifest*.json)
+NATIVE_RUNTIME_MANIFESTS ?= $(if \
+	$(NATIVE_RUNTIME_MANIFEST), \
+	$(NATIVE_RUNTIME_MANIFEST), \
+	$(if \
+		$(NATIVE_RUNTIME_CI_MANIFESTS), \
+		$(NATIVE_RUNTIME_CI_MANIFESTS), \
+		$(NATIVE_RUNTIME_CHECKED_IN_MANIFESTS)))
+
+install: ## Install the editable frontend with the bundled ruby engine only (no native payload)
 	poetry install --with linter,typecheck,unittest,tracking
+
+install-complete: ## Install the editable frontend and materialize the native amber runtime
+	poetry install --with linter,typecheck,unittest,tracking,native-runtime
+	$(MAKE) materialize-native-runtime
+
+materialize-native-runtime: ## Install a verified CI payload or build the explicit local override
+	@if [ -n "$(NATIVE_RUNTIME_SOURCE)" ] && [ -d "$(NATIVE_RUNTIME_SOURCE)" ]; then \
+		python_path="$$(poetry run python -c 'import sys; print(sys.executable)')"; \
+		$(MAKE) -C "$(NATIVE_RUNTIME_SOURCE)" native-build-deps audit-native-runtime-wheel \
+			PYTHON="$$python_path"; \
+		"$$python_path" -m pip install --no-index --no-deps --force-reinstall \
+			--find-links "$(NATIVE_RUNTIME_SOURCE)/dist" compileiq-native-runtime; \
+		"$$python_path" -c "from compileiq.backends import get_backend_registration; \
+			registration = get_backend_registration('amber'); \
+			assert registration.name == 'amber'" \
+			|| { echo "ERROR: the installed native runtime could not register its amber backend." >&2; exit 1; }; \
+	elif [ -n "$(strip $(NATIVE_RUNTIME_MANIFESTS))" ]; then \
+		poetry run python dev/materialize_native_runtime.py \
+			$(if $(NATIVE_RUNTIME_WHEEL),--runtime-wheel "$(NATIVE_RUNTIME_WHEEL)",) \
+			--runtime-directory dist/native-runtime \
+			--runtime-directory "$(NATIVE_RUNTIME_DIRECTORY)" \
+			$(foreach manifest,$(NATIVE_RUNTIME_MANIFESTS),--lane-manifest "$(manifest)"); \
+	else \
+		echo "ERROR: no verified native payload is staged." >&2; \
+		echo "Provide NATIVE_RUNTIME_MANIFEST (and optionally NATIVE_RUNTIME_WHEEL)," >&2; \
+		echo "stage a verified manifest/wheel pair, or use the explicit" >&2; \
+		echo "NATIVE_RUNTIME_SOURCE=/path/to/native-source override." >&2; \
+		exit 1; \
+	fi
 
 install-examples: ## Install dev dependencies + examples
 	poetry install --with examples,linter,typecheck,unittest,tracking
+
+install-examples-complete: ## Install examples and materialize the native amber runtime
+	poetry install --with examples,linter,typecheck,unittest,tracking,native-runtime
+	$(MAKE) materialize-native-runtime
 
 install-docs: ## Install docs dependencies
 	poetry install --with docs
@@ -87,6 +139,36 @@ docs-preview: ## Build and serve live worktree docs locally
 
 build: ## Build wheel and sdist
 	poetry build
+
+FRONTEND_WHEEL ?= $(firstword $(wildcard dist/compileiq-[0-9]*.whl))
+COMPOSE_NATIVE_RUNTIME_WHEEL ?= $(if \
+	$(NATIVE_RUNTIME_WHEEL), \
+	$(NATIVE_RUNTIME_WHEEL), \
+	$(firstword $(wildcard dist/native-runtime/compileiq_native_runtime-*.whl)))
+LANE_MANIFEST ?= dist/native-runtime/native-runtime-lane-manifest.json
+COMPLETE_WHEEL_DIR ?= dist/complete
+COMPLETE_WHEEL ?= $(firstword $(wildcard $(COMPLETE_WHEEL_DIR)/compileiq-*.whl))
+COMPLETE_WHEEL_MANIFEST ?= $(COMPLETE_WHEEL_DIR)/composition-manifest.json
+
+compose-complete-wheel: ## Compose one publishable wheel from manifested frontend/runtime inputs
+	@test -n "$(FRONTEND_WHEEL)" || (echo "ERROR: set FRONTEND_WHEEL=/path/to/compileiq.whl" >&2; exit 1)
+	@test -n "$(COMPOSE_NATIVE_RUNTIME_WHEEL)" || (echo "ERROR: set NATIVE_RUNTIME_WHEEL=/path/to/runtime.whl" >&2; exit 1)
+	@test -f "$(LANE_MANIFEST)" || (echo "ERROR: set LANE_MANIFEST=/path/to/native-runtime-lane-manifest.json" >&2; exit 1)
+	poetry run python dev/compose_compileiq_wheel.py \
+		--frontend-wheel "$(FRONTEND_WHEEL)" \
+		--runtime-wheel "$(COMPOSE_NATIVE_RUNTIME_WHEEL)" \
+		--lane-manifest "$(LANE_MANIFEST)" \
+		--output-dir "$(COMPLETE_WHEEL_DIR)" \
+		--output-manifest "$(COMPLETE_WHEEL_MANIFEST)"
+
+verify-complete-wheel: ## Audit a composed wheel as the single public distribution
+	@test -n "$(COMPLETE_WHEEL)" || (echo "ERROR: set COMPLETE_WHEEL=/path/to/complete.whl" >&2; exit 1)
+	poetry run python dev/verify_complete_wheel.py "$(COMPLETE_WHEEL)" \
+		--composition-manifest "$(COMPLETE_WHEEL_MANIFEST)"
+
+test-complete-wheel-install: ## Clean-install only the complete public wheel
+	@test -n "$(COMPLETE_WHEEL)" || (echo "ERROR: set COMPLETE_WHEEL=/path/to/complete.whl" >&2; exit 1)
+	poetry run python dev/test_complete_wheel_install.py --wheel "$(COMPLETE_WHEEL)"
 
 clean: ## Remove build artifacts and caches
 	rm -rf dist/ public/ .coverage .testmondata

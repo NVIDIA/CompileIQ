@@ -46,7 +46,7 @@ make install-docs && make docs
 make build
 ```
 
-Python version: >=3.11, <3.14. CI uses 3.11.4.
+Python version: >=3.11, <3.15. CI covers Python 3.11 through 3.14.
 
 ## Test Structure
 

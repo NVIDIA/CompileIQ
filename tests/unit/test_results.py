@@ -112,6 +112,26 @@ def test_add_result(num_scores, score_val, norm_val, normalize):
             assert row[f"norm_score_{i + 1}"] == v
 
 
+def test_multiobjective_normalized_row_rejects_a_missing_normalized_score():
+    """Raise a stable validation error instead of relying on an optimizable assertion."""
+
+    result = SearchResult._initialize_empty(
+        num_scores=2,
+        problem_type="min",
+        norm_scores=True,
+    )
+    failed = Score(
+        score=INVALID_SCORE,
+        norm_score=None,
+        params={"x": 1.0},
+        param_id="failed",
+        num_objectives=2,
+    )
+
+    with pytest.raises(ValueError, match="Expected 2 objective values"):
+        result.add_result(failed, generation_num=0, normalize=True)
+
+
 def test_save(tmp_path):
     df = _generate_results(num_scores=3, num_entries=20, allow_invalid=False)
     result = SearchResult(df=df, problem_type=ProblemType.MAX, num_scores=3)

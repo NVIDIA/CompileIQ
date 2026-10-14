@@ -179,3 +179,14 @@ class TestScoreModelValidation:
         """Declaring num_objectives=2 but providing 3 scores is a bug."""
         with pytest.raises(Exception):
             Score(score=[1.0, 2.0, 3.0], params="{}", param_id=1, num_objectives=2)
+
+    def test_multi_normalized_score_length_mismatch_raises(self):
+        """Normalized objectives obey the same shape contract as raw objectives."""
+        with pytest.raises(ValueError):
+            Score(
+                score=[1.0, 2.0],
+                norm_score=[0.5],
+                params="{}",
+                param_id=1,
+                num_objectives=2,
+            )

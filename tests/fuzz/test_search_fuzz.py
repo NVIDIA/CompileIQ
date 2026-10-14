@@ -27,6 +27,9 @@ from tests.utils import (
 
 
 MAX_EXAMPLES = int(os.environ.get("CIQ_FUZZ_EXAMPLES", "20"))
+MANAGED_WORKER_TYPES = tuple(
+    worker_type for worker_type in WorkerTypes if worker_type is not WorkerTypes.MANUAL
+)
 
 FUZZ_SETTINGS = dict(
     suppress_health_check=[HealthCheck.function_scoped_fixture],
@@ -46,7 +49,7 @@ FUZZ_SETTINGS = dict(
     problem_type=st.sampled_from(["min", "max"]),
     func=st.sampled_from([light_obj_func, multi_light_obj_func, nested_light_obj_func]),
     num_workers=st.integers(1, 3),
-    worker_type=st.sampled_from(list(WorkerTypes)),
+    worker_type=st.sampled_from(MANAGED_WORKER_TYPES),
     tracker_type=st.sampled_from(list(TrackerTypes)),
 )
 def test_start_fuzz(
@@ -144,5 +147,3 @@ def test_sample_fuzz(
     ) as tuner:
         results = tuner.sample(num_samples)
         assert len(results) == num_samples
-
-
