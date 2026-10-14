@@ -12,13 +12,10 @@ import compileiq.search_spaces.base as ss
 import pytest
 import os
 
-
-def mock_objective(config):
-    return 1.0
-
-
-async def async_mock_objective(config):
-    return 1.0
+# Objectives live in tests.utils so Ray workers can import them by reference; a
+# function defined in this pytest-imported module cannot be unpickled there.
+from tests.utils import async_light_obj_func as async_mock_objective
+from tests.utils import light_obj_func as mock_objective
 
 
 @pytest.fixture
@@ -29,10 +26,7 @@ def workers_to_test():
 
 @pytest.mark.requires_ipc
 def test_compileiq_default_tracker_type(
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
 ):
     """Test that Search uses default tracker type when not specified."""
     search_space = {"x": ss.range(start=1.0, end=10.0, step=1.0)}
@@ -45,6 +39,7 @@ def test_compileiq_default_tracker_type(
         )
 
         search = Search(
+            engine=scripted_engine,
             objective_function=mock_objective,
             search_space=search_space,
             search_config=config,
@@ -61,10 +56,7 @@ def test_compileiq_default_tracker_type(
 @pytest.mark.requires_ipc
 def test_mlflow(
     workers_to_test,
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
 ):
     """Test Search with MLflow tracker type."""
     search_space = {"x": ss.range(start=1.0, end=10.0, step=1.0)}
@@ -86,6 +78,7 @@ def test_mlflow(
             test_score_names = ["test_score"]
             test_description = "test_description"
             search = Search(
+                engine=scripted_engine,
                 objective_function=obj_func,
                 search_space=search_space,
                 search_config=config,
@@ -107,10 +100,7 @@ def test_mlflow(
 @pytest.mark.requires_ipc
 def test_loguru(
     workers_to_test,
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
 ):
     """Test that Search uses loguru tracker type when specified."""
     search_space = {"x": ss.range(start=1.0, end=10.0, step=1.0)}
@@ -129,6 +119,7 @@ def test_loguru(
             tracker_config = LoguruTrackerConfig(level="DEBUG", sink=log_file)
 
             tuner = Search(
+                engine=scripted_engine,
                 objective_function=obj_func,
                 search_space=search_space,
                 search_config=config,

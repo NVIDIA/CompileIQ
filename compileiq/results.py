@@ -361,9 +361,9 @@ class SearchResult:
 
     def clear_duplicates(self) -> pd.DataFrame:
         """
-        Core will often send the same params to be calculated.
-        If the calculated scores are exactly the same as the previous time,
-        we can just drop these rows.
+        Drops rows that repeat an earlier row's parameters and scores exactly, for
+        example in results loaded from a CSV written by an engine that re-issued
+        the same parameters.
         """
         check_cols = ["params_str"] + self.score_columns
 

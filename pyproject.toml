@@ -8,9 +8,6 @@ readme = "README.md"
 repository = "https://github.com/NVIDIA/CompileIQ"
 documentation = "https://github.com/NVIDIA/CompileIQ/blob/main/README.md"
 packages = [{ include = "compileiq", format = "wheel" }]
-include = [
-    { path = "compileiq/core/executable/**/*", format = "wheel" },
-]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.15"
@@ -114,15 +111,12 @@ addopts = "--ignore=tests/fuzz"
 markers = [
     "requires_ray: test needs a running Ray cluster",
     "requires_ipc: test needs real sockets or subprocesses (incomplete mocking)",
-    "requires_core: test runs the real core binary (not sandbox-compatible)",
+    "requires_amber: test runs a real search on the native amber runtime (skipped when it is not installed unless CIQ_REQUIRE_AMBER=1)",
 ]
 
 # Coverage configuration
 [tool.coverage.run]
 source = ["compileiq"]
-omit = [
-    "compileiq/core/executable/*",
-]
 
 [tool.coverage.report]
 show_missing = true

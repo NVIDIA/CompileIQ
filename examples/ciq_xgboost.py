@@ -50,7 +50,6 @@ def main():
     main_config = SearchConfiguration(
         pool_size=64,
         generations=5,
-        mutate_rate=0.25,
         problem_type="max",
         num_objectives=1,
     )

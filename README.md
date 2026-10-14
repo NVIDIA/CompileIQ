@@ -34,26 +34,28 @@ pip install compileiq
 ```
 
 The CompileIQ 1.1 release contract is one complete distribution: each published
-platform wheel contains every backend available for that platform, with no separate
-runtime package to install. Linux and Windows complete wheels contain the bundled
-`ruby` and native `amber` backends. The macOS ARM64 beta wheel contains `amber`
-only because no macOS legacy core is shipped. For editable development,
-`make install` sets up the frontend with the bundled `ruby` engine only;
-`make install-complete` also materializes the pinned native payload checked into
-this repository through Git LFS:
+platform wheel contains the native `amber` engine, which is the default
+and the only bundled engine, with no separate runtime package to install.
+In CompileIQ 1.1, `amber` replaces the original search core.
+
+For editable development, `make install` installs the frontend and materializes
+the pinned native payload checked into this repository through Git LFS, so fetch
+the LFS objects first:
 
 ```bash
-make install
 git lfs pull
-make install-complete
+make install
 ```
+
+`make install-frontend` installs the frontend without an engine, which is enough
+for linting, type checking, and unit tests.
 
 ## Supported platforms
 
 CompileIQ 1.1 targets Python 3.11, 3.12, 3.13, and 3.14. The beta CI matrix
 composes, verifies, and clean-installs complete wheels for Linux x86_64, Linux
-ARM64, Windows AMD64, and macOS ARM64 on each of those Python versions. The
-macOS cells provide `amber` only; the other platforms provide both backends.
+ARM64, Windows AMD64, and macOS ARM64 on each of those Python versions. Every
+cell provides the same `amber` engine.
 
 Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`. See
 the [installation guide](docs/install.md) for Linux runtime library
@@ -83,7 +85,6 @@ Browse the published [Search Space Catalog Releases](https://github.com/NVIDIA/C
 
 | Environment Variable | Default Value | Type | Description
 | ------ | ------ | ------ | ------ |
-| CIQ_SOCKET_TIMEOUT | 20 | int | Controls how long CompileIQ waits for a core response. If you experience timeouts because your search space is too big, consider increasing this value.
 | CIQ_KEEP_CACHE | False | bool | If set to True, `.cache` files will not be deleted.
 | CIQ_PROCESS_MODE | "forkserver" | str | Start method for process-based workers. Set to "fork" for tighter process separation when threads are involved. `IsoMultiProcessWorker` defaults to "fork" independently.
 | CIQ_SEARCH_SPACES_DIR | unset | path | Reads compiler search-space `manifest.json` and `.bin` files from a local mirror instead of GitHub.

@@ -22,15 +22,14 @@ def objective(config):
 
 def main():
     search_space_config = {
-        "x": ss.range(start=1.0, end=20.0, step=0.5),
+        "x": ss.range(start=1.0, end=20.0, step=0.1),
         "y": ss.choice([1, 2, 3]),
         "z": ss.log_sampling(start=1e-4, end=1.0, knockout_prob=0.2),
     }
 
     main_config = SearchConfiguration(
-        pool_size=128,
-        generations=10,
-        mutate_rate=0.25,
+        pool_size=64,
+        generations=5,
         problem_type="max",
         num_objectives=1,
     )

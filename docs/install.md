@@ -7,26 +7,32 @@ pip install compileiq
 ```
 
 The CompileIQ 1.1 release contract is a single, complete `compileiq`
-distribution: each published platform wheel contains every backend available for
-that platform, with no separate runtime package for users to select or keep
-compatible. Linux and Windows complete wheels contain the bundled `ruby` and native
-`amber` backends. The macOS ARM64 beta wheel contains `amber` only because no macOS
-legacy core is shipped.
+distribution: each published platform wheel contains the native `amber` engine,
+with no separate runtime package for users to select or keep
+compatible. `amber` is the default and the only bundled engine on every platform.
+
+In CompileIQ 1.1, `amber` replaces the original search core.
+The `SearchConfiguration` settings `cull_size`, `mutate_rate`, `objective_weights`, and `enable_large_fail_pool` have no effect since
+1.1; `Search` ignores a non-default value with a `FutureWarning` that names the
+closest `amber` option, so 1.0 configurations keep running, and a future release will
+remove these fields. `amber` never repeats a candidate, so a search in a small or
+converged space can end early with a `SearchSpaceExhaustedWarning` and the results
+so far.
 
 For editable repository development, the default bootstrap installs the frontend
-with the bundled `ruby` engine only, so it needs no native payload:
-
-```bash
-make install
-```
-
-To also materialize the pinned, manifest-verified native `amber` payload checked
-into the repository through Git LFS, fetch the LFS objects and use the complete
-install target:
+and materializes the pinned, manifest-verified native `amber` payload checked into
+the repository through Git LFS, so fetch the LFS objects first:
 
 ```bash
 git lfs pull
-make install-complete
+make install
+```
+
+`make install-complete` remains as an alias for `make install`. To install only
+the frontend, without an engine, for linting, type checking, and unit tests, use:
+
+```bash
+make install-frontend
 ```
 
 The repository contains one manifest-verified native artifact per supported
@@ -43,30 +49,29 @@ same-version incomplete wheel or source fallback is published for a cell whose
 native payload is missing. The current beta CI matrix composes, verifies, and
 clean-installs these cells end to end:
 
-- Linux x86_64 / CPython 3.11, 3.12, 3.13, and 3.14: `ruby` and `amber`
-- Linux ARM64 / CPython 3.11, 3.12, 3.13, and 3.14: `ruby` and `amber`
-- Windows AMD64 / CPython 3.11, 3.12, 3.13, and 3.14: `ruby` and `amber`
-- Apple Silicon macOS 15+ / CPython 3.11, 3.12, 3.13, and 3.14: `amber` only
+- Linux x86_64 / CPython 3.11, 3.12, 3.13, and 3.14
+- Linux ARM64 / CPython 3.11, 3.12, 3.13, and 3.14
+- Windows AMD64 / CPython 3.11, 3.12, 3.13, and 3.14
+- Apple Silicon macOS 15+ / CPython 3.11, 3.12, 3.13, and 3.14
+
+Every cell provides the same `amber` engine.
 
 Other platform and Python combinations are outside this release's supported matrix.
 
-Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`. The
-macOS ARM64 release wheels are intentionally coreless because the legacy core is
-not packaged for macOS.
+Linux wheels target glibc 2.34 or newer and are tagged `manylinux_2_34`.
 
 ## Runtime Requirements
 
-On Linux, the bundled core expects the platform C/C++ runtime libraries and
-zlib to be available on the host. Package names vary by distribution; on
-Debian/Ubuntu, the direct runtime packages for the current Linux wheels are:
+On Linux, the native runtime expects the platform C/C++ runtime libraries to be
+available on the host. Package names vary by distribution; on Debian/Ubuntu, the
+direct runtime packages for the current Linux wheels are:
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y \
   libc6 \
   libgcc-s1 \
-  libstdc++6 \
-  zlib1g
+  libstdc++6
 ```
 
 On Windows, install the Microsoft Visual C++ Redistributable 2015 or newer
@@ -81,7 +86,7 @@ Aider, Windsurf) can use to drive optimization campaigns. The skills follow the
 
 | Skill | Use when |
 | --- | --- |
-| `compileiq-bootstrap` | First-time setup, socket timeout, or before any other skill |
+| `compileiq-bootstrap` | First-time setup, a hang on the first evaluation, or before any other skill |
 | `compileiq-booster-pack` | Try a curated ACF candidate before paying for a full search |
 | `compileiq-search-space` | Choosing a provider class or pinning a search-space release (incl. the `att` variant for attention workloads) |
 | `compileiq-author-objective` | Writing or fixing the function passed as `objective_function=` |
@@ -108,11 +113,8 @@ for the full layout and authoring conventions.
 
 | Environment Variable | Default Value | Type | Description
 | ------ | ------ | ------ | ------ |
-| CIQ_SOCKET_TIMEOUT | 20 | int | Controls how long CompileIQ waits for a core response. If you experience timeouts because your search space is too big, consider increasing this value.
 | CIQ_KEEP_CACHE | False | bool | If set to True, `.cache` files will not be deleted.
 | CIQ_PROCESS_MODE | "forkserver" | str | User can set this to "fork" to better separate processes and deal with threads. `IsoMultiProcessWorker` uses `fork` as the default.
 | CIQ_SEARCH_SPACES_DIR | unset | path | Reads compiler search-space `manifest.json` and `.bin` files from a local mirror instead of GitHub.
 | CIQ_SEARCH_SPACES_REPO | NVIDIA/CompileIQ | str | GitHub repository used for search-space release lookups, useful for staging or a future dedicated asset repo.
 | CIQ_SS_LATEST_TTL_DAYS | 7 | float | Reuses the cached GitHub `latest` search-space release tag for this many days, reducing anonymous REST API calls that can be throttled on shared IPs. Set to `0` to check GitHub every time.
-| CIQ_CORE_BINARY | unset | path | Uses an explicit core executable for local core development instead of the bundled binary.
-| CIQ_CORE_MANIFEST | unset | path | Optionally verifies `CIQ_CORE_BINARY` against a local core manifest rooted next to the platform directories.

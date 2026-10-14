@@ -33,7 +33,6 @@ def main():
         normalize=True,
         pool_size=12,
         generations=2,
-        mutate_rate=0.25,
         problem_type="min",
         num_objectives=1,
     )

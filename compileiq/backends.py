@@ -27,7 +27,7 @@ from compileiq.utils.validation import Score
 class EngineConfig(BaseModel, extra="forbid", frozen=True):
     """A registered engine name plus engine-owned options.
 
-    Most users select an engine with a string such as ``"ruby"`` or ``"amber"``.
+    Most users select an engine with a string such as ``"amber"``, the default.
     ``EngineConfig`` is the equivalent form for callers that also need to supply
     settings owned and validated by that engine.
     """
@@ -41,6 +41,14 @@ class EngineConfig(BaseModel, extra="forbid", frozen=True):
         default_factory=dict,
         description="Engine-specific options validated by the engine registration.",
     )
+
+
+class BackendError(RuntimeError):
+    """Base class for actionable backend errors."""
+
+
+class BackendNotFoundError(BackendError):
+    """Raised when a requested backend has not been registered."""
 
 
 def resolve_engine(engine: str | EngineConfig) -> EngineConfig:
@@ -57,16 +65,18 @@ def resolve_engine(engine: str | EngineConfig) -> EngineConfig:
     return EngineConfig(name=name, options=options)
 
 
-class BackendError(RuntimeError):
-    """Base class for actionable backend errors."""
-
-
-class BackendNotFoundError(BackendError):
-    """Raised when a requested backend has not been registered."""
-
-
 class BackendCapabilityError(BackendError):
     """Raised when a backend cannot safely perform a requested operation."""
+
+
+class SearchSpaceExhaustedError(BackendError, ValueError):
+    """Raised when an engine cannot issue another candidate it has not issued before.
+
+    Engines that never repeat a candidate within a search raise this once a small
+    discrete search space, or a converged search, leaves too few unseen candidates for
+    the next batch. ``Search.start()`` ends the search with the results so far instead
+    of failing, unless no candidate has been evaluated yet.
+    """
 
 
 class CheckpointValidationError(BackendError):
@@ -268,9 +278,10 @@ _BACKENDS: dict[str, BackendRegistration] = {}
 _ENTRY_POINTS_LOADED = False
 _PROVIDER_INSTALL_HINTS = {
     "amber": (
-        "The curated 'amber' engine is unavailable because this installation does not contain "
+        "The default 'amber' engine is unavailable because this installation does not contain "
         "its native payload. Install a complete platform-specific 'compileiq' wheel for this "
-        "version and retry."
+        "version and retry. In a source checkout, run 'make install', which materializes "
+        "the native runtime checked in under native-runtime-wheels/."
     ),
 }
 
@@ -292,10 +303,8 @@ def register_backend(
     """
 
     normalized_name = name.strip().lower()
-    if not normalized_name or normalized_name == "ruby":
-        raise ValueError(
-            "Backend name must be non-empty and cannot replace the reserved 'ruby' engine name."
-        )
+    if not normalized_name:
+        raise ValueError("Backend name must be non-empty.")
     if normalized_name in _BACKENDS and not replace:
         raise ValueError(f"Backend {normalized_name!r} is already registered.")
     _BACKENDS[normalized_name] = BackendRegistration(
@@ -317,8 +326,8 @@ def unregister_backend(name: str) -> None:
 def _load_entry_point_backends() -> None:
     """Load installed provider registrars once, only when a provider is first requested.
 
-    Lazy discovery avoids importing the composed native payload and its dependencies
-    for searches that use the bundled ruby core.
+    Lazy discovery keeps ``import compileiq`` from importing the composed native payload
+    and its dependencies until a search selects an engine.
     """
 
     global _ENTRY_POINTS_LOADED

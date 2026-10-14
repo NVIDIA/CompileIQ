@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Check bundled Linux core ELF version requirements."""
+"""Check Linux ELF GLIBC/GLIBCXX version requirements.
+
+Release composition runs this on the native runtime extension embedded in each
+Linux complete wheel (see dev/verify_complete_wheel.py).
+"""
 from __future__ import annotations
 
 import argparse
@@ -10,12 +14,6 @@ import sys
 from pathlib import Path
 
 
-DEFAULT_ELF_FILES = (
-    Path("compileiq/core/executable/linux/x86_64/bin/_core"),
-    Path("compileiq/core/executable/linux/x86_64/lib/libciq.so"),
-    Path("compileiq/core/executable/linux/aarch64/bin/_core"),
-    Path("compileiq/core/executable/linux/aarch64/lib/libciq.so"),
-)
 DEFAULT_MAX_GLIBC = (2, 34)
 DEFAULT_MAX_GLIBCXX = (3, 4, 29)
 VERSION_RE = re.compile(r"\b(GLIBCXX|GLIBC)_([0-9]+(?:\.[0-9]+)*)\b")
@@ -82,9 +80,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "paths",
-        nargs="*",
+        nargs="+",
         type=Path,
-        default=list(DEFAULT_ELF_FILES),
         help="Linux ELF files to inspect",
     )
     parser.add_argument("--max-glibc", default="2.34", help="Maximum allowed GLIBC version")

@@ -56,7 +56,6 @@ These are the parameters we want to tune for this XGBoost example. Each sampled 
 main_config = SearchConfiguration(
     pool_size=64,
     generations=5,
-    mutate_rate=0.25,
     problem_type="max",
     num_objectives=1,
 )

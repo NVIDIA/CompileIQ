@@ -22,12 +22,15 @@ from pathlib import Path
 
 
 EXPECTED_ENTRY_POINT = "compileiq_native_runtime:register_backend_artifact"
-CORE_PLATFORM_PREFIXES = {
-    "manylinux_2_34_aarch64": "linux/aarch64/",
-    "manylinux_2_34_x86_64": "linux/x86_64/",
-    "win_amd64": "win32/amd64/",
+SUPPORTED_PLATFORM_TAGS = {
+    "manylinux_2_34_aarch64",
+    "manylinux_2_34_x86_64",
+    "win_amd64",
+    "macosx_15_0_arm64",
 }
-CORELESS_PLATFORM_TAGS = {"macosx_15_0_arm64"}
+# CompileIQ 1.1 removed the original core. A complete wheel that still carries
+# anything under this prefix was composed from a stale frontend.
+REMOVED_CORE_PREFIX = "compileiq/core/"
 
 
 def _exactly_one(names: list[str], suffix: str) -> str:
@@ -59,42 +62,17 @@ def _filename_tags(wheel: Path) -> set[str]:
     }
 
 
-def _verify_core_platform(names: list[str], tags: list[str], archive: zipfile.ZipFile) -> None:
+def _verify_platform(names: list[str], tags: list[str]) -> None:
     platforms = {tag.rsplit("-", 1)[-1] for tag in tags}
-    unsupported = sorted(platforms - CORE_PLATFORM_PREFIXES.keys() - CORELESS_PLATFORM_TAGS)
+    unsupported = sorted(platforms - SUPPORTED_PLATFORM_TAGS)
     if unsupported:
-        raise RuntimeError(f"complete wheel has unsupported core platforms: {unsupported}")
-    coreless_platforms = platforms & CORELESS_PLATFORM_TAGS
-    if coreless_platforms:
-        if platforms != coreless_platforms:
-            raise RuntimeError(f"complete wheel spans incompatible core platforms: {platforms}")
-        bundled_core = [
-            name
-            for name in names
-            if name.startswith("compileiq/core/executable/")
-            and name != "compileiq/core/executable/core-manifest.json"
-        ]
-        if bundled_core:
-            raise RuntimeError(
-                f"coreless complete wheel unexpectedly contains bundled core files: "
-                f"{bundled_core}"
-            )
-        return
-    prefixes = {CORE_PLATFORM_PREFIXES[platform] for platform in platforms}
-    if len(prefixes) != 1:
-        raise RuntimeError(f"complete wheel spans incompatible core platforms: {platforms}")
-
-    manifest_name = "compileiq/core/executable/core-manifest.json"
-    if manifest_name not in names:
-        raise RuntimeError("complete wheel is missing the bundled core manifest")
-    manifest = json.loads(archive.read(manifest_name))
-    files = manifest.get("files")
-    if not isinstance(files, dict):
-        raise RuntimeError("bundled core manifest has invalid files provenance")
-    prefix = prefixes.pop()
-    if not any(str(name).startswith(prefix) for name in files):
+        raise RuntimeError(f"complete wheel has unsupported platforms: {unsupported}")
+    if len(platforms) != 1:
+        raise RuntimeError(f"complete wheel spans more than one platform: {sorted(platforms)}")
+    removed_core = [name for name in names if name.startswith(REMOVED_CORE_PREFIX)]
+    if removed_core:
         raise RuntimeError(
-            f"complete wheel tag does not have a bundled core for {prefix.rstrip('/')}"
+            f"complete wheel contains files from the removed bundled core: {removed_core}"
         )
 
 
@@ -111,7 +89,7 @@ def _verify_linux_native_abi(
         raise RuntimeError(
             "readelf not found; install binutils to verify the Linux native runtime ABI"
         )
-    checker = Path(__file__).with_name("check-linux-core-abi.py")
+    checker = Path(__file__).with_name("check-linux-abi.py")
     with tempfile.TemporaryDirectory(prefix="ciq-native-abi-") as directory:
         extracted = Path(directory) / Path(extension).name
         extracted.write_bytes(archive.read(extension))
@@ -181,7 +159,7 @@ def verify_complete_wheel(wheel: Path) -> None:
                 "complete wheel filename and WHEEL metadata tags differ: "
                 f"filename={sorted(filename_tags)}, metadata={sorted(tags)}"
             )
-        _verify_core_platform(names, tags, archive)
+        _verify_platform(names, tags)
         _verify_linux_native_abi(archive, extensions[0], tags)
 
         record_name = _exactly_one(names, ".dist-info/RECORD")

@@ -16,11 +16,8 @@ class SearchRequest:
     cuda_version: str
     generations: int = 5
     pool_size: int = 32
-    cull_size: int | None = None
-    mutate_rate: float = 0.25
     normalize: bool = False
     init_with_true_random_threshold: float = 0.9
-    enable_large_fail_pool: bool = True
     block_size: int = 256
     timing_trials: int = 10
     task_timeout: float = 30.0

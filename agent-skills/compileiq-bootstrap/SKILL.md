@@ -1,12 +1,12 @@
 ---
 name: compileiq-bootstrap
 description: >
-  Use when starting a fresh CompileIQ project, hitting a socket timeout, or before
+  Use when starting a fresh CompileIQ project, hitting a hang on the first evaluation, or before
   running any other compileiq-* skill. Verifies CUDA 13.3+, ptxas, GPU access,
   that `from compileiq.ciq import Search` and friends resolve, and that
   `PtxasSearchSpace().retrieve()` returns a real path. Documents the env vars
   that control timeouts, caching, and search-space mirroring. Triggers on
-  "set up compileiq", "compileiq doesn't work", "socket timeout", "where do
+  "set up compileiq", "compileiq doesn't work", "first eval hangs", "where do
   search spaces come from", "air-gapped compileiq".
 when_to_use: |
   - First time a user opens a CompileIQ project.
@@ -15,7 +15,7 @@ when_to_use: |
   Don't use when: the env is already validated in this session.
 license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: NVIDIA CompileIQ
   domain: compiler-optimization
 allowed-tools: Bash Read
@@ -81,7 +81,7 @@ source checkout) and re-run.
 ### 4. Search-space resolution round-trip
 
 This catches network or air-gapped issues that otherwise surface as
-socket-timeout hangs deep inside the first evaluation:
+hangs deep inside the first evaluation:
 
 ```bash
 python -c "
@@ -99,7 +99,6 @@ The first run downloads from GitHub releases and caches under
 
 | Variable | Default | What it controls |
 |---|---|---|
-| `CIQ_SOCKET_TIMEOUT` | `20` | Seconds to wait on IPC with the core. Raise to 60-120 for large search spaces; raise much higher if you regularly see a hang on the first evaluation. |
 | `CIQ_KEEP_CACHE` | unset (`0`) | Set to `1`/`true`/`yes` to keep `.cache` files after a run for post-mortem replay. |
 | `CIQ_PROCESS_MODE` | `forkserver` | `forkserver`, `fork`, or `spawn`. Switch to `spawn` if `forkserver` fails on a constrained host. `IsoMultiProcessWorker` defaults to `fork` regardless. |
 | `CIQ_SEARCH_SPACES_DIR` | unset | Path to a local mirror containing `manifest.json` plus the referenced `.bin` files. Set this on air-gapped hosts to skip network. |
@@ -117,12 +116,10 @@ prints, for each failure, the precise command the user should run next.
 
 ## Gotchas
 
-- **Socket timeout on first eval is *not* BLAS.** Current shipped binaries do
-  not require BLAS/LAPACK. If a hang occurs:
-  1. Raise `CIQ_SOCKET_TIMEOUT=120` and retry.
-  2. If still hangs, mirror search spaces locally and set
+- **If the first eval hangs:**
+  1. Mirror search spaces locally and set
      `CIQ_SEARCH_SPACES_DIR=/path/to/mirror`.
-  3. If still hangs, switch process mode: `CIQ_PROCESS_MODE=spawn`.
+  2. If still hangs, switch process mode: `CIQ_PROCESS_MODE=spawn`.
 - **Don't install system libraries in this skill.** Distro-specific package
   installs require sudo and break in containers and on shared clusters. If
   `nvcc`, `ptxas`, or a Python interpreter is missing, surface the error

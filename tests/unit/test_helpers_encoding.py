@@ -11,8 +11,8 @@ from compileiq.utils.helpers import _encode_for_core, _decode_from_core
 
 
 class TestCoreEncoding:
-    """These functions encode parameter keys to base64 so the core binary
-    can use them as identifiers.  The round-trip must be lossless for
+    """These functions encode parameter keys to base64 so nested keys can be
+    flattened with "_" separators.  The round-trip must be lossless for
     every string a user might use as a parameter name."""
 
     def test_plain_ascii_round_trip(self):
@@ -32,7 +32,7 @@ class TestCoreEncoding:
 
     def test_encoded_output_is_valid_base64(self):
         """The encoded string must only contain base64-safe characters,
-        since the core binary uses it as an identifier."""
+        since "_" separates flattened key segments."""
         import base64
 
         encoded = _encode_for_core("test_key")

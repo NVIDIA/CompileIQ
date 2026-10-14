@@ -1,10 +1,9 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install install-complete materialize-native-runtime install-examples install-examples-complete install-docs install-release lint lint-fix format format-check \
+.PHONY: help install install-frontend install-complete materialize-native-runtime install-examples install-examples-complete install-docs install-release lint lint-fix format format-check \
         typecheck test test-all test-unit test-integration test-fuzz test-cov \
         docs docs-serve docs-preview build compose-complete-wheel verify-complete-wheel \
         test-complete-wheel-install clean validate \
-        verify-core update-core \
         setup-compileiq-package-release \
         setup-search-space-release update-search-space-catalog \
         build-search-space-release check-search-space-staging check-search-space-assets \
@@ -39,12 +38,14 @@ NATIVE_RUNTIME_MANIFESTS ?= $(if \
 		$(NATIVE_RUNTIME_CI_MANIFESTS), \
 		$(NATIVE_RUNTIME_CHECKED_IN_MANIFESTS)))
 
-install: ## Install the editable frontend with the bundled ruby engine only (no native payload)
-	poetry install --with linter,typecheck,unittest,tracking
-
-install-complete: ## Install the editable frontend and materialize the native amber runtime
+install: ## Install the editable frontend and materialize the native amber runtime (needs git lfs pull)
 	poetry install --with linter,typecheck,unittest,tracking,native-runtime
 	$(MAKE) materialize-native-runtime
+
+install-frontend: ## Install the editable frontend without an engine (lint, typecheck, and unit tests only)
+	poetry install --with linter,typecheck,unittest,tracking
+
+install-complete: install ## Compatibility alias for install
 
 materialize-native-runtime: ## Install a verified CI payload or build the explicit local override
 	@if [ -n "$(NATIVE_RUNTIME_SOURCE)" ] && [ -d "$(NATIVE_RUNTIME_SOURCE)" ]; then \
@@ -71,12 +72,11 @@ materialize-native-runtime: ## Install a verified CI payload or build the explic
 		exit 1; \
 	fi
 
-install-examples: ## Install dev dependencies + examples
-	poetry install --with examples,linter,typecheck,unittest,tracking
-
-install-examples-complete: ## Install examples and materialize the native amber runtime
+install-examples: ## Install dev dependencies + examples and materialize the native amber runtime
 	poetry install --with examples,linter,typecheck,unittest,tracking,native-runtime
 	$(MAKE) materialize-native-runtime
+
+install-examples-complete: install-examples ## Compatibility alias for install-examples
 
 install-docs: ## Install docs dependencies
 	poetry install --with docs
@@ -178,19 +178,7 @@ clean: ## Remove build artifacts and caches
 	find . -name '.cache' -exec rm -rf {} + 2>/dev/null || true
 	find . -name '.testmondata' -exec rm -rf {} + 2>/dev/null || true
 
-validate: lint typecheck verify-core test-unit ## Quick validation (lint + typecheck + core verification + unit tests)
-
-verify-core: ## Verify bundled core binaries against core-manifest.json
-	poetry run python -m compileiq.core.verify_core
-
-update-core: ## Update bundled core binaries from CORE_MANIFEST_URL and CORE_TARBALL_URL
-	@test -n "$(CORE_MANIFEST_URL)" || (echo "ERROR: set CORE_MANIFEST_URL" >&2; exit 1)
-	@test -n "$(CORE_TARBALL_URL)" || (echo "ERROR: set CORE_TARBALL_URL" >&2; exit 1)
-	@test -n "$(CORE_MANIFEST_SHA256)" || (echo "ERROR: set CORE_MANIFEST_SHA256" >&2; exit 1)
-	bash dev/update-core-binaries.sh \
-		--manifest-url "$(CORE_MANIFEST_URL)" \
-		--tarball-url "$(CORE_TARBALL_URL)" \
-		--expected-manifest-sha256 "$(CORE_MANIFEST_SHA256)"
+validate: lint typecheck test-unit ## Quick validation (lint + typecheck + unit tests)
 
 # CompileIQ package release targets.
 

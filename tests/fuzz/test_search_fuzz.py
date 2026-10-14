@@ -62,19 +62,11 @@ def test_start_fuzz(
     num_workers,
     worker_type,
     tracker_type,
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
     mock_search_space,
     mock_nested_search_space,
 ):
     """Fuzz test_start across the full original parameter space."""
-    pytest.current_gen = 0
-    pytest.max_gen = gens
-    pytest.pool_size = pool_size
-    pytest.nested_test = func == nested_light_obj_func
-    pytest.encoded_knobs = True
 
     expected_returns = 5 if func == multi_light_obj_func else 1
 
@@ -92,6 +84,7 @@ def test_start_fuzz(
     )
     rfunc = ASYNC_FUNC_MAP[func] if worker_type == WorkerTypes.ASYNC else func
     with Search(
+        engine=scripted_engine,
         objective_function=rfunc,
         search_space=search_space_config,
         search_config=main_config,
@@ -116,10 +109,7 @@ def test_start_fuzz(
 def test_sample_fuzz(
     num_samples,
     func,
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
     mock_search_space,
     mock_nested_search_space,
 ):
@@ -131,16 +121,11 @@ def test_sample_fuzz(
         num_objectives=10,
     )
 
-    pytest.current_gen = 0
-    pytest.max_gen = 2
-    pytest.pool_size = num_samples
-    pytest.nested_test = func == nested_light_obj_func
-    pytest.encoded_knobs = True
-
     search_space_config = (
         mock_nested_search_space if func == nested_light_obj_func else mock_search_space
     )
     with Search(
+        engine=scripted_engine,
         objective_function=func,
         search_space=search_space_config,
         search_config=main_config,

@@ -16,7 +16,7 @@ when_to_use: |
   - Migrating from local to a Ray cluster.
 license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: NVIDIA CompileIQ
   domain: compiler-optimization
 allowed-tools: Bash Read
@@ -76,8 +76,6 @@ config = SearchConfiguration(
     problem_type=ProblemType.MIN,   # MIN for latency; MAX for throughput
     generations=10,                  # required, > 0
     pool_size=15,                    # > 5; auto-derives if omitted
-    # cull_size auto-derives to 75% of pool, rounded down to even
-    # mutate_rate defaults to 0.25
     # num_objectives defaults to 1
     # normalize defaults to False (set True for cross-GPU runs)
 )
@@ -87,10 +85,18 @@ config = SearchConfiguration(
 |---|---|---|
 | `generations` | required | 10 for initial exploration; 20-40 for a deep run. |
 | `pool_size` | auto (≥32) | 15 for tiny spaces; 32 for ≥1k design points; 64-128 for ≥10k. |
-| `cull_size` | 75% of pool, even | Almost never override directly. |
-| `mutate_rate` | 0.25 | Raise to 0.3-0.5 only if convergence stalls in early gens. |
 | `num_objectives` | 1 | Must equal `len(return_tuple)` from the objective. |
 | `normalize` | False | True when running across heterogeneous nodes or GPUs. |
+
+The default engine, `amber`, owns its optimizer settings. Leave the
+`SearchConfiguration` fields `cull_size`, `mutate_rate`, `objective_weights`,
+and `enable_large_fail_pool` unset: they have no effect since CompileIQ 1.1, and
+`Search` ignores them with a `FutureWarning`. Pass amber options
+(`mutation_probability`, `survivor_count`, `reference_direction_weights`,
+`seed`) through `engine=EngineConfig(name="amber", options={...})` instead.
+`amber` never repeats a candidate, so keep `pool_size * generations` well below
+the number of distinct points in a small discrete space; otherwise `start()` ends
+early with a `SearchSpaceExhaustedWarning` and returns the results so far.
 
 **Sanity rule of thumb:** if `pool_size * generations < 50`, you are exploring,
 not optimizing. If `> 2000`, you are probably overfitting to measurement noise

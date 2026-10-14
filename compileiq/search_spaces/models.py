@@ -75,7 +75,7 @@ class ParamConfigBase(BaseModel, populate_by_name=True):
 
     @property
     def knockout_threshold(self) -> float | None:
-        """Return the legacy bundled-core threshold for compatibility reads."""
+        """Return the legacy complementary knockout threshold for compatibility reads."""
 
         return _probability_to_threshold(self.knockout_prob)
 
@@ -108,9 +108,3 @@ class LiteralParamConfig(ParamConfigBase):
 
 
 ParamConfig = Union[RangeParamConfig, ChoiceParamConfig, LiteralParamConfig]
-
-
-class SearchSpaceFileModel(BaseModel, populate_by_name=True):
-    format: str = "compileiq-search-space-v1"
-    classes: dict[str, ParamConfig]
-    parameter_layout: list[str]

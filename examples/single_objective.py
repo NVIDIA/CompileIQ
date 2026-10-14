@@ -11,7 +11,7 @@ def objective(config):
 
 def main():
     search_space_config = {
-        "x": ss.range(start=1.0, end=20.0, step=0.5),
+        "x": ss.range(start=1.0, end=20.0, step=0.1),
         "y": ss.choice([1, 2, 3]),
         "z": ss.literal("this is a constant", knockout_prob=0.5),
     }

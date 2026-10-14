@@ -17,7 +17,7 @@ when_to_use: |
   - Want to pin a specific search-space release for reproducibility.
 license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: NVIDIA CompileIQ
   domain: compiler-optimization
 allowed-tools: Bash Read
@@ -189,12 +189,12 @@ except Exception as e:
   in this same branch. When recommending the variant to a user, say
   "attention" explicitly.
 - **Providers vs Booster Packs are different things.** Providers return one
-  binary search space the optimization core consumes during a search; Booster
+  binary search space the search engine consumes during a search; Booster
   Packs are pre-built `.acf` candidates to apply *outside* a search. Don't
   feed a `.acf` from a Booster Pack to `PtxasSearchSpace(...)`.
 - **`LocalSearchSpaceBin` doesn't validate `.bin` contents.** It only
   validates that the file exists. A malformed file will fail downstream when
-  the core tries to parse it; the resulting error message points at the
+  the engine tries to parse it; the resulting error message points at the
   resolver, not the provider.
 
 ## Next

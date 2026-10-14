@@ -1,18 +1,18 @@
 """
-End-to-end integration tests that run against the REAL core binary — no mocks.
+End-to-end integration tests that run real searches on the default engine, the
+native ``amber`` runtime. No mocks.
+
+These tests were written against the original core and ported when CompileIQ 1.1
+replaced it with ``amber``. They exercise generic search behavior (problem types, multiple
+objectives, normalization, sampling, parameter types, and the manual ask/tell
+lifecycle), so every Search here uses the default engine on purpose.
 
 REQUIREMENTS:
-    - The core binary must exist for the current platform (linux/x86_64,
-       etc.).  Tests are auto-skipped if it's missing.
-    - These tests are NOT sandbox-compatible (they spawn subprocesses and
-      bind sockets).
-    - Run with: pytest tests/integration/test_core_integration.py -vvv
-      or: pytest -m requires_core
+    - The native runtime must be installed (``make install``). Without it the tests
+      are skipped, unless ``CIQ_REQUIRE_AMBER=1`` is set, as in CI, to make them fail.
+    - Run with: pytest tests/integration/test_engine_integration.py -vvv
+      or: pytest -m requires_amber
 """
-
-import sys
-import platform
-from pathlib import Path
 
 import pytest
 import compileiq.search_spaces.base as ss
@@ -21,31 +21,7 @@ from compileiq.types import SearchConfiguration, INVALID_SCORE
 from compileiq.utils.validation import Score
 
 
-# ---------------------------------------------------------------------------
-# Skip if the core binary isn't available for this platform
-# ---------------------------------------------------------------------------
-
-
-def _core_binary_exists() -> bool:
-    """Check whether the core binary exists for the current OS/arch."""
-    platform_map = {
-        ("linux", "x86_64"): ("linux", "x86_64", "bin", "core"),
-        ("linux", "aarch64"): ("linux", "aarch64", "bin", "core"),
-        ("win32", "amd64"): ("win32", "amd64", "core.exe"),
-    }
-    key = (sys.platform, platform.machine().lower())
-    parts = platform_map.get(key)
-    if parts is None:
-        return False
-    exe_dir = Path(__file__).parent.parent.parent / "compileiq" / "core" / "executable"
-    binary = exe_dir / Path(*parts)
-    return binary.exists()
-
-
-pytestmark = [
-    pytest.mark.requires_core,
-    pytest.mark.skipif(not _core_binary_exists(), reason="Core binary not found for this platform"),
-]
+pytestmark = pytest.mark.requires_amber
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +34,14 @@ def cache_dir(tmp_path):
     return tmp_path / "core_test_cache"
 
 
-SMALL_CONFIG = dict(generations=3, pool_size=8, cull_size=4)
+SMALL_CONFIG = dict(generations=3, pool_size=8)
+
+# amber issues only candidates it has not issued before in the search and raises
+# "Unable to generate N unique candidates" once a small discrete space runs out.
+# The original core tolerated repeats instead. Searches below whose own
+# parameters have few distinct values add this unused parameter so that
+# SMALL_CONFIG's 24 candidates stay well inside the space.
+ROOM_TO_SEARCH = {"room": ss.range(start=0, end=10_000, step=1)}
 
 
 # ---------------------------------------------------------------------------
@@ -74,7 +57,7 @@ def objective_min(config):
 def test_single_objective_min(cache_dir):
     """The most basic end-to-end test: can we run a simple minimization search
     from start to finish and get back sensible results?"""
-    result = Search(
+    search = Search(
         objective_function=objective_min,
         search_space={
             "x": ss.range(start=1.0, end=20.0, step=0.5),
@@ -87,13 +70,15 @@ def test_single_objective_min(cache_dir):
         ),
         cache_folder=cache_dir,
         disable_progress_bar=True,
-    ).start()
+    )
+    # No engine= argument: the default must be the native runtime.
+    assert search.provider == "amber"
+    result = search.start()
 
     df = result.get_results()
     best = result.get_best_result()
 
-    # Structural: we should have results, but deduplication can reduce the
-    # number of scored rows even in the initial generation.
+    # Structural: we should have results, at most one row per evaluation.
     assert not df.empty
     assert len(df) <= SMALL_CONFIG["pool_size"] * SMALL_CONFIG["generations"]
     assert "score_1" in df.columns
@@ -168,8 +153,8 @@ def test_multi_objective(cache_dir):
     """Multi-objective search with Pareto front — this is an advertised headline
     feature.  We verify the result has both score columns and that the Pareto
     front returns a non-empty list of non-dominated solutions."""
-    # The core requires pool_size >= 2*num_objectives + 1 for its internal
-    # direction-vector algorithm, so we need a bigger population than SMALL_CONFIG.
+    # Reference directions need pool_size >= 2*num_objectives + 1 survivors, so this
+    # uses a bigger population than SMALL_CONFIG.
     result = Search(
         objective_function=multi_objective,
         search_space={
@@ -199,7 +184,7 @@ def test_multi_objective(cache_dir):
 
 
 # ---------------------------------------------------------------------------
-# Normalization — baseline measurement with real core
+# Normalization: baseline measurement with a real engine
 # ---------------------------------------------------------------------------
 
 
@@ -248,8 +233,8 @@ def test_normalization(cache_dir):
 
 def test_sample(cache_dir):
     """sample() lets users preview what parameter sets look like before
-    committing to a full search.  It still needs the core binary to generate
-    the candidate samples."""
+    committing to a full search.  It still needs the engine to generate the
+    candidate samples."""
     tuner = Search(
         objective_function=objective_min,
         search_space={
@@ -275,7 +260,7 @@ def test_sample(cache_dir):
 
 
 # ---------------------------------------------------------------------------
-# Nested search space — verify key encoding round-trip with real core
+# Nested search space: verify key encoding round-trip with a real engine
 # ---------------------------------------------------------------------------
 
 
@@ -285,9 +270,9 @@ def nested_objective(config):
 
 
 def test_nested_search_space(cache_dir):
-    """Nested search spaces go through base64 key encoding for the core binary
-    and get decoded back.  A bug in the encode/decode round-trip would show up
-    as missing or mangled keys in the returned parameters."""
+    """Nested search spaces are flattened with base64 key encoding before they
+    reach the engine and get decoded back.  A bug in the encode/decode round-trip
+    would show up as missing or mangled keys in the returned parameters."""
     result = Search(
         objective_function=nested_objective,
         search_space={
@@ -359,9 +344,9 @@ def objective_string_choice(config):
     return booster_score.get(config["booster"], 5.0) + flag_score.get(config["opt_level"], 10.0)
 
 
-def test_string_choices_with_real_core(cache_dir):
-    """String values in choice() catch regressions in IPC parsing.
-    Verify they round-trip correctly through JSON serialization to the core and back."""
+def test_string_choices_with_real_engine(cache_dir):
+    """String values in choice() catch regressions in parameter decoding.
+    Verify they round-trip correctly through the engine and back."""
     valid_boosters = {"gbtree", "gblinear", "dart"}
     valid_flags = {"O0", "O1", "O2"}
 
@@ -370,6 +355,7 @@ def test_string_choices_with_real_core(cache_dir):
         search_space={
             "booster": ss.choice(["gbtree", "gblinear", "dart"]),
             "opt_level": ss.choice(["O0", "O1", "O2"]),
+            **ROOM_TO_SEARCH,
         },
         search_config=SearchConfiguration(
             **SMALL_CONFIG,
@@ -403,15 +389,16 @@ def objective_complex_literal(config):
     return x**2
 
 
-def test_complex_literal_strings_with_real_core(cache_dir):
-    """Literal parameters with JSON-like string values catch regressions in IPC parsing.
-    Verify they survive the JSON round-trip through the core."""
+def test_complex_literal_strings_with_real_engine(cache_dir):
+    """Literal parameters with JSON-like string values catch regressions in parameter
+    decoding. Verify they survive the round-trip through the engine."""
     result = Search(
         objective_function=objective_complex_literal,
         search_space={
             "x": ss.range(start=1.0, end=20.0, step=0.5),
             "json_param": ss.literal('{"key": 10}'),
             "plain_str": ss.literal("this is a constant"),
+            **ROOM_TO_SEARCH,
         },
         search_config=SearchConfiguration(
             **SMALL_CONFIG,
@@ -443,14 +430,14 @@ def objective_log_sampled(config):
     return (lr - 0.01) ** 2
 
 
-def test_log_sampling_with_real_core(cache_dir):
+def test_log_sampling_with_real_engine(cache_dir):
     """log_sampling() uses np.geomspace which can produce scientific notation
-    floats (e.g. 1e-08).  Verify the core binary handles these correctly in
-    the JSON search-space config."""
+    floats (e.g. 1e-08).  Verify the engine handles these correctly."""
     result = Search(
         objective_function=objective_log_sampled,
         search_space={
             "lr": ss.log_sampling(start=1e-8, end=1.0),
+            **ROOM_TO_SEARCH,
         },
         search_config=SearchConfiguration(
             **SMALL_CONFIG,
@@ -472,7 +459,7 @@ def test_log_sampling_with_real_core(cache_dir):
 
 
 # ---------------------------------------------------------------------------
-# JSON serde — knockout fields in JSON
+# Knockout
 # ---------------------------------------------------------------------------
 
 
@@ -483,10 +470,8 @@ def objective_with_knockout(config):
     return x**2 + y
 
 
-def test_knockout_with_real_core(cache_dir):
-    """Knockout field (knockout_threshold) is serialized to JSON
-    but was never tested with the real core.  Verify the core correctly parses
-    and applies knockout when this field is present."""
+def test_knockout_with_real_engine(cache_dir):
+    """Verify the engine accepts knockout_prob and still produces scored results."""
     result = Search(
         objective_function=objective_with_knockout,
         search_space={
@@ -526,7 +511,7 @@ def objective_mixed(config):
     return x**2 + y + lr + b
 
 
-def test_mixed_types_with_real_core(cache_dir):
+def test_mixed_types_with_real_engine(cache_dir):
     """Kitchen-sink test: range (int and float), choice (numeric and string),
     literal (string with knockout), and log_sampling all in one search space.
     Mirrors what real users do in examples/ciq_xgboost.py."""
@@ -562,25 +547,22 @@ def test_mixed_types_with_real_core(cache_dir):
 
 
 # ---------------------------------------------------------------------------
-# Manual ask/tell lifecycle: bundled ruby adapter, out-of-order subsets
+# Manual ask/tell lifecycle: out-of-order subsets
 # ---------------------------------------------------------------------------
 
 
-def test_ruby_ask_tell_out_of_order_advances_without_id_collision(cache_dir):
-    """Drive the real bundled ruby core through a manual ask/tell lifecycle.
+def test_ask_tell_out_of_order_advances_without_id_collision(cache_dir):
+    """Drive the default engine through a manual ask/tell lifecycle.
 
     One generation's batch is reported as two out-of-order subsets, then the next
-    generation is requested. The adapter must advance the bundled core's
-    generation across the two-subset report and must namespace candidate IDs so
-    identifiers never collide across generations.
-
-    Runs only where the core binary exists (see module-level ``requires_core``
-    skip); otherwise it is auto-skipped, so it exercises the real adapter in CI.
+    generation is requested. The engine must advance across the two-subset report,
+    and candidate IDs must never collide across generations. (Ported from the
+    original core's adapter test.)
     """
 
     search = Search(
         objective_function=lambda config: config["x"],
-        search_space={"x": ss.range(start=1.0, end=20.0, step=0.5)},
+        search_space={"x": ss.range(start=1.0, end=20.0, step=0.5), **ROOM_TO_SEARCH},
         search_config=SearchConfiguration(
             **SMALL_CONFIG,
             problem_type="min",
@@ -588,7 +570,6 @@ def test_ruby_ask_tell_out_of_order_advances_without_id_collision(cache_dir):
         ),
         cache_folder=cache_dir,
         disable_progress_bar=True,
-        engine="ruby",
     )
 
     def score_for(candidate):
@@ -603,7 +584,7 @@ def test_ruby_ask_tell_out_of_order_advances_without_id_collision(cache_dir):
 
     first = search.ask()
     assert len(first) == SMALL_CONFIG["pool_size"]
-    assert search._backend_impl is not None  # the ruby engine sets the impl at construction
+    assert search._backend_impl is not None
     generation_before = search._backend_impl.current_generation
 
     midpoint = len(first) // 2
@@ -611,25 +592,76 @@ def test_ruby_ask_tell_out_of_order_advances_without_id_collision(cache_dir):
     subset_b = first[midpoint:]
 
     # Report the later subset first, each subset reversed, to exercise
-    # order-independent subset reporting. The bundled adapter buffers subsets
-    # until the whole batch is present, then sends one ordered core response.
+    # order-independent subset reporting.
     search.tell([score_for(candidate) for candidate in reversed(subset_b)])
     assert len(search.pending_candidates) == len(subset_a)  # batch not yet complete
     search.tell([score_for(candidate) for candidate in reversed(subset_a)])
     assert search.pending_candidates == ()  # batch complete
 
     second = search.ask()
-    # The bundled GA carries survivors across generations, so the next-generation
-    # ask only returns the new offspring needing evaluation -- fewer than the full
-    # pool. The contract under test is that it advanced and produced fresh work.
     assert len(second) > 0
-
-    # The adapter advanced the bundled core to the next generation ...
-    assert search._backend_impl is not None
     assert search._backend_impl.current_generation == generation_before + 1
 
-    # ... and public candidate IDs never collide across generations, even though
-    # the bundled core may reuse its internal integer IDs.
     first_ids = {str(candidate.param_id) for candidate in first}
     second_ids = {str(candidate.param_id) for candidate in second}
     assert first_ids.isdisjoint(second_ids)
+
+
+# ---------------------------------------------------------------------------
+# Compatibility: SearchConfiguration settings retired in CompileIQ 1.1
+# ---------------------------------------------------------------------------
+
+
+def test_retired_settings_are_ignored_with_a_warning(cache_dir):
+    """A 1.0 configuration that set retired settings still runs on amber, with a FutureWarning."""
+
+    with pytest.warns(FutureWarning, match="have no effect since CompileIQ 1.1 are ignored"):
+        search = Search(
+            objective_function=objective_min,
+            search_space={
+                "x": ss.range(start=1.0, end=20.0, step=0.5),
+                "y": ss.choice([1, 2, 3]),
+                **ROOM_TO_SEARCH,
+            },
+            search_config=SearchConfiguration(
+                generations=2,
+                pool_size=12,
+                cull_size=6,
+                mutate_rate=0.5,
+                problem_type="min",
+                num_objectives=1,
+            ),
+            cache_folder=cache_dir,
+            disable_progress_bar=True,
+        )
+
+    result = search.start()
+    assert not result.get_results().empty
+
+
+def test_search_ends_early_when_a_small_space_runs_out(cache_dir):
+    """amber never repeats a candidate; a 9-point space cannot fill three batches of 8.
+
+    The managed search keeps the first generation's results and warns instead of
+    failing, the way 1.0 scripts with small spaces expect a search to finish.
+    """
+
+    from compileiq.ciq import SearchSpaceExhaustedWarning
+
+    search = Search(
+        objective_function=objective_string_choice,
+        search_space={
+            "booster": ss.choice(["gbtree", "gblinear", "dart"]),
+            "opt_level": ss.choice(["O0", "O1", "O2"]),
+        },
+        search_config=SearchConfiguration(**SMALL_CONFIG, problem_type="min", num_objectives=1),
+        cache_folder=cache_dir,
+        disable_progress_bar=True,
+    )
+
+    with pytest.warns(SearchSpaceExhaustedWarning, match="ran out of candidates"):
+        result = search.start()
+
+    df = result.get_results()
+    assert 1 <= len(df) <= 9
+    assert len({str(params) for params in df["params"]}) == len(df)

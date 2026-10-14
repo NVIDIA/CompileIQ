@@ -19,7 +19,7 @@ when_to_use: |
     compileiq-validate-result).
 license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: NVIDIA CompileIQ
   domain: compiler-optimization
 allowed-tools: Bash Read
@@ -35,19 +35,22 @@ seeing, follow the first action, then dig into the matching detail section.
 
 | Symptom | Most-likely cause | First action |
 |---|---|---|
-| Search hangs on first eval; socket timeout | Search space too large for default `CIQ_SOCKET_TIMEOUT=20`; OR release fetch slow/blocked; OR `forkserver` issue | Raise `CIQ_SOCKET_TIMEOUT=120`; if still hangs, `CIQ_SEARCH_SPACES_DIR=<local mirror>`; if still hangs, `CIQ_PROCESS_MODE=spawn`. **Do NOT** symlink BLAS — that fix is obsolete |
+| Search hangs on first eval | Release fetch slow/blocked; OR `forkserver` issue | `CIQ_SEARCH_SPACES_DIR=<local mirror>`; if still hangs, `CIQ_PROCESS_MODE=spawn`. |
+| `Engine 'amber' is not registered` | Frontend-only install (source checkout without the native runtime) | `pip install compileiq` for a complete wheel; from a source checkout, `git lfs pull && make install` |
+| `FutureWarning: SearchConfiguration settings that have no effect since CompileIQ 1.1 are ignored` | `SearchConfiguration(cull_size=..., mutate_rate=..., objective_weights=..., enable_large_fail_pool=False)` | The setting has no effect. Remove it, or pass the named amber option through `EngineConfig(name="amber", options={...})` |
+| `SearchSpaceExhaustedWarning` (search ends early) or `Unable to generate N unique candidates` from `ask()` | `amber` never repeats a candidate; the space is small or the search converged | Lower `pool_size` or `generations`, or widen the search space |
 | Every eval returns `INVALID_SCORE` | Return-type mismatch (tuple vs scalar) / correctness gate / `task_timeout` too tight | `Search.sample(1)` + call objective by hand; check `num_objectives` vs return shape; raise `task_timeout` |
 | Every eval returns the **same** score | ACF not reaching the compiler — framework cache is hiding it | Apply Debug-pack `O0` ACF by hand; if the score doesn't regress, fix cache-bust (`TRITON_ALWAYS_COMPILE=1`, `HELION_SKIP_CACHE=1`, fresh `TRITON_CACHE_DIR`, drop FlashInfer cubin packages) |
 | `TypeError: fromhex() … not dict` | Legacy `bytes.fromhex(config_blob)` in objective | Replace with `save_compiler_config(acf_path, config)` — see `compileiq-author-objective` |
 | `"not in expected format"` | Objective returned wrong shape | `num_objectives` must equal `len(return_tuple)`; scalar return only when `num_objectives=1` |
-| Convergence stalled (best score flat) | Pool too small for space; mutate_rate too low; or kernel near-optimal | Raise `pool_size`; raise `mutate_rate`; sample diversity with `Search.sample(20)` |
+| Convergence stalled (best score flat) | Pool too small for space; mutation too low; or kernel near-optimal | Raise `pool_size`; raise amber's `mutation_probability` option; sample diversity with `Search.sample(20)` |
 | Increasing invalid rate over generations | Mutation arm spreading; compiler version drift mid-run | `CIQ_KEEP_CACHE=1`, re-run, inspect failing configs offline |
 | CV% > 10% on validation | Unlocked clocks / thermal throttling / GPU contention | Lock GPU + memory clocks; pin `CUDA_VISIBLE_DEVICES`; watch `nvidia-smi dmon` for thermals |
 | Need to know *why* a winning ACF helps | Profile with NCU | See **NCU section** below |
 
 ## Details
 
-### Socket timeout / hang on first eval
+### Hang on first eval
 
 > Not BLAS. Do not send users to symlink `libblas.so`.
 
@@ -56,17 +59,14 @@ do not require BLAS/LAPACK.
 
 Real causes today, in order of frequency:
 
-1. **`CIQ_SOCKET_TIMEOUT` too low.** Default is 20 seconds, which is fine for
-   small search spaces but fails on big ones. Raise to 120 first; raise to
-   300+ for very large spaces.
-2. **Release-backed search-space fetch is slow or blocked.** First call to
+1. **Release-backed search-space fetch is slow or blocked.** First call to
    `PtxasSearchSpace().retrieve()` downloads from `github.com`. On a corporate
    firewall this can stall. Pre-stage the mirror:
    ```bash
    gh release download search-spaces-latest -R NVIDIA/CompileIQ -D /shared/mirror
    export CIQ_SEARCH_SPACES_DIR=/shared/mirror
    ```
-3. **`forkserver` is unsupported on the host.** Set `CIQ_PROCESS_MODE=spawn`.
+2. **`forkserver` is unsupported on the host.** Set `CIQ_PROCESS_MODE=spawn`.
    `IsoMultiProcessWorker` already uses `fork` by default.
 
 ### Every eval returns INVALID_SCORE
@@ -128,7 +128,7 @@ def objective(config: str):
 
 ### "Not in expected format"
 
-The objective returned a shape CompileIQ's core doesn't expect. Rules:
+The objective returned a shape CompileIQ doesn't expect. Rules:
 
 - `num_objectives=1`: objective must return a single scalar (`int` | `float`).
   Not a 1-tuple, not a list.
@@ -147,7 +147,7 @@ assert (
 Three causes, in order:
 
 1. **Pool too small for the space.** `pool_size = max(2 * num_objectives + 1, 32)` is the auto-derived floor — for spaces with >1k design points, raise to 64-128.
-2. **Mutation rate too low.** Default `mutate_rate=0.25`. Raise to 0.3-0.5 if the search is converging on the first generation.
+2. **Mutation too low.** Pass a higher amber `mutation_probability`, for example `engine=EngineConfig(name="amber", options={"mutation_probability": 0.3})`, if the search is converging on the first generation. (`mutate_rate` has no effect since 1.1.)
 3. **The kernel is genuinely near-optimal.** Verify by running `Search.sample(20)` and timing each sample by hand — if the spread is <5%, the search space is shallow.
 
 ### Increasing invalid rate

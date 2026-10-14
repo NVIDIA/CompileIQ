@@ -92,19 +92,6 @@ def bundle_group() -> None:
     help="Candidates evaluated per generation",
 )
 @click.option(
-    "--cull-size",
-    default=None,
-    type=int,
-    help="Parents kept per generation (even integer; default: CompileIQ derives from pool-size)",
-)
-@click.option(
-    "--mutate-rate",
-    default=0.25,
-    show_default=True,
-    type=float,
-    help="Chance a sampled candidate is perturbed between generations",
-)
-@click.option(
     "--normalize",
     is_flag=True,
     help="Normalize scores inside CompileIQ (multi-GPU / multi-machine)",
@@ -115,12 +102,6 @@ def bundle_group() -> None:
     show_default=True,
     type=float,
     help="Fraction of seed-high/seed-low sampling at search init",
-)
-@click.option(
-    "--large-fail-pool/--no-large-fail-pool",
-    default=True,
-    show_default=True,
-    help="Resubmit a full pool when a generation has too many failures",
 )
 @click.option(
     "--block-size",
@@ -207,11 +188,8 @@ def populate_command(
     mock: bool,
     generations: int,
     pool_size: int,
-    cull_size: int | None,
-    mutate_rate: float,
     normalize: bool,
     init_random_threshold: float,
-    large_fail_pool: bool,
     block_size: int,
     timing_trials: int,
     task_timeout: float,
@@ -235,11 +213,8 @@ def populate_command(
         mock=mock,
         generations=generations,
         pool_size=pool_size,
-        cull_size=cull_size,
-        mutate_rate=mutate_rate,
         normalize=normalize,
         init_with_true_random_threshold=init_random_threshold,
-        enable_large_fail_pool=large_fail_pool,
         block_size=block_size,
         timing_trials=timing_trials,
         task_timeout=task_timeout,

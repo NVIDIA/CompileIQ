@@ -10,12 +10,7 @@ def _is_true(val: str):
 
 
 ## Manager required files
-_ROOT_PATH = Path(__file__).parent.parent.parent
 _CACHE_DIR = os.path.join(Path.home(), ".cache", "compileiq")
-
-MAIN_CONFIG_FILENAME = "main_config.json"
-SEARCH_SPACE_CONFIG_FILENAME = "search_space.json"
-CORE_PACKAGES = ["sci", "graph"]
 
 KEEP_CACHE_FILES = _is_true(os.getenv("CIQ_KEEP_CACHE", "0"))
 
@@ -24,9 +19,3 @@ def unsafe_allow_checkpoint_provenance_mismatch() -> bool:
     """Read the development-only checkpoint provenance override at call time."""
 
     return _is_true(os.getenv("CIQ_UNSAFE_ALLOW_CHECKPOINT_PROVENANCE_MISMATCH", "0"))
-
-
-## Socket Values
-SOCKET_TIMEOUT = int(os.getenv("CIQ_SOCKET_TIMEOUT", "20"))  # in seconds
-MAX_RETRIES = 10
-MAX_BYTES: int = 4096 * 10

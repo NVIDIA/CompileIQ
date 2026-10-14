@@ -1,22 +1,16 @@
-import os
-from pathlib import Path
 import pytest
-import random
 from compileiq.ciq import Search
 from compileiq.types import SearchConfiguration, TrackerTypes, WorkerTypes
 from compileiq.tracker import _TRACKER_TYPES_TO_CONFIG
 from tests.utils import (
     multi_light_obj_func,
     light_obj_func,
-    async_light_obj_func,
     nested_light_obj_func,
     validate_scores,
     async_always_invalid_score_func,
     TEST_WORKERS,
     ASYNC_FUNC_MAP,
 )
-
-LEGACY_DIR = Path(__file__).resolve().parent.parent / "legacy"
 
 
 # ---------------------------------------------------------------------------
@@ -51,20 +45,11 @@ def test_start(
     problem_type,
     func,
     num_workers,
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
     mock_search_space,
     mock_nested_search_space,
 ):
     """E2E test with representative param combinations."""
-    # Global variables used for mock
-    pytest.current_gen = 0
-    pytest.max_gen = gens
-    pytest.pool_size = pool_size
-    pytest.nested_test = func == nested_light_obj_func
-    pytest.encoded_knobs = True
 
     expected_returns = 5 if func == multi_light_obj_func else 1
     main_config = SearchConfiguration(
@@ -81,6 +66,7 @@ def test_start(
     )
     rfunc = ASYNC_FUNC_MAP[func] if worker_type == WorkerTypes.ASYNC else func
     with Search(
+        engine=scripted_engine,
         objective_function=rfunc,
         search_space=search_space_config,
         search_config=main_config,
@@ -93,40 +79,6 @@ def test_start(
 
     # Validating scores
     validate_scores(df, func, expected_returns, normalize=norm)
-
-
-@pytest.mark.order(3)
-def test_legacy_ss_files():
-    """
-    Tests legacy dna files, these will be deprecated in the future.
-    """
-    path = LEGACY_DIR / "dna_files"
-    legacy_configs = [
-        str(path / filename) for filename in os.listdir(path) if filename.endswith(".config")
-    ]
-
-    random.shuffle(legacy_configs)
-
-    for legacy_config in legacy_configs:
-        # We need to manually get the config to update global mock
-        main_config = SearchConfiguration(
-            pool_size=8,
-            generations=2,
-        )
-
-        with Search(
-            objective_function=async_light_obj_func,
-            search_space=legacy_config,
-            search_config=main_config,
-            worker_type=WorkerTypes.ASYNC,
-        ) as tuner:
-            results = tuner.start()
-
-        results.get_best_result()
-        df = results.get_results()
-
-        # Validating scores
-        validate_scores(df, light_obj_func, normalize=main_config.normalize)
 
 
 SAMPLE_CONFIGS = [
@@ -142,20 +94,11 @@ SAMPLE_CONFIGS = [
 def test_sample(
     num_samples,
     func,
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
     mock_search_space,
     mock_nested_search_space,
 ):
     """E2E sample test with representative param combinations."""
-    # Global variables used for mock
-    pytest.current_gen = 0
-    pytest.max_gen = 2
-    pytest.pool_size = num_samples
-    pytest.nested_test = func == nested_light_obj_func
-    pytest.encoded_knobs = True
 
     main_config = SearchConfiguration(
         generations=1,
@@ -167,6 +110,7 @@ def test_sample(
         mock_nested_search_space if func == nested_light_obj_func else mock_search_space
     )
     with Search(
+        engine=scripted_engine,
         objective_function=func,
         search_space=search_space_config,
         search_config=main_config,
@@ -182,10 +126,7 @@ def test_sample(
 )
 def test_chaining_calls(
     worker_type,
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
     mock_search_space,
     mock_nested_search_space,
     tmp_path,
@@ -194,12 +135,6 @@ def test_chaining_calls(
     pool_size = 10
     tracker_type = TrackerTypes.DISABLED
     func = nested_light_obj_func
-    # Global variables used for mock
-    pytest.current_gen = 0
-    pytest.max_gen = gens
-    pytest.pool_size = pool_size
-    pytest.nested_test = func == nested_light_obj_func
-    pytest.encoded_knobs = True
 
     expected_returns = 1
     main_config = SearchConfiguration(
@@ -213,6 +148,7 @@ def test_chaining_calls(
     search_space_config = mock_nested_search_space
     rfunc = ASYNC_FUNC_MAP[func] if worker_type == WorkerTypes.ASYNC else func
     with Search(
+        engine=scripted_engine,
         objective_function=rfunc,
         search_space=search_space_config,
         search_config=main_config,
@@ -221,36 +157,27 @@ def test_chaining_calls(
     ) as tuner:
         results = tuner.start()
         results.get_best_result()
-        pytest.current_gen = 0
         tuner.start()
 
 
 @pytest.mark.order(1)
 def test_early_exit_fail(
-    mock_core_start,
-    mock_send_to_core,
-    mock_receive_from_core,
-    mock_socket_listen,
+    scripted_engine,
     mock_search_space,
 ):
     """
     Testing that the search exits early when all objective functions fail in the first generation
     and `exit_on_failure` is set to True.
     """
-    # Global variables used for mock
-    pytest.current_gen = 0
-    pytest.max_gen = 2
-    pytest.pool_size = 8
-    pytest.nested_test = False
-    pytest.encoded_knobs = True
 
     main_config = SearchConfiguration(
-        pool_size=pytest.pool_size,
-        generations=pytest.max_gen,
+        pool_size=8,
+        generations=2,
         num_objectives=1,
     )
 
     with Search(
+        engine=scripted_engine,
         objective_function=async_always_invalid_score_func,
         search_space=mock_search_space,
         search_config=main_config,
