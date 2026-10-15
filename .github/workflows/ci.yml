@@ -396,6 +396,231 @@ jobs:
           path: dist/*.whl
           if-no-files-found: error
 
+  compose-complete-wheels:
+    # Composes the 16 publishable wheels (CPython 3.11-3.14 on Linux x86_64,
+    # Linux aarch64, Windows AMD64, and macOS arm64) from the one pure-Python
+    # frontend wheel and the checked-in native runtime wheels. Composition is
+    # wheel editing, so one Linux job does every cell. The output is not
+    # publishable until verify-and-test-complete-wheel accepts it on its own
+    # platform; see docs/release_composition.md.
+    name: Compose complete wheels
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build-and-smoke-test-wheel, complete-wheel-matrix]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - uses: actions/setup-python@v6
+        with:
+          # The last version listed is the default python; pull requests use
+          # the others to clean-install each Linux x86_64 wheel below.
+          python-version: |
+            3.11
+            3.13
+            3.14
+            3.12
+      - run: python -m pip install packaging
+      - name: Download smoke-tested frontend wheel
+        uses: actions/download-artifact@v6
+        with:
+          name: compileiq-frontend-wheel-linux-x86_64
+          path: frontend
+      - name: Compose one complete wheel per checked-in runtime cell
+        shell: bash
+        run: |
+          shopt -s nullglob
+          frontend=(frontend/compileiq-*-py3-none-any.whl)
+          manifests=(native-runtime-wheels/native-runtime-manifest-*.json)
+          if [[ "${#frontend[@]}" -ne 1 || "${#manifests[@]}" -ne 16 ]]; then
+            echo "::error::expected 1 frontend wheel and 16 runtime manifests, found ${#frontend[@]} and ${#manifests[@]}"
+            exit 1
+          fi
+          for manifest in "${manifests[@]}"; do
+            runtime_tag="${manifest#native-runtime-wheels/native-runtime-manifest-}"
+            runtime_tag="${runtime_tag%.json}"
+            runtime=(native-runtime-wheels/compileiq_native_runtime-*-"${runtime_tag}".whl)
+            if [[ "${#runtime[@]}" -ne 1 ]]; then
+              echo "::error::expected one runtime wheel for ${runtime_tag}, found ${#runtime[@]}"
+              exit 1
+            fi
+            python dev/compose_compileiq_wheel.py \
+              --frontend-wheel "${frontend[0]}" \
+              --runtime-wheel "${runtime[0]}" \
+              --lane-manifest "${manifest}" \
+              --frontend-from-this-build \
+              --output-dir wheelhouse \
+              --output-manifest "wheelhouse/composition-manifest-${runtime_tag}.json"
+          done
+          composed=(wheelhouse/*.whl)
+          if [[ "${#composed[@]}" -ne 16 ]]; then
+            echo "::error::expected 16 composed wheels, found ${#composed[@]}"
+            exit 1
+          fi
+          ls -l wheelhouse
+      # On pull requests, accept the Linux x86_64 wheels here instead of in
+      # verify-and-test-complete-wheel, so a PR waits for one runner instead of
+      # three. main and release tags run the full per-platform acceptance.
+      - name: Verify and clean-install the Linux x86_64 wheels (pull requests)
+        if: needs.complete-wheel-matrix.outputs.full != 'true'
+        shell: bash
+        run: |
+          for python in 3.11 3.12 3.13 3.14; do
+            abi="cp${python/./}"
+            runtime_tag="${abi}-${abi}-linux_x86_64"
+            wheel=(wheelhouse/compileiq-*-"${abi}-${abi}"-manylinux_2_34_x86_64.whl)
+            if [[ "${#wheel[@]}" -ne 1 ]]; then
+              echo "::error::expected one Linux x86_64 wheel for ${abi}, found ${#wheel[@]}"
+              exit 1
+            fi
+            echo "::group::py${python} ${wheel[0]}"
+            python dev/verify_complete_wheel.py "${wheel[0]}" \
+              --composition-manifest "wheelhouse/composition-manifest-${runtime_tag}.json"
+            "python${python}" dev/test_complete_wheel_install.py --wheel "${wheel[0]}"
+            echo "::endgroup::"
+          done
+      # Not a release input on its own: the upload job only takes wheels that
+      # verify-and-test-complete-wheel re-uploads after acceptance.
+      - name: Upload composed wheels for acceptance
+        uses: actions/upload-artifact@v6
+        with:
+          name: compileiq-composed-wheels-unverified
+          path: wheelhouse/
+          if-no-files-found: error
+
+  complete-wheel-matrix:
+    name: Select complete wheel matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      full: ${{ steps.matrix.outputs.full }}
+    steps:
+      - id: matrix
+        name: Choose complete wheel cells for this ref
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+
+          platforms = [
+              {
+                  "os": "ubuntu-latest",
+                  "name": "Linux x86_64",
+                  "runtime_platform": "linux_x86_64",
+                  "wheel_platform": "manylinux_2_34_x86_64",
+              },
+              {
+                  "os": "ubuntu-24.04-arm",
+                  "name": "Linux aarch64",
+                  "runtime_platform": "linux_aarch64",
+                  "wheel_platform": "manylinux_2_34_aarch64",
+              },
+              {
+                  "os": "windows-latest",
+                  "name": "Windows amd64",
+                  "runtime_platform": "win_amd64",
+                  "wheel_platform": "win_amd64",
+              },
+              {
+                  # The wheels are tagged macosx_15_0_arm64, so pip on an older
+                  # macOS runner would reject them.
+                  "os": "macos-15",
+                  "name": "macOS arm64",
+                  "runtime_platform": "macosx_15_0_arm64",
+                  "wheel_platform": "macosx_15_0_arm64",
+              },
+          ]
+          cells = []
+          for platform in platforms:
+              for python in ("3.11", "3.12", "3.13", "3.14"):
+                  abi = "cp" + python.replace(".", "")
+                  cells.append(
+                      {
+                          "os": platform["os"],
+                          "name": platform["name"],
+                          "python": python,
+                          "runtime_tag": f"{abi}-{abi}-{platform['runtime_platform']}",
+                          "wheel_tag": f"{abi}-{abi}-{platform['wheel_platform']}",
+                      }
+                  )
+
+          # Pull requests accept the Linux x86_64 cells inside
+          # compose-complete-wheels; main and release tags accept all 16 here,
+          # which the release upload requires.
+          ref = os.environ["GITHUB_REF"]
+          full_matrix = ref == "refs/heads/main" or ref.startswith("refs/tags/v")
+          if not full_matrix:
+              cells = [cell for cell in cells if cell["name"] == "Linux x86_64"]
+
+          print("Selected complete wheel cells:")
+          for cell in cells:
+              print(f"- py{cell['python']} on {cell['name']} ({cell['wheel_tag']})")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"matrix={json.dumps({'include': cells})}\n")
+              output.write(f"full={'true' if full_matrix else 'false'}\n")
+          PY
+
+  verify-and-test-complete-wheel:
+    # Complete-wheel acceptance runs on each wheel's own platform and Python
+    # version. Only wheels that pass are re-uploaded as
+    # compileiq-complete-wheel-* artifacts, the sole input to the release upload.
+    name: Verify and install complete wheel [py${{ matrix.python }} on ${{ matrix.name }}]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    needs: [compose-complete-wheels, complete-wheel-matrix]
+    if: needs.complete-wheel-matrix.outputs.full == 'true'
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.complete-wheel-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install packaging
+      - name: Download composed wheels
+        uses: actions/download-artifact@v6
+        with:
+          name: compileiq-composed-wheels-unverified
+          path: wheelhouse
+      - name: Select this cell's wheel
+        shell: bash
+        run: |
+          shopt -s nullglob
+          wheel=(wheelhouse/compileiq-*-${{ matrix.wheel_tag }}.whl)
+          if [[ "${#wheel[@]}" -ne 1 ]]; then
+            echo "::error::expected one complete wheel for ${{ matrix.wheel_tag }}, found ${#wheel[@]}"
+            exit 1
+          fi
+          mkdir accepted
+          cp "${wheel[0]}" accepted/
+          echo "COMPLETE_WHEEL=accepted/$(basename "${wheel[0]}")" >> "$GITHUB_ENV"
+      - name: Verify complete wheel
+        shell: bash
+        run: |
+          python dev/verify_complete_wheel.py "$COMPLETE_WHEEL" \
+            --composition-manifest "wheelhouse/composition-manifest-${{ matrix.runtime_tag }}.json"
+      - name: Clean-install test complete wheel
+        shell: bash
+        run: |
+          expected_version=()
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            expected_version=(--expected-version "$(python -c 'import sys; from packaging.version import Version; print(Version(sys.argv[1]))' "${GITHUB_REF_NAME#v}")")
+          fi
+          python dev/test_complete_wheel_install.py --wheel "$COMPLETE_WHEEL" "${expected_version[@]}"
+      - name: Upload accepted complete wheel
+        uses: actions/upload-artifact@v6
+        with:
+          name: compileiq-complete-wheel-${{ matrix.wheel_tag }}
+          path: accepted/*.whl
+          if-no-files-found: error
+
   # This job is a work around to make sure that all the checks have passed before we mark the PR as ready for review.
   # This is needed because GitHub does not allow us to set a condition on the PR to be marked as ready for review based on the status of the checks.
   # The only status check the repository rules require; keep the name "CI Pass".
@@ -419,12 +644,17 @@ jobs:
       - validate-binary-ss
       - smoke-test-wheel-matrix
       - build-and-smoke-test-wheel
+      - compose-complete-wheels
+      - complete-wheel-matrix
+      - verify-and-test-complete-wheel
     steps:
       - name: Require every job to succeed
         env:
           NEEDS: ${{ toJSON(needs) }}
-          # Jobs that may be skipped on purpose (none today).
-          ALLOWED_SKIPS: ""
+          # Pull requests accept the Linux x86_64 wheels inside
+          # compose-complete-wheels, so the per-platform acceptance job is
+          # skipped on purpose there; main and release tags require it.
+          ALLOWED_SKIPS: ${{ needs.complete-wheel-matrix.outputs.full != 'true' && 'verify-and-test-complete-wheel' || '' }}
         run: |
           python3 - <<'PY'
           import json
@@ -443,3 +673,39 @@ jobs:
           if bad:
               raise SystemExit(f"Not every job succeeded: {bad}")
           PY
+
+  upload-github-release-wheels:
+    name: Upload complete wheels to GitHub release
+    runs-on: ubuntu-latest
+    needs: [ci-pass, verify-and-test-complete-wheel]
+    if: |
+      startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      # Only wheels that passed complete-wheel acceptance; frontend-only and
+      # unverified composed wheels use other artifact names.
+      - name: Download accepted complete wheel artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: compileiq-complete-wheel-*
+          path: dist
+          merge-multiple: true
+      - name: Check release wheel assets
+        shell: bash
+        run: |
+          ls -l dist
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          pure=(dist/*-none-any.whl)
+          if [[ "${#wheels[@]}" -ne 16 || "${#pure[@]}" -ne 0 ]]; then
+            echo "::error::expected 16 platform wheels and no pure-Python wheels, found ${#wheels[@]} and ${#pure[@]}"
+            exit 1
+          fi
+      # Uploads the accepted complete wheels to the draft GitHub Release for this tag.
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          files: dist/*.whl
+          generate_release_notes: true
+          name: "CompileIQ ${{ github.ref_name }}"
+          draft: true

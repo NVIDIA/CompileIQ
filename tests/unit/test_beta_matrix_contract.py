@@ -96,3 +96,51 @@ def test_complete_wheel_acceptance_forwards_the_exact_expected_version(
     assert "assert installed_version == expected_version" in (
         test_complete_wheel_install.ACCEPTANCE
     )
+
+
+def test_release_upload_publishes_only_accepted_complete_wheels() -> None:
+    ci = ROOT / ".github/workflows/ci.yml"
+    upload = _job(ci, "upload-github-release-wheels")
+    assert "startsWith(github.ref, 'refs/tags/v')" in upload
+    assert "needs: [ci-pass, verify-and-test-complete-wheel]" in upload
+    assert "pattern: compileiq-complete-wheel-*" in upload
+    assert "draft: true" in upload
+
+    accept = _job(ci, "verify-and-test-complete-wheel")
+    assert "name: compileiq-complete-wheel-${{ matrix.wheel_tag }}" in accept
+    assert accept.index("dev/verify_complete_wheel.py") < accept.index(
+        "dev/test_complete_wheel_install.py"
+    ) < accept.index("Upload accepted complete wheel")
+    # Unverified composed wheels must never match the release download pattern.
+    compose = _job(ci, "compose-complete-wheels")
+    assert "name: compileiq-composed-wheels-unverified" in compose
+
+    matrix = _job(ci, "complete-wheel-matrix")
+    for runner in ("ubuntu-latest", "ubuntu-24.04-arm", "windows-latest", "macos-15"):
+        assert f'"os": "{runner}"' in matrix
+    assert 'for python in ("3.11", "3.12", "3.13", "3.14")' in matrix
+
+
+def test_ci_pass_fails_closed_over_every_job() -> None:
+    ci = ROOT / ".github/workflows/ci.yml"
+    text = ci.read_text()
+    jobs = set(re.findall(r"(?m)^  ([a-zA-Z0-9_-]+):\n", text.split("\njobs:\n", 1)[1]))
+    gate = _job(ci, "ci-pass")
+    assert "name: CI Pass" in gate  # the repository rules require this check name
+    assert "if: always()" in gate
+    needs = set(re.findall(r"(?m)^      - ([a-zA-Z0-9_-]+)$", gate.split("steps:", 1)[0]))
+    assert needs == jobs - {"ci-pass", "upload-github-release-wheels"}
+    # The only job allowed to be skipped is per-platform acceptance, and only off
+    # main and release tags, where compose-complete-wheels accepts the Linux wheels.
+    assert (
+        "ALLOWED_SKIPS: ${{ needs.complete-wheel-matrix.outputs.full != 'true' "
+        "&& 'verify-and-test-complete-wheel' || '' }}"
+    ) in gate
+
+    accept = _job(ci, "verify-and-test-complete-wheel")
+    assert "if: needs.complete-wheel-matrix.outputs.full == 'true'" in accept
+    compose = _job(ci, "compose-complete-wheels")
+    assert "if: needs.complete-wheel-matrix.outputs.full != 'true'" in compose
+    assert compose.index("dev/verify_complete_wheel.py") < compose.index(
+        "dev/test_complete_wheel_install.py"
+    )

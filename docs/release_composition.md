@@ -40,6 +40,30 @@ same-version wheel is published for that cell. Package installation therefore
 fails normally instead of silently publishing an incomplete product for that
 cell.
 
+## Publishing from GitHub CI
+
+Every composition input is in this repository, so GitHub CI
+(`.github/workflows/ci.yml`) runs the release graph above for the 16 published
+cells: CPython 3.11, 3.12, 3.13, and 3.14 on Linux x86_64, Linux aarch64,
+Windows AMD64, and macOS 15+ arm64.
+
+1. `build-and-smoke-test-wheel` builds the one pure-Python frontend wheel. On a
+   `v*` tag its version is set from the tag.
+2. `compose-complete-wheels` composes all 16 wheels from that frontend wheel
+   and the native runtime wheels and manifests under `native-runtime-wheels/`.
+   The checked-in manifests bind only the runtime wheel, so composition passes
+   `--frontend-from-this-build`; the composition manifest still records the
+   frontend wheel's digest.
+3. `verify-and-test-complete-wheel` runs `dev/verify_complete_wheel.py` and
+   `dev/test_complete_wheel_install.py` for each wheel on its own platform and
+   Python version. On a tag, acceptance also checks the installed version
+   against the tag. Pull requests run the Linux x86_64 cells; `main` and `v*`
+   tags run all 16.
+4. On a `v*` tag, `upload-github-release-wheels` uploads the 16 accepted
+   wheels, and nothing else, to a draft GitHub Release for that tag. It fails
+   unless exactly 16 accepted platform wheels are present. Publishing the draft
+   and uploading to PyPI remain separate release steps.
+
 ## Editable development
 
 `make install` installs the editable frontend and materializes the pinned native
