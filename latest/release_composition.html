@@ -473,6 +473,31 @@ same-version wheel is published for that cell. Package installation therefore
 fails normally instead of silently publishing an incomplete product for that
 cell.</p>
 </section>
+<section id="publishing-from-github-ci">
+<h2>Publishing from GitHub CI<a class="headerlink" href="#publishing-from-github-ci" title="Link to this heading">#</a></h2>
+<p>Every composition input is in this repository, so GitHub CI
+(<code class="docutils literal notranslate"><span class="pre">.github/workflows/ci.yml</span></code>) runs the release graph above for the 16 published
+cells: CPython 3.11, 3.12, 3.13, and 3.14 on Linux x86_64, Linux aarch64,
+Windows AMD64, and macOS 15+ arm64.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">build-and-smoke-test-wheel</span></code> builds the one pure-Python frontend wheel. On a
+<code class="docutils literal notranslate"><span class="pre">v*</span></code> tag its version is set from the tag.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compose-complete-wheels</span></code> composes all 16 wheels from that frontend wheel
+and the native runtime wheels and manifests under <code class="docutils literal notranslate"><span class="pre">native-runtime-wheels/</span></code>.
+The checked-in manifests bind only the runtime wheel, so composition passes
+<code class="docutils literal notranslate"><span class="pre">--frontend-from-this-build</span></code>; the composition manifest still records the
+frontend wheel’s digest.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">verify-and-test-complete-wheel</span></code> runs <code class="docutils literal notranslate"><span class="pre">dev/verify_complete_wheel.py</span></code> and
+<code class="docutils literal notranslate"><span class="pre">dev/test_complete_wheel_install.py</span></code> for each wheel on its own platform and
+Python version. On a tag, acceptance also checks the installed version
+against the tag. Pull requests run the Linux x86_64 cells; <code class="docutils literal notranslate"><span class="pre">main</span></code> and <code class="docutils literal notranslate"><span class="pre">v*</span></code>
+tags run all 16.</p></li>
+<li><p>On a <code class="docutils literal notranslate"><span class="pre">v*</span></code> tag, <code class="docutils literal notranslate"><span class="pre">upload-github-release-wheels</span></code> uploads the 16 accepted
+wheels, and nothing else, to a draft GitHub Release for that tag. It fails
+unless exactly 16 accepted platform wheels are present. Publishing the draft
+and uploading to PyPI remain separate release steps.</p></li>
+</ol>
+</section>
 <section id="editable-development">
 <h2>Editable development<a class="headerlink" href="#editable-development" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> installs the editable frontend and materializes the pinned native
@@ -533,6 +558,7 @@ they are not part of the public installation contract.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#release-graph">Release graph</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#publishing-from-github-ci">Publishing from GitHub CI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#editable-development">Editable development</a></li>
 </ul>
   </nav></div>
