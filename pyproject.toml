@@ -21,18 +21,19 @@ dill = "^0.4.0"
 msgpack = "^1.1.1"
 
 # Nspec vulnerabilities
-urllib3 = "^2.6.2" # ray, mlflow
+urllib3 = "^2.8.0" # ray, mlflow
 requests = "^2.32.5" #ray, mlflow
 aiohttp = "^3.13.3" # ray
 json5 = "^0.14.0"
+pillow = "^12.3.0"
+anyio = "^4.15.1"
 
 [tool.poetry.group.tracking]
 optional = true
 
 [tool.poetry.group.tracking.dependencies]
 mlflow = "^3.1.1"
-starlette = "^0.50.0" #mlflow
-fonttools = "^4.60.1" #mlflow
+fonttools = "^4.60.1"
 
 [tool.poetry.group.native-runtime]
 optional = true
