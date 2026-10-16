@@ -1,0 +1,373 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="900" viewBox="0 0 1480 900">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="86.00" y="36.00" font-size="29" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#111827" text-anchor="start">FlashInfer Batch Decode B200 ACF Gains - Full</text>
+<text x="86.00" y="62.00" font-size="15" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#4b5563" text-anchor="start">Sorted gain from ACF median time versus baseline median time. Higher is better.</text>
+
+<rect x="86" y="96" width="938" height="712" fill="#f9fafb" stroke="#d1d5db"/>
+<line x1="80" y1="808.00" x2="1024" y2="808.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="74.00" y="813.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#374151" text-anchor="end">-17.8%</text>
+<line x1="80" y1="665.60" x2="1024" y2="665.60" stroke="#e5e7eb" stroke-width="1"/>
+<text x="74.00" y="670.60" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#374151" text-anchor="end">-10.7%</text>
+<line x1="80" y1="523.20" x2="1024" y2="523.20" stroke="#e5e7eb" stroke-width="1"/>
+<text x="74.00" y="528.20" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#374151" text-anchor="end">-3.6%</text>
+<line x1="80" y1="380.80" x2="1024" y2="380.80" stroke="#e5e7eb" stroke-width="1"/>
+<text x="74.00" y="385.80" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#374151" text-anchor="end">3.6%</text>
+<line x1="80" y1="238.40" x2="1024" y2="238.40" stroke="#e5e7eb" stroke-width="1"/>
+<text x="74.00" y="243.40" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#374151" text-anchor="end">10.7%</text>
+<line x1="80" y1="96.00" x2="1024" y2="96.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="74.00" y="101.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#374151" text-anchor="end">17.8%</text>
+<line x1="86" y1="452.00" x2="1024" y2="452.00" stroke="#111827" stroke-width="1.4" stroke-dasharray="6 5"/>
+<text x="1020.00" y="443.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="end">0% baseline</text>
+<polyline points="86.00,758.90 101.90,758.90 117.80,754.10 133.69,461.59 149.59,456.80 165.49,456.16 181.39,454.40 197.29,454.40 213.19,454.40 229.08,454.40 244.98,452.00 260.88,452.00 276.78,452.00 292.68,452.00 308.58,452.00 324.47,452.00 340.37,452.00 356.27,452.00 372.17,452.00 388.07,452.00 403.97,452.00 419.86,452.00 435.76,452.00 451.66,452.00 467.56,452.00 483.46,452.00 499.36,452.00 515.25,452.00 531.15,452.00 547.05,452.00 562.95,452.00 578.85,452.00 594.75,452.00 610.64,452.00 626.54,452.00 642.44,452.00 658.34,452.00 674.24,452.00 690.14,449.92 706.03,449.92 721.93,449.92 737.83,449.92 753.73,449.92 769.63,447.87 785.53,447.87 801.42,447.84 817.32,447.84 833.22,447.84 849.12,447.84 865.02,447.22 880.92,447.22 896.81,447.20 912.71,445.80 928.61,443.69 944.51,263.78 960.41,262.30 976.31,262.30 992.20,149.90 1008.10,145.10 1024.00,145.10" fill="none" stroke="#2563eb" stroke-width="2.4"/>
+<circle cx="86.00" cy="758.90" r="6.2" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 18-fp8_group_quant_6-604935e94e7b.acf
+gain=-15.38%
+ratio=1.153846
+baseline_ms=0.013311999850
+acf_ms=0.015359999612</title></circle>
+<text x="86.00" y="775.90" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="middle">R1</text>
+<circle cx="101.90" cy="758.90" r="6.2" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 19-recompute_w_u_fwd_0-ddaf5128d619.acf
+gain=-15.38%
+ratio=1.153846
+baseline_ms=0.013311999850
+acf_ms=0.015359999612</title></circle>
+<text x="101.90" y="775.90" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="middle">R2</text>
+<circle cx="117.80" cy="754.10" r="6.2" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 01-causal_conv_1-34795e1779b7.acf
+gain=-15.14%
+ratio=1.151442
+baseline_ms=0.013311999850
+acf_ms=0.015328000300</title></circle>
+<text x="117.80" y="771.10" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="middle">R3</text>
+<circle cx="133.69" cy="461.59" r="6.2" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 20-recompute_w_u_fwd_1-cf6163fdbb39.acf
+gain=-0.48%
+ratio=1.004808
+baseline_ms=0.013311999850
+acf_ms=0.013376000337</title></circle>
+<text x="133.69" y="478.59" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="middle">R4</text>
+<circle cx="149.59" cy="456.80" r="6.2" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 15-fp8_group_quant_3-9b3899b0437c.acf
+gain=-0.24%
+ratio=1.002404
+baseline_ms=0.013311999850
+acf_ms=0.013344000094</title></circle>
+<text x="149.59" y="473.80" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="middle">R5</text>
+<circle cx="165.49" cy="456.16" r="4.5" fill="#b91c1c" opacity="0.92"><title>b1_kv2048 | 15-fp8_group_quant_3-9b3899b0437c.acf
+gain=-0.21%
+ratio=1.002083
+baseline_ms=0.015359999612
+acf_ms=0.015391999856</title></circle>
+<circle cx="181.39" cy="454.40" r="4.5" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 04-chunk_fwd_h_1-1ba1395526ea.acf
+gain=-0.12%
+ratio=1.001202
+baseline_ms=0.013311999850
+acf_ms=0.013327999972</title></circle>
+<circle cx="197.29" cy="454.40" r="4.5" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 05-chunk_fwd_o_0-90bcd5667aaa.acf
+gain=-0.12%
+ratio=1.001202
+baseline_ms=0.013311999850
+acf_ms=0.013327999972</title></circle>
+<circle cx="213.19" cy="454.40" r="4.5" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 08-chunk_fwd_o_3-3da87b881f6c.acf
+gain=-0.12%
+ratio=1.001202
+baseline_ms=0.013311999850
+acf_ms=0.013327999972</title></circle>
+<circle cx="229.08" cy="454.40" r="4.5" fill="#b91c1c" opacity="0.92"><title>b1_kv512 | 09-chunk_fwd_o_4-c9402a37f06c.acf
+gain=-0.12%
+ratio=1.001202
+baseline_ms=0.013311999850
+acf_ms=0.013327999972</title></circle>
+<circle cx="244.98" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 00-causal_conv_0-c3288601ffdf.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="260.88" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 02-causal_conv_2-a3c5ee92e579.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="276.78" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 03-chunk_fwd_h_0-c070e427757e.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="292.68" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 06-chunk_fwd_o_1-1bf10a87b31c.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="308.58" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 07-chunk_fwd_o_2-6bd7110b3f18.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="324.47" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 10-chunk_fwd_o_5-0f83e0ccadaf.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="340.37" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 11-chunk_fwd_o_6-69a07c8225cc.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="356.27" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 13-fp8_group_quant_1-1de814ccc6c2.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="372.17" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 14-fp8_group_quant_2-26b3240d07b7.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="388.07" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 16-fp8_group_quant_4-968547e81f8f.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="403.97" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 17-fp8_group_quant_5-e30a78520199.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="419.86" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 21-recompute_w_u_fwd_2-48fb75d9d73a.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="435.76" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 22-recompute_w_u_fwd_3-fbc6db7c6710.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="451.66" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv512 | 23-recompute_w_u_fwd_4-3cef9f16a524.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013311999850
+acf_ms=0.013311999850</title></circle>
+<circle cx="467.56" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 02-causal_conv_2-a3c5ee92e579.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="483.46" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 03-chunk_fwd_h_0-c070e427757e.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="499.36" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 04-chunk_fwd_h_1-1ba1395526ea.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="515.25" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 07-chunk_fwd_o_2-6bd7110b3f18.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="531.15" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 09-chunk_fwd_o_4-c9402a37f06c.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="547.05" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 10-chunk_fwd_o_5-0f83e0ccadaf.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="562.95" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 11-chunk_fwd_o_6-69a07c8225cc.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="578.85" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 12-fp8_group_quant_0-254db792c99b.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="594.75" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 13-fp8_group_quant_1-1de814ccc6c2.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="610.64" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 14-fp8_group_quant_2-26b3240d07b7.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="626.54" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 16-fp8_group_quant_4-968547e81f8f.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="642.44" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 20-recompute_w_u_fwd_1-cf6163fdbb39.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="658.34" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b1_kv2048 | 21-recompute_w_u_fwd_2-48fb75d9d73a.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.015359999612
+acf_ms=0.015359999612</title></circle>
+<circle cx="674.24" cy="452.00" r="4.5" fill="#6b7280" opacity="0.92"><title>b8_kv128 | 14-fp8_group_quant_2-26b3240d07b7.acf
+gain=+0.00%
+ratio=1.000000
+baseline_ms=0.013344000094
+acf_ms=0.013344000094</title></circle>
+<circle cx="690.14" cy="449.92" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 01-causal_conv_1-34795e1779b7.acf
+gain=+0.10%
+ratio=0.998958
+baseline_ms=0.015359999612
+acf_ms=0.015343999956</title></circle>
+<circle cx="706.03" cy="449.92" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 05-chunk_fwd_o_0-90bcd5667aaa.acf
+gain=+0.10%
+ratio=0.998958
+baseline_ms=0.015359999612
+acf_ms=0.015343999956</title></circle>
+<circle cx="721.93" cy="449.92" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 08-chunk_fwd_o_3-3da87b881f6c.acf
+gain=+0.10%
+ratio=0.998958
+baseline_ms=0.015359999612
+acf_ms=0.015343999956</title></circle>
+<circle cx="737.83" cy="449.92" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 19-recompute_w_u_fwd_0-ddaf5128d619.acf
+gain=+0.10%
+ratio=0.998958
+baseline_ms=0.015359999612
+acf_ms=0.015343999956</title></circle>
+<circle cx="753.73" cy="449.92" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 22-recompute_w_u_fwd_3-fbc6db7c6710.acf
+gain=+0.10%
+ratio=0.998958
+baseline_ms=0.015359999612
+acf_ms=0.015343999956</title></circle>
+<circle cx="769.63" cy="447.87" r="4.5" fill="#047857" opacity="0.92"><title>b8_kv512 | 14-fp8_group_quant_2-26b3240d07b7.acf
+gain=+0.21%
+ratio=0.997930
+baseline_ms=0.015456000343
+acf_ms=0.015424000099</title></circle>
+<circle cx="785.53" cy="447.87" r="4.5" fill="#047857" opacity="0.92"><title>b8_kv512 | 21-recompute_w_u_fwd_2-48fb75d9d73a.acf
+gain=+0.21%
+ratio=0.997930
+baseline_ms=0.015456000343
+acf_ms=0.015424000099</title></circle>
+<circle cx="801.42" cy="447.84" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 00-causal_conv_0-c3288601ffdf.acf
+gain=+0.21%
+ratio=0.997917
+baseline_ms=0.015359999612
+acf_ms=0.015328000300</title></circle>
+<circle cx="817.32" cy="447.84" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 06-chunk_fwd_o_1-1bf10a87b31c.acf
+gain=+0.21%
+ratio=0.997917
+baseline_ms=0.015359999612
+acf_ms=0.015328000300</title></circle>
+<circle cx="833.22" cy="447.84" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 18-fp8_group_quant_6-604935e94e7b.acf
+gain=+0.21%
+ratio=0.997917
+baseline_ms=0.015359999612
+acf_ms=0.015328000300</title></circle>
+<circle cx="849.12" cy="447.84" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 23-recompute_w_u_fwd_4-3cef9f16a524.acf
+gain=+0.21%
+ratio=0.997917
+baseline_ms=0.015359999612
+acf_ms=0.015328000300</title></circle>
+<circle cx="865.02" cy="447.22" r="4.5" fill="#047857" opacity="0.92"><title>b8_kv128 | 07-chunk_fwd_o_2-6bd7110b3f18.acf
+gain=+0.24%
+ratio=0.997602
+baseline_ms=0.013344000094
+acf_ms=0.013311999850</title></circle>
+<circle cx="880.92" cy="447.22" r="4.5" fill="#047857" opacity="0.92"><title>b8_kv128 | 21-recompute_w_u_fwd_2-48fb75d9d73a.acf
+gain=+0.24%
+ratio=0.997602
+baseline_ms=0.013344000094
+acf_ms=0.013311999850</title></circle>
+<circle cx="896.81" cy="447.20" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv512 | 12-fp8_group_quant_0-254db792c99b.acf
+gain=+0.24%
+ratio=0.997596
+baseline_ms=0.013311999850
+acf_ms=0.013279999606</title></circle>
+<circle cx="912.71" cy="445.80" r="4.5" fill="#047857" opacity="0.92"><title>b8_kv512 | 07-chunk_fwd_o_2-6bd7110b3f18.acf
+gain=+0.31%
+ratio=0.996894
+baseline_ms=0.015456000343
+acf_ms=0.015407999977</title></circle>
+<circle cx="928.61" cy="443.69" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv2048 | 17-fp8_group_quant_5-e30a78520199.acf
+gain=+0.42%
+ratio=0.995833
+baseline_ms=0.015359999612
+acf_ms=0.015296000056</title></circle>
+<circle cx="944.51" cy="263.78" r="4.5" fill="#047857" opacity="0.92"><title>b1_kv8192 | 07-chunk_fwd_o_2-6bd7110b3f18.acf
+gain=+9.44%
+ratio=0.905646
+baseline_ms=0.021536000073
+acf_ms=0.019503999501</title></circle>
+<circle cx="960.41" cy="262.30" r="6.2" fill="#047857" opacity="0.92"><title>b1_kv8192 | 14-fp8_group_quant_2-26b3240d07b7.acf
+gain=+9.51%
+ratio=0.904903
+baseline_ms=0.021536000073
+acf_ms=0.019487999380</title></circle>
+<text x="960.41" y="251.30" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="middle">U5</text>
+<circle cx="976.31" cy="262.30" r="6.2" fill="#047857" opacity="0.92"><title>b1_kv8192 | 21-recompute_w_u_fwd_2-48fb75d9d73a.acf
+gain=+9.51%
+ratio=0.904903
+baseline_ms=0.021536000073
+acf_ms=0.019487999380</title></circle>
+<text x="976.31" y="251.30" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="middle">U4</text>
+<circle cx="992.20" cy="149.90" r="6.2" fill="#047857" opacity="0.92"><title>b1_kv128 | 14-fp8_group_quant_2-26b3240d07b7.acf
+gain=+15.14%
+ratio=0.848558
+baseline_ms=0.013311999850
+acf_ms=0.011296000332</title></circle>
+<text x="992.20" y="138.90" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="middle">U3</text>
+<circle cx="1008.10" cy="145.10" r="6.2" fill="#047857" opacity="0.92"><title>b1_kv128 | 07-chunk_fwd_o_2-6bd7110b3f18.acf
+gain=+15.38%
+ratio=0.846154
+baseline_ms=0.013311999850
+acf_ms=0.011264000088</title></circle>
+<text x="1008.10" y="134.10" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="middle">U2</text>
+<circle cx="1024.00" cy="145.10" r="6.2" fill="#047857" opacity="0.92"><title>b1_kv128 | 21-recompute_w_u_fwd_2-48fb75d9d73a.acf
+gain=+15.38%
+ratio=0.846154
+baseline_ms=0.013311999850
+acf_ms=0.011264000088</title></circle>
+<text x="1024.00" y="134.10" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="middle">U1</text>
+<rect x="1034" y="96" width="408" height="712" fill="#ffffff" stroke="#d1d5db"/>
+<text x="1052.00" y="128.00" font-size="20" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#111827" text-anchor="start">Visible case callouts</text>
+<text x="1052.00" y="154.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#4b5563" text-anchor="start">Labels on the curve map to shape and ACF here.</text>
+<text x="1052.00" y="192.00" font-size="17" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="start">Top gains</text>
+<text x="1052.00" y="222.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="start">U1 +15.38%</text>
+<text x="1146.00" y="222.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv128 | 21-recompute_w_u_fwd_2-48fb75d9d7...</text>
+<text x="1146.00" y="239.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.013312 ms acf=0.011264 ms</text>
+<text x="1052.00" y="268.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="start">U2 +15.38%</text>
+<text x="1146.00" y="268.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv128 | 07-chunk_fwd_o_2-6bd7110b3f18.acf</text>
+<text x="1146.00" y="285.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.013312 ms acf=0.011264 ms</text>
+<text x="1052.00" y="314.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="start">U3 +15.14%</text>
+<text x="1146.00" y="314.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv128 | 14-fp8_group_quant_2-26b3240d07b7...</text>
+<text x="1146.00" y="331.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.013312 ms acf=0.011296 ms</text>
+<text x="1052.00" y="360.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="start">U4 +9.51%</text>
+<text x="1146.00" y="360.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv8192 | 21-recompute_w_u_fwd_2-48fb75d9d7...</text>
+<text x="1146.00" y="377.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.021536 ms acf=0.019488 ms</text>
+<text x="1052.00" y="406.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#047857" text-anchor="start">U5 +9.51%</text>
+<text x="1146.00" y="406.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv8192 | 14-fp8_group_quant_2-26b3240d07b7...</text>
+<text x="1146.00" y="423.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.021536 ms acf=0.019488 ms</text>
+<text x="1052.00" y="486.00" font-size="17" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="start">Largest regressions</text>
+<text x="1052.00" y="518.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="start">R1 -15.38%</text>
+<text x="1146.00" y="518.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv512 | 18-fp8_group_quant_6-604935e94e7b...</text>
+<text x="1146.00" y="535.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.013312 ms acf=0.015360 ms</text>
+<text x="1052.00" y="564.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="start">R2 -15.38%</text>
+<text x="1146.00" y="564.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv512 | 19-recompute_w_u_fwd_0-ddaf5128d6...</text>
+<text x="1146.00" y="581.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.013312 ms acf=0.015360 ms</text>
+<text x="1052.00" y="610.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="start">R3 -15.14%</text>
+<text x="1146.00" y="610.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv512 | 01-causal_conv_1-34795e1779b7.acf</text>
+<text x="1146.00" y="627.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.013312 ms acf=0.015328 ms</text>
+<text x="1052.00" y="656.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="start">R4 -0.48%</text>
+<text x="1146.00" y="656.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv512 | 20-recompute_w_u_fwd_1-cf6163fdbb...</text>
+<text x="1146.00" y="673.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.013312 ms acf=0.013376 ms</text>
+<text x="1052.00" y="702.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="700" fill="#b91c1c" text-anchor="start">R5 -0.24%</text>
+<text x="1146.00" y="702.00" font-size="14" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="start">b1_kv512 | 15-fp8_group_quant_3-9b3899b0437c...</text>
+<text x="1146.00" y="719.00" font-size="12" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#6b7280" text-anchor="start">baseline=0.013312 ms acf=0.013344 ms</text>
+<line x1="86" y1="808" x2="1024" y2="808" stroke="#111827"/>
+<line x1="86" y1="96" x2="86" y2="808" stroke="#111827"/>
+<text x="555.00" y="866.00" font-size="16" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#111827" text-anchor="middle">ACF attempts sorted by gain</text>
+<text transform="translate(24 452.00) rotate(-90)" text-anchor="middle" font-size="16" font-family="NVIDIA Sans, Arial, sans-serif" fill="#111827">Gain vs baseline (%)</text>
+<text x="86.00" y="836.00" font-size="15" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#374151" text-anchor="start">shown=60 total=60 improved=22 neutral_abs_le_1pct=51 below_baseline=10</text>
+<text x="1024.00" y="836.00" font-size="15" font-family="NVIDIA Sans, Arial, sans-serif" font-weight="400" fill="#374151" text-anchor="end">min=-15.38% median=+0.00% max=+15.38%</text>
+</svg>

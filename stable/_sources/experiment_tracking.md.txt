@@ -95,7 +95,6 @@ tracker_config = MLflowTrackerConfig(
 main_config = SearchConfiguration(
     pool_size=32,
     generations=3,
-    mutate_rate=0.5,
     problem_type="min",
     num_objectives=1,
 )

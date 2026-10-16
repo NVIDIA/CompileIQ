@@ -45,7 +45,7 @@
 
 
 
-    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/documentation_options.js?v=56dcb7b8"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,12 +55,12 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://nvidia.github.io/CompileIQ/versions.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.1';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
 
-    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/v1.0/workers.html" />
+    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/v1.1/workers.html" />
     <link rel="icon" href="_static/favicon.png"/>
 
     <link rel="index" title="Index" href="genindex.html" />
@@ -71,7 +71,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0" />
+  <meta name="docsearch:version" content="1.1" />
 
 
   </head>
@@ -353,6 +353,7 @@
   <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
 </ul>
@@ -364,6 +365,7 @@
 <li class="toctree-l1"><a class="reference internal" href="ptx_spill_example.html">Tuning PTXAS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nvcc_example.html">Tuning NVCC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="triton_example.html">Tuning PTXAS in Triton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cutile_example.html">Autotuning cuTile parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking Guidelines</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
@@ -381,6 +383,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_composition.html">Complete Wheel Release Composition</a></li>
 </ul>
 </div>
 </nav></div>
@@ -445,7 +448,50 @@
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Built-in worker classes are available in <code class="docutils literal notranslate"><span class="pre">compileiq.worker</span></code>: <code class="docutils literal notranslate"><span class="pre">MultiProcessWorker</span></code> (default), <code class="docutils literal notranslate"><span class="pre">IsoMultiProcessWorker</span></code>, <code class="docutils literal notranslate"><span class="pre">RayWorker</span></code>, and <code class="docutils literal notranslate"><span class="pre">AsyncWorker</span></code>.</p>
+<p>Built-in worker classes are available in <code class="docutils literal notranslate"><span class="pre">compileiq.worker</span></code>: <code class="docutils literal notranslate"><span class="pre">MultiProcessWorker</span></code> (default), <code class="docutils literal notranslate"><span class="pre">IsoMultiProcessWorker</span></code>, <code class="docutils literal notranslate"><span class="pre">RayWorker</span></code>, <code class="docutils literal notranslate"><span class="pre">AsyncWorker</span></code>, and <code class="docutils literal notranslate"><span class="pre">ManualWorker</span></code>.</p>
+<section id="manual-worker">
+<h2>Manual Worker<a class="headerlink" href="#manual-worker" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">WorkerTypes.MANUAL</span></code> when another system evaluates candidates and CompileIQ
+should only manage optimizer state. It makes accidental calls to <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> or
+<code class="docutils literal notranslate"><span class="pre">start()</span></code> fail before CompileIQ runs the objective function or asks the optimizer
+for managed work.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.ciq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Search</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkerTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compileiq.utils.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Score</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">managed_execution_disabled</span><span class="p">(</span><span class="n">_config</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This search is evaluated externally&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_externally</span><span class="p">(</span><span class="n">_config</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">0.0</span>  <span class="c1"># Replace with an externally measured objective value.</span>
+
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Search</span><span class="p">(</span>
+    <span class="n">objective_function</span><span class="o">=</span><span class="n">managed_execution_disabled</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">search_space_config</span><span class="p">,</span>
+    <span class="n">search_config</span><span class="o">=</span><span class="n">main_config</span><span class="p">,</span>
+    <span class="n">worker_type</span><span class="o">=</span><span class="n">WorkerTypes</span><span class="o">.</span><span class="n">MANUAL</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">candidates</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">ask</span><span class="p">()</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">Score</span><span class="p">(</span>
+        <span class="n">score</span><span class="o">=</span><span class="n">run_externally</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">params</span><span class="p">),</span>
+        <span class="n">params</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+        <span class="n">param_id</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">param_id</span><span class="p">,</span>
+        <span class="n">num_objectives</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span>
+<span class="p">]</span>
+<span class="n">tuner</span><span class="o">.</span><span class="n">tell</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">objective_function</span></code> remains a required <code class="docutils literal notranslate"><span class="pre">Search</span></code> argument, but <code class="docutils literal notranslate"><span class="pre">ManualWorker</span></code>
+never invokes it. Checkpoints record the manual worker choice, so restoring a
+checkpoint without a worker override preserves this execution guard.</p>
+</section>
 <section id="native-worker-multiprocessworker">
 <h2>Native Worker (MultiProcessWorker)<a class="headerlink" href="#native-worker-multiprocessworker" title="Link to this heading">#</a></h2>
 <p>The native worker is the default. It uses Python’s native <code class="docutils literal notranslate"><span class="pre">multiprocessing</span></code> library to spin up processes that execute your objective function.</p>
@@ -595,7 +641,11 @@ All Ray workers must have CompileIQ installed, as well as any other required lib
 <li><p><code class="docutils literal notranslate"><span class="pre">params_pool</span></code> is a list (usually of size <code class="docutils literal notranslate"><span class="pre">pool_size</span></code>) with all parameters CompileIQ sampled for this generation.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">params_ids</span></code> is a list of IDs (one per element in <code class="docutils literal notranslate"><span class="pre">params_pool</span></code>) used to uniquely identify each evaluation.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">num_function_returns</span></code> is the number of expected returns, i.e., the number of objectives defined by the user</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> these are any additional keyword parameters you pass to <code class="docutils literal notranslate"><span class="pre">.start()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> contains additional worker-specific keyword parameters passed to
+<code class="docutils literal notranslate"><span class="pre">.start()</span></code> that are not consumed by Search</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_workers</span></code> and <code class="docutils literal notranslate"><span class="pre">task_timeout</span></code> are named Search controls that are also passed
+through the standard <code class="docutils literal notranslate"><span class="pre">.run()</span></code> arguments; Search-only controls such as
+<code class="docutils literal notranslate"><span class="pre">checkpoint_path</span></code> are not forwarded</p></li>
 </ul>
 <p>It expects a list of <code class="docutils literal notranslate"><span class="pre">Score</span></code> objects as a return. <code class="docutils literal notranslate"><span class="pre">Score</span></code> contains metadata so we can associate the parameters with their scores.</p>
 <blockquote>
@@ -740,7 +790,11 @@ All Ray workers must have CompileIQ installed, as well as any other required lib
 </pre></div>
 </div>
 <blockquote>
-<div><p>Any arguments passed to <code class="docutils literal notranslate"><span class="pre">.start()</span></code> are accessible through <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> for the <code class="docutils literal notranslate"><span class="pre">.run</span></code> method</p>
+<div><p>Additional worker-specific keyword arguments passed to <code class="docutils literal notranslate"><span class="pre">.start()</span></code> are
+accessible through <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> in <code class="docutils literal notranslate"><span class="pre">.run()</span></code>. The existing <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> and
+<code class="docutils literal notranslate"><span class="pre">task_timeout</span></code> controls are also passed through the standard <code class="docutils literal notranslate"><span class="pre">.run()</span></code>
+arguments. Search-only controls, such as <code class="docutils literal notranslate"><span class="pre">checkpoint_path</span></code>, are consumed by
+Search and are not forwarded to the worker.</p>
 </div></blockquote>
 <blockquote>
 <div><p>You can find an updated running example in <a class="reference external" href="https://github.com/NVIDIA/CompileIQ/blob/main/examples/compilers/ptx_spill.py/custom_worker.py">our repository</a>.</p>
@@ -799,6 +853,7 @@ All Ray workers must have CompileIQ installed, as well as any other required lib
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-worker">Manual Worker</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#native-worker-multiprocessworker">Native Worker (MultiProcessWorker)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#isolated-worker-isomultiprocessworker">Isolated Worker (IsoMultiProcessWorker)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#async-worker">Async Worker</a></li>

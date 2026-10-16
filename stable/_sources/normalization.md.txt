@@ -84,13 +84,13 @@ This flow assumes that baseline measurements for a given (node, GPU id) are stab
 
 ## For GPU Measurements
 
-When performing measurements on GPU it is recommended to lock clocks to reduce variability. CompileIQ provides functionality to perform these operations through `nvidia-smi` calls under the hood.
+When performing measurements on GPU it is recommended to lock clocks to reduce variability. CompileIQ provides functionality to lock clocks and cap the GPU power limit, performing these operations through `nvidia-smi` calls under the hood.
 
 ```python
 from compileiq.utils.gpu import gpu_benchmark_mode
 
-with gpu_benchmark_mode(clock_mhz=1965, raise_on_failure=False):
-    ... # everything inside here runs with locked clocks
+with gpu_benchmark_mode(clock_mhz=1965, power_watts=350, raise_on_failure=False):
+    ... # everything inside here runs with locked clocks and a capped power limit
 
 # After exit we reset the clocks back to the default
 ```

@@ -45,7 +45,7 @@
 
 
 
-    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/documentation_options.js?v=56dcb7b8"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,12 +55,12 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://nvidia.github.io/CompileIQ/versions.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.1';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
 
-    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/v1.0/booster_packs.html" />
+    <link rel="canonical" href="https://nvidia.github.io/CompileIQ/v1.1/booster_packs.html" />
     <link rel="icon" href="_static/favicon.png"/>
 
     <link rel="index" title="Index" href="genindex.html" />
@@ -71,7 +71,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0" />
+  <meta name="docsearch:version" content="1.1" />
 
 
   </head>
@@ -353,6 +353,7 @@
   <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Install Instructions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started with CompileIQ</a></li>
 </ul>
@@ -364,6 +365,7 @@
 <li class="toctree-l1"><a class="reference internal" href="ptx_spill_example.html">Tuning PTXAS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nvcc_example.html">Tuning NVCC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="triton_example.html">Tuning PTXAS in Triton</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cutile_example.html">Autotuning cuTile parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking Guidelines</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
@@ -381,6 +383,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="search_strategy.html">Search Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_composition.html">Complete Wheel Release Composition</a></li>
 </ul>
 </div>
 </nav></div>
@@ -502,7 +505,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">SHA256SUMS.txt</span></code>, which records checksums for the uploaded catalog and pack zip assets.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">booster-pack-debug.zip</span></code>, the diagnostic Debug Pack.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">booster-pack-helion.zip</span></code>, the Helion Booster Pack.</p></li>
-<li><p>Each Booster Pack zip consists of ACFs and a pack-specific <code class="docutils literal notranslate"><span class="pre">booster-pack-manifest.json</span></code> that describes the ACFs for that pack.</p></li>
+<li><p>Each Booster Pack zip consists of ACFs and a pack-specific <code class="docutils literal notranslate"><span class="pre">booster-pack-manifest.json</span></code> that describes the ACFs for that pack. When a pack covers more than one compiler stage, each ACF entry includes <code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> so you can choose the correct NVCC/NVVM, PTXAS, or combined application path.</p></li>
 </ul>
 <p>The release notes, catalog file, and pack manifest are the source of truth for each pack; check them for the intended workload, compiler version and path or compiler stage, GPU target, validation context, and known caveats.</p>
 </section>
@@ -512,17 +515,19 @@
 <ol class="arabic simple">
 <li><p>Run your workload without an ACF and save the baseline result.</p></li>
 <li><p>Download the Booster Pack from the filtered GitHub Releases page.</p></li>
-<li><p>Unzip the pack.</p></li>
-<li><p>Apply one ACF at a time through the Controls Interface.</p></li>
+<li><p>Unzip the pack and inspect each ACF’s <code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> in <code class="docutils literal notranslate"><span class="pre">booster-pack-manifest.json</span></code>.</p></li>
+<li><p>Apply one ACF at a time through every compiler stage listed for that ACF.</p></li>
 <li><p>Validate correctness against a known-good reference.</p></li>
 <li><p>Compare performance against the no-ACF baseline.</p></li>
 <li><p>Keep only candidates that compile, pass correctness, and improve the target workload.</p></li>
 </ol>
-<p>For direct PTXAS usage, pass the ACF with <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code>:</p>
+<p>For direct PTXAS usage, select an ACF whose <code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> includes <code class="docutils literal notranslate"><span class="pre">ptxas</span></code> and
+pass it with <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ptxas<span class="w"> </span>-v<span class="w"> </span>-arch<span class="o">=</span>sm_90a<span class="w"> </span>--apply-controls<span class="w"> </span>candidate.acf<span class="w"> </span>kernel.ptx
 </pre></div>
 </div>
-<p>For NVCC usage, pass the same option to NVCC:</p>
+<p>For NVCC usage, select an ACF whose <code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> includes <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> and pass the
+same option to NVCC:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nvcc<span class="w"> </span>-arch<span class="o">=</span>sm_100<span class="w"> </span>--apply-controls<span class="w"> </span>candidate.acf<span class="w"> </span>kernel.cu<span class="w"> </span>-o<span class="w"> </span>kernel
 </pre></div>
 </div>

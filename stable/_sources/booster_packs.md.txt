@@ -49,7 +49,7 @@ Each catalog release includes:
 * `SHA256SUMS.txt`, which records checksums for the uploaded catalog and pack zip assets.
 * `booster-pack-debug.zip`, the diagnostic Debug Pack.
 * `booster-pack-helion.zip`, the Helion Booster Pack.
-* Each Booster Pack zip consists of ACFs and a pack-specific `booster-pack-manifest.json` that describes the ACFs for that pack.
+* Each Booster Pack zip consists of ACFs and a pack-specific `booster-pack-manifest.json` that describes the ACFs for that pack. When a pack covers more than one compiler stage, each ACF entry includes `compiler_stages` so you can choose the correct NVCC/NVVM, PTXAS, or combined application path.
 
 The release notes, catalog file, and pack manifest are the source of truth for each pack; check them for the intended workload, compiler version and path or compiler stage, GPU target, validation context, and known caveats.
 
@@ -59,19 +59,21 @@ The basic workflow is:
 
 1. Run your workload without an ACF and save the baseline result.
 2. Download the Booster Pack from the filtered GitHub Releases page.
-3. Unzip the pack.
-4. Apply one ACF at a time through the Controls Interface.
+3. Unzip the pack and inspect each ACF's `compiler_stages` in `booster-pack-manifest.json`.
+4. Apply one ACF at a time through every compiler stage listed for that ACF.
 5. Validate correctness against a known-good reference.
 6. Compare performance against the no-ACF baseline.
 7. Keep only candidates that compile, pass correctness, and improve the target workload.
 
-For direct PTXAS usage, pass the ACF with `--apply-controls`:
+For direct PTXAS usage, select an ACF whose `compiler_stages` includes `ptxas` and
+pass it with `--apply-controls`:
 
 ```bash
 ptxas -v -arch=sm_90a --apply-controls candidate.acf kernel.ptx
 ```
 
-For NVCC usage, pass the same option to NVCC:
+For NVCC usage, select an ACF whose `compiler_stages` includes `nvcc` and pass the
+same option to NVCC:
 
 ```bash
 nvcc -arch=sm_100 --apply-controls candidate.acf kernel.cu -o kernel
