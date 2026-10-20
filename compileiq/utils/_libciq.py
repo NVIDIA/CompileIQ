@@ -1,4 +1,4 @@
-"""Private: combine encrypted ACFs inside ``libciq``. Not a public API.
+"""Private: combine and translate encrypted ACFs inside ``libciq``. Not a public API.
 
 It combines per-compiler encrypted ACFs, such as one for NVVM and one for PTXAS, into the
 single controls file that ``nvcc --apply-controls`` reads. A later change adds a public way
@@ -105,7 +105,7 @@ def load_libciq() -> ctypes.CDLL:
     if not path.is_file():
         raise LibciqUnavailableError(f"{LIBCIQ_PATH_ENV_VAR} points to a missing file: {path}")
     warnings.warn(
-        f"{LIBCIQ_PATH_ENV_VAR} is set; merging ACFs with a developer libciq.",
+        f"{LIBCIQ_PATH_ENV_VAR} is set; using a developer libciq.",
         RuntimeWarning,
         stacklevel=2,
     )
@@ -247,3 +247,111 @@ def merge_acfs(
                 f"not {type(acf).__name__}"
             )
     return merge_controls(blobs, ensure_components=list(ensure_components)).hex()
+
+
+# libciq translate_acf return codes.
+TRANSLATE_SUCCESS = 0
+TRANSLATE_ERRORS = {
+    -30: "the input is not an encrypted ACF this CompileIQ build can read",
+    -31: "a target search space is invalid",
+    -32: "the ACF has controls for a compiler with no target search space",
+    -33: "internal error in libciq",
+}
+
+_TRANSLATE_UNAVAILABLE_MESSAGE = (
+    "This CompileIQ installation cannot translate ACFs: it has no compiled native runtime "
+    "with translate_acf. Install a complete CompileIQ wheel of a release that supports "
+    "translation."
+)
+
+
+class AcfTranslationError(ValueError):
+    """The ACF cannot be translated. ``code`` is the libciq ``translate_acf`` return code."""
+
+    def __init__(self, code: int):
+        detail = TRANSLATE_ERRORS.get(code, "unknown error")
+        super().__init__(f"Cannot translate ACF: {detail} (libciq code {code}).")
+        self.code = code
+
+
+def _configure_translate(library: ctypes.CDLL) -> ctypes.CDLL:
+    try:
+        translate_acf = library.translate_acf
+    except AttributeError as exc:
+        raise LibciqUnavailableError(
+            f"The libciq named by {LIBCIQ_PATH_ENV_VAR} does not export translate_acf."
+        ) from exc
+    translate_acf.restype = _BYTE_POINTER
+    translate_acf.argtypes = [
+        _BYTE_POINTER,
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_char_p),
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_size_t),
+        ctypes.POINTER(ctypes.c_int),
+    ]
+    return library
+
+
+def _native_translate() -> Callable[..., tuple[int, bytes]] | None:
+    """Return the native runtime's ``translate_acf`` when this installation has one."""
+
+    try:
+        runtime = importlib.import_module(NATIVE_RUNTIME_MODULE)
+    except ImportError:
+        return None
+    return getattr(runtime, "translate_acf", None)
+
+
+def translate_controls(
+    acf: bytes,
+    search_space_paths: Sequence[str | os.PathLike[str]],
+    library: ctypes.CDLL | None = None,
+) -> bytes:
+    """Translate an encrypted ACF through libciq ``translate_acf``.
+
+    ``search_space_paths`` holds at most one encrypted search space per compiler; each
+    compiler section of the ACF is translated against the search space for that compiler,
+    using the same type-based rule for every compiler.
+    Uses the compiled native runtime, whose ``translate_acf(acf, paths)`` returns
+    ``(code, bytes)``, unless ``library`` is given or ``CIQ_LIBCIQ_PATH`` names a
+    developer libciq.
+    """
+
+    if not acf:
+        raise AcfTranslationError(-30)
+    paths = [os.fsdecode(path) for path in search_space_paths]
+    if library is None and not os.environ.get(LIBCIQ_PATH_ENV_VAR):
+        native = _native_translate()
+        if native is None:
+            raise LibciqUnavailableError(_TRANSLATE_UNAVAILABLE_MESSAGE)
+        with _CALL_LOCK:
+            code, translated = native(bytes(acf), paths)
+        if code != TRANSLATE_SUCCESS or not translated:
+            raise AcfTranslationError(code if code else -33)
+        return bytes(translated)
+
+    library = _configure_translate(load_libciq() if library is None else library)
+    buffer = (ctypes.c_ubyte * len(acf)).from_buffer_copy(acf)
+    encoded = (ctypes.c_char_p * max(len(paths), 1))(*[os.fsencode(path) for path in paths])
+    out_len = ctypes.c_size_t(0)
+    code = ctypes.c_int(TRANSLATE_SUCCESS)
+
+    with _CALL_LOCK:
+        result = library.translate_acf(
+            ctypes.cast(buffer, _BYTE_POINTER),
+            len(acf),
+            encoded,
+            len(paths),
+            ctypes.byref(out_len),
+            ctypes.byref(code),
+        )
+        if not result:
+            raise AcfTranslationError(code.value if code.value else -33)
+        try:
+            translated = ctypes.string_at(result, out_len.value)
+        finally:
+            library.free_buffer(result)
+    if code.value != TRANSLATE_SUCCESS or not translated:
+        raise AcfTranslationError(code.value if code.value else -33)
+    return translated
