@@ -106,7 +106,7 @@ GitHub Actions workflows cover validation, testing, and deploy-related tasks. Li
 
 ## Available Agent Skills
 
-This repository ships an agent-agnostic skill set under `agent-skills/` that any AGENTS.md-aware coding agent (Claude Code, Codex, Cursor, GitHub Copilot, Aider, Windsurf) can use to drive CompileIQ optimization campaigns. The skills follow the [agentskills.io](https://agentskills.io) `SKILL.md` convention; an installer renders the right format for each agent.
+This repository ships an agent-agnostic skill set under `skills/` that any AGENTS.md-aware coding agent (Claude Code, Codex, Cursor, GitHub Copilot, Aider, Windsurf) can use to drive CompileIQ optimization campaigns. The skills follow the [agentskills.io](https://agentskills.io) `SKILL.md` convention; an installer renders the right format for each agent.
 
 | Skill | Use when |
 | --- | --- |
@@ -120,4 +120,4 @@ This repository ships an agent-agnostic skill set under `agent-skills/` that any
 
 **Recommended order for a fresh project:** `bootstrap → booster-pack → (only if no pack helps) author-objective → run-search → validate-result`. `debug` is available throughout.
 
-To install for your agent: `bash agent-skills/install.sh --agents <claude-code|codex|cursor|copilot|aider|windsurf>` (or run with no `--agents` flag to auto-detect). See [`agent-skills/README.md`](agent-skills/README.md) for the full layout, authoring conventions, and `--check` / `--uninstall`.
+To install for your agent: `bash skills/install.sh --agents <claude-code|codex|cursor|copilot|aider|windsurf>` (or run with no `--agents` flag to auto-detect). See [`skills/README.md`](skills/README.md) for the full layout, authoring conventions, and `--check` / `--uninstall`.

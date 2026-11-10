@@ -31,7 +31,7 @@ python mixed_triton.py
 
 ## Output
 
-Both scripts generate `best_matmul.acf` - use with Triton's `ptx_options` or through `PTXAS_OPTIONS` env var:
+Both scripts generate `best_matmul.acf` - use with Triton's `ptx_options` (Triton 3.4+) or, on Triton 3.6+, through the `PTXAS_OPTIONS` env var set before the process starts:
 
 ```python
 kernel[grid](..., ptx_options="--apply-controls=best_matmul.acf")

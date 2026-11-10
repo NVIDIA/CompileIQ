@@ -123,3 +123,10 @@ If port 8000 is already in use, stop the existing local docs server first.
 Use `make docs` or `make docs-serve` when you need to test the multiversion
 documentation shape used by GitHub Pages. Those commands build from Git refs, so
 they are not the right choice for checking dirty worktree edits before commit.
+
+## License
+
+CompileIQ is licensed under the [NVIDIA Software License Agreement](LICENSE).
+The agent skills under [`skills/`](skills/) are licensed separately: skill
+documentation under CC-BY-4.0 and skill scripts under Apache-2.0, as described
+in [`skills/LICENSE`](skills/LICENSE).

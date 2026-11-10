@@ -79,7 +79,7 @@ On Windows, install the Microsoft Visual C++ Redistributable 2015 or newer
 
 ## Managing Searches with Coding Agents
 
-CompileIQ ships an agent-agnostic skill set under `agent-skills/` that any
+CompileIQ ships an agent-agnostic skill set under `skills/` that any
 AGENTS.md-aware coding agent (Claude Code, Codex, Cursor, GitHub Copilot,
 Aider, Windsurf) can use to drive optimization campaigns. The skills follow the
 [agentskills.io](https://agentskills.io) `SKILL.md` convention.
@@ -98,15 +98,15 @@ Install for your agent of choice (auto-detects available agents if `--agents`
 is omitted):
 
 ```bash
-bash agent-skills/install.sh                          # auto-detect
-bash agent-skills/install.sh --agents claude-code,codex,cursor,copilot
-bash agent-skills/install.sh --check                   # verify
-bash agent-skills/install.sh --uninstall               # remove mounts
+bash skills/install.sh                          # auto-detect
+bash skills/install.sh --agents claude-code,codex,cursor,copilot
+bash skills/install.sh --check                   # verify
+bash skills/install.sh --uninstall               # remove mounts
 ```
 
 Recommended order for a fresh project: **bootstrap → booster-pack → (only if
 no pack helps) author-objective → run-search → validate-result**, with
-**debug** available throughout. See [`agent-skills/README.md`](../agent-skills/README.md)
+**debug** available throughout. See [`skills/README.md`](../skills/README.md)
 for the full layout and authoring conventions.
 
 ## Environment Configuration Options

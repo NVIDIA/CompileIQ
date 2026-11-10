@@ -7,7 +7,7 @@ import pandas as pd
 def _load_diagnose_csv():
     script_path = (
         Path(__file__).parents[2]
-        / "agent-skills"
+        / "skills"
         / "compileiq-debug"
         / "scripts"
         / "diagnose_csv.py"

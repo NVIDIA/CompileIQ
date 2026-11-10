@@ -80,7 +80,7 @@ For bug reports, include the CompileIQ version (`pip show compileiq`), Python ve
 
 - **Bug fix or small change** — open a pull request directly; reference the issue with `closes #N` if one exists.
 - **New feature or non-trivial enhancement** — open an issue first to align on design before writing code.
-- **Documentation or [`agent-skills/`](agent-skills/) tweaks** — open a pull request directly; label the related issue (if any) as `documentation`.
+- **Documentation or [`skills/`](skills/) tweaks** — open a pull request directly; label the related issue (if any) as `documentation`.
 
 ## Development setup
 
