@@ -28,7 +28,8 @@ python optimize_reduction.py --benchmark-only --arch sm_100 --runs 5
 ## Requirements
 
 - CUDA 13.3+
-- Blackwell GPU (sm_100) or adjust `--arch`
+- Blackwell or later GPU (sm_100 by default; adjust `--arch`). NVCC accepts compiler
+  controls only on Blackwell and later.
 - `pip install compileiq`
 
 ## Files
