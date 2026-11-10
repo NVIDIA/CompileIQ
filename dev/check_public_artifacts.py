@@ -40,7 +40,7 @@ FORBIDDEN_ARTIFACT_BYTES = (
 # through --markers or this environment variable. Both lists match case-insensitively.
 MARKERS_ENVIRONMENT_VARIABLE = "CIQ_PUBLIC_ARTIFACT_MARKERS"
 PUBLIC_TEXT_FILES = ("AGENTS.md", "README.md")
-PUBLIC_TEXT_ROOTS = ("docs", "agent-skills", RUNTIME_DIRECTORY)
+PUBLIC_TEXT_ROOTS = ("docs", "skills", RUNTIME_DIRECTORY)
 LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1"
 
 
