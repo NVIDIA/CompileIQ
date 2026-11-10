@@ -74,7 +74,7 @@ matmul_kernel[grid](
 )
 ```
 
-> You can optionally use the `PTX_OPTIONS` environment variable to pass in the `--apply-controls` flag instead of explicitly adding it to your kernel calls. Note that this will be applied globally
+> On Triton 3.6+ you can optionally use the `PTXAS_OPTIONS` environment variable to pass in the `--apply-controls` flag instead of explicitly adding it to your kernel calls. Triton reads it once at startup (earlier versions ignore it), so set it before launching the process rather than changing it between evaluations. Note that this will be applied globally
 
 ### Building the objective function
 

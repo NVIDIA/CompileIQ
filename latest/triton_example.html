@@ -505,7 +505,7 @@ Blackwell-specific PTXAS path:</p>
 </pre></div>
 </div>
 <blockquote>
-<div><p>You can optionally use the <code class="docutils literal notranslate"><span class="pre">PTX_OPTIONS</span></code> environment variable to pass in the <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code> flag instead of explicitly adding it to your kernel calls. Note that this will be applied globally</p>
+<div><p>On Triton 3.6+ you can optionally use the <code class="docutils literal notranslate"><span class="pre">PTXAS_OPTIONS</span></code> environment variable to pass in the <code class="docutils literal notranslate"><span class="pre">--apply-controls</span></code> flag instead of explicitly adding it to your kernel calls. Triton reads it once at startup (earlier versions ignore it), so set it before launching the process rather than changing it between evaluations. Note that this will be applied globally</p>
 </div></blockquote>
 <section id="building-the-objective-function">
 <h3>Building the objective function<a class="headerlink" href="#building-the-objective-function" title="Link to this heading">#</a></h3>

@@ -503,7 +503,7 @@ sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w
 </section>
 <section id="managing-searches-with-coding-agents">
 <h2>Managing Searches with Coding Agents<a class="headerlink" href="#managing-searches-with-coding-agents" title="Link to this heading">#</a></h2>
-<p>CompileIQ ships an agent-agnostic skill set under <code class="docutils literal notranslate"><span class="pre">agent-skills/</span></code> that any
+<p>CompileIQ ships an agent-agnostic skill set under <code class="docutils literal notranslate"><span class="pre">skills/</span></code> that any
 AGENTS.md-aware coding agent (Claude Code, Codex, Cursor, GitHub Copilot,
 Aider, Windsurf) can use to drive optimization campaigns. The skills follow the
 <a class="reference external" href="https://agentskills.io">agentskills.io</a> <code class="docutils literal notranslate"><span class="pre">SKILL.md</span></code> convention.</p>
@@ -540,15 +540,15 @@ Aider, Windsurf) can use to drive optimization campaigns. The skills follow the
 </div>
 <p>Install for your agent of choice (auto-detects available agents if <code class="docutils literal notranslate"><span class="pre">--agents</span></code>
 is omitted):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>agent-skills/install.sh<span class="w">                          </span><span class="c1"># auto-detect</span>
-bash<span class="w"> </span>agent-skills/install.sh<span class="w"> </span>--agents<span class="w"> </span>claude-code,codex,cursor,copilot
-bash<span class="w"> </span>agent-skills/install.sh<span class="w"> </span>--check<span class="w">                   </span><span class="c1"># verify</span>
-bash<span class="w"> </span>agent-skills/install.sh<span class="w"> </span>--uninstall<span class="w">               </span><span class="c1"># remove mounts</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>skills/install.sh<span class="w">                          </span><span class="c1"># auto-detect</span>
+bash<span class="w"> </span>skills/install.sh<span class="w"> </span>--agents<span class="w"> </span>claude-code,codex,cursor,copilot
+bash<span class="w"> </span>skills/install.sh<span class="w"> </span>--check<span class="w">                   </span><span class="c1"># verify</span>
+bash<span class="w"> </span>skills/install.sh<span class="w"> </span>--uninstall<span class="w">               </span><span class="c1"># remove mounts</span>
 </pre></div>
 </div>
 <p>Recommended order for a fresh project: <strong>bootstrap → booster-pack → (only if
 no pack helps) author-objective → run-search → validate-result</strong>, with
-<strong>debug</strong> available throughout. See <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">agent-skills/README.md</span></code></span>
+<strong>debug</strong> available throughout. See <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">skills/README.md</span></code></span>
 for the full layout and authoring conventions.</p>
 </section>
 <section id="environment-configuration-options">
