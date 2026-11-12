@@ -79,6 +79,9 @@ same option to NVCC:
 nvcc -arch=sm_100 --apply-controls candidate.acf kernel.cu -o kernel
 ```
 
+NVCC accepts ACFs on Blackwell (`sm_100`) and later only. On earlier GPUs, use ACFs whose
+`compiler_stages` include only `ptxas`.
+
 For Triton, pass the ACF through PTXAS options as shown in the [Triton example](triton_example.md). Make sure you force recompilation where framework caching applies, such as with `TRITON_ALWAYS_COMPILE`.
 
 For Helion, pass the ACF through the official ACF API as shown in the [Softmax Example](https://helionlang.com/examples/acfs/softmax_acf.html). Make sure you force recompilation where framework caching applies.

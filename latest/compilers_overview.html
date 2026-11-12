@@ -447,6 +447,9 @@
 nvcc<span class="w">  </span>-arch<span class="o">=</span>sm_100<span class="w">    </span>--apply-controls<span class="w"> </span>candidate.acf<span class="w"> </span>kernel.cu<span class="w"> </span>-o<span class="w"> </span>kernel
 </pre></div>
 </div>
+<p>Passing an ACF to NVCC is supported on Blackwell (<code class="docutils literal notranslate"><span class="pre">sm_100</span></code>) and later architectures only. On
+earlier GPUs, NVCC rejects the ACF with <code class="docutils literal notranslate"><span class="pre">-apply-controls</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">supported</span> <span class="pre">on</span> <span class="pre">this</span> <span class="pre">target</span></code>; use
+a PTXAS ACF instead, which works on every supported architecture.</p>
 <p>For Triton, pass it through PTXAS options — see the <a class="reference internal" href="triton_example.html"><span class="std std-doc">Triton example</span></a>.
 For a curated starting point instead of a full search, see <a class="reference internal" href="booster_packs.html"><span class="std std-doc">Booster Packs</span></a>.</p>
 </div>

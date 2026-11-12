@@ -14,6 +14,10 @@ ptxas -v -arch=sm_90a --apply-controls candidate.acf kernel.ptx
 nvcc  -arch=sm_100    --apply-controls candidate.acf kernel.cu -o kernel
 ```
 
+Passing an ACF to NVCC is supported on Blackwell (`sm_100`) and later architectures only. On
+earlier GPUs, NVCC rejects the ACF with `-apply-controls is not supported on this target`; use
+a PTXAS ACF instead, which works on every supported architecture.
+
 For Triton, pass it through PTXAS options — see the [Triton example](triton_example.md).
 For a curated starting point instead of a full search, see [Booster Packs](booster_packs.md).
 :::

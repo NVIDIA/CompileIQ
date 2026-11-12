@@ -12,7 +12,9 @@ What you'll need:
 
 * A Python environment with CompileIQ installed
 * CUDA Toolkit (CTK) 13.3+
-* A GPU (Blackwell sm_100 by default, adjustable via `--arch`)
+* A Blackwell or later GPU (`sm_100` by default, adjustable via `--arch`). NVCC accepts compiler
+  controls only on Blackwell and later; for earlier GPUs, tune PTXAS instead, as in the
+  [PTXAS spill example](ptx_spill_example.md).
 
 ### Building the objective function
 

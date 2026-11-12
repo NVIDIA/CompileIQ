@@ -448,7 +448,9 @@
 <ul class="simple">
 <li><p>A Python environment with CompileIQ installed</p></li>
 <li><p>CUDA Toolkit (CTK) 13.3+</p></li>
-<li><p>A GPU (Blackwell sm_100 by default, adjustable via <code class="docutils literal notranslate"><span class="pre">--arch</span></code>)</p></li>
+<li><p>A Blackwell or later GPU (<code class="docutils literal notranslate"><span class="pre">sm_100</span></code> by default, adjustable via <code class="docutils literal notranslate"><span class="pre">--arch</span></code>). NVCC accepts compiler
+controls only on Blackwell and later; for earlier GPUs, tune PTXAS instead, as in the
+<a class="reference internal" href="ptx_spill_example.html"><span class="std std-doc">PTXAS spill example</span></a>.</p></li>
 </ul>
 <section id="building-the-objective-function">
 <h3>Building the objective function<a class="headerlink" href="#building-the-objective-function" title="Link to this heading">#</a></h3>

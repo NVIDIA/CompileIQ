@@ -531,6 +531,8 @@ same option to NVCC:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nvcc<span class="w"> </span>-arch<span class="o">=</span>sm_100<span class="w"> </span>--apply-controls<span class="w"> </span>candidate.acf<span class="w"> </span>kernel.cu<span class="w"> </span>-o<span class="w"> </span>kernel
 </pre></div>
 </div>
+<p>NVCC accepts ACFs on Blackwell (<code class="docutils literal notranslate"><span class="pre">sm_100</span></code>) and later only. On earlier GPUs, use ACFs whose
+<code class="docutils literal notranslate"><span class="pre">compiler_stages</span></code> include only <code class="docutils literal notranslate"><span class="pre">ptxas</span></code>.</p>
 <p>For Triton, pass the ACF through PTXAS options as shown in the <a class="reference internal" href="triton_example.html"><span class="std std-doc">Triton example</span></a>. Make sure you force recompilation where framework caching applies, such as with <code class="docutils literal notranslate"><span class="pre">TRITON_ALWAYS_COMPILE</span></code>.</p>
 <p>For Helion, pass the ACF through the official ACF API as shown in the <a class="reference external" href="https://helionlang.com/examples/acfs/softmax_acf.html">Softmax Example</a>. Make sure you force recompilation where framework caching applies.</p>
 </section>
