@@ -104,11 +104,12 @@ description: >                            # ≤1024 chars; trigger words first
   Use when …
 when_to_use: |                            # Claude Code extension; safe on others
   - bullets
-license: Apache-2.0
+license: CC-BY-4.0 AND Apache-2.0         # matches skills/LICENSE
 metadata:
   version: "1.0.0"
-  author: NVIDIA CompileIQ
+  author: CompileIQ Team <compileiq@nvidia.com>   # "Name <email>", required by skillevaluator
   domain: compiler-optimization
+  tags: [compileiq, cuda, ptxas, compiler-optimization, autotuning]
 allowed-tools: Bash Read                  # Claude Code extension
 paths: ["**/*.py"]                        # Claude Code extension; ignored by others
 ---
