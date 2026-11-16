@@ -5,6 +5,8 @@
 **/.cache
 **/top_results*
 **/*.log
+# Skill eval fixtures are inputs, not logs; keep them tracked.
+!skills/*/evals/files/**/*.log
 **/tmp
 **/.ruff_cache
 **/TODO

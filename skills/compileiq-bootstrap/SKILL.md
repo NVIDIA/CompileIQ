@@ -15,7 +15,7 @@ when_to_use: |
   Don't use when: the env is already validated in this session.
 license: CC-BY-4.0 AND Apache-2.0
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: CompileIQ Team <compileiq@nvidia.com>
   domain: compiler-optimization
   tags: [compileiq, cuda, ptxas, compiler-optimization, autotuning]
