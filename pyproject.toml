@@ -69,7 +69,9 @@ ruff = "^0.7.3"
 optional = true
 
 [tool.poetry.group.typecheck.dependencies]
-pyright = "~1.1.408"
+# The nodejs extra uses the nodejs-wheel binaries instead of downloading Node.js
+# through nodeenv, which breaks on pre-release Node versions.
+pyright = { version = "~1.1.408", extras = ["nodejs"] }
 pandas-stubs = "^3.0.0.260204"
 
 [tool.poetry.group.unittest]
