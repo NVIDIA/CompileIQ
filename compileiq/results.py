@@ -344,10 +344,15 @@ class SearchResult:
         next_point_index = 0  # Next index in the is_efficient array to search for
 
         while next_point_index < len(scores):
+            point = scores[next_point_index]
+            # Keep a row unless the current point dominates it: no worse on every
+            # objective and strictly better on at least one. Rows strictly better on
+            # some objective, and exact score ties, are not dominated.
             if self.problem_type == ProblemType.MIN:
-                nondominated_point_mask = np.any(scores <= scores[next_point_index], axis=1)
+                strictly_better = np.any(scores < point, axis=1)
             else:
-                nondominated_point_mask = np.any(scores >= scores[next_point_index], axis=1)
+                strictly_better = np.any(scores > point, axis=1)
+            nondominated_point_mask = strictly_better | np.all(scores == point, axis=1)
 
             nondominated_point_mask[next_point_index] = True
             is_efficient = is_efficient[nondominated_point_mask]  # Remove dominated points

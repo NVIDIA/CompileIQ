@@ -37,7 +37,21 @@ class TestCalculatePareteFrontMin:
 
         assert mask[0] is np.True_  # (1,1) is on the front
         assert mask[1] is np.False_  # (5,5) is dominated by (1,1)
-        assert mask[2] is np.True_  # (1,5) is not dominated by (1,1) — equal on dim 0
+        assert mask[2] is np.False_  # (1,5) ties (1,1) on dim 0 and is worse on dim 1
+
+    def test_point_tied_on_one_objective_and_worse_on_another_excluded(self):
+        """A tie on one objective does not protect a row that is worse on another."""
+        scores = np.array([(1, 5), (1, 1)])
+        result = _make_result([(1, 5), (1, 1)])
+        mask = result.calculate_pareto_front(scores)
+        assert mask.tolist() == [False, True]
+
+    def test_identical_points_kept_and_dominated_row_excluded(self):
+        """Exact ties stay on the front together; a row that one of them dominates does not."""
+        scores = np.array([(2, 3), (2, 4), (2, 3)])
+        result = _make_result([(2, 3), (2, 4), (2, 3)])
+        mask = result.calculate_pareto_front(scores)
+        assert mask.tolist() == [True, False, True]
 
     def test_all_on_front(self):
         """When no point dominates another, all should be on the front."""
@@ -75,7 +89,13 @@ class TestCalculateParetoFrontMax:
 
         assert mask[0] is np.True_  # (5,5) dominates
         assert mask[1] is np.False_  # (1,1) is dominated
-        assert mask[2] is np.True_  # (5,1) trades off with (5,5)
+        assert mask[2] is np.False_  # (5,1) ties (5,5) on dim 0 and is worse on dim 1
+
+    def test_point_tied_on_one_objective_and_worse_on_another_excluded(self):
+        scores = np.array([(5, 1), (5, 5)])
+        result = _make_result([(5, 1), (5, 5)], problem_type=ProblemType.MAX)
+        mask = result.calculate_pareto_front(scores)
+        assert mask.tolist() == [False, True]
 
 
 # ---------------------------------------------------------------------------
@@ -114,6 +134,26 @@ class TestGetBestResultPareto:
         for b in best:
             assert b.get("score_1") != INVALID_SCORE
             assert b.get("score_2") != INVALID_SCORE
+
+    def test_matches_brute_force_with_discrete_objectives(self):
+        """Compiler objectives such as spill bytes or register counts tie often; the
+        front must still hold exactly the rows that no other row dominates."""
+
+        def dominates(a, b):
+            return all(x <= y for x, y in zip(a, b)) and any(x < y for x, y in zip(a, b))
+
+        rng = np.random.default_rng(0)
+        for _ in range(50):
+            rows = [
+                (int(rng.integers(0, 6)), int(rng.integers(0, 4)), int(rng.integers(0, 3)))
+                for _ in range(30)
+            ]
+            result = _make_result(rows)
+            got = sorted(r["metadata"] for r in result.pareto_front())
+            expected = [
+                i for i, row in enumerate(rows) if not any(dominates(o, row) for o in rows)
+            ]
+            assert got == expected
 
     def test_pareto_front_with_clear_winner(self):
         """When one point dominates all others, only it should be on the front."""
