@@ -24,7 +24,10 @@ def _job(workflow: Path, name: str) -> str:
 
 def test_beta_metadata_and_ray_lock_cover_the_release_matrix() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
-    assert project["tool"]["poetry"]["version"] == "1.1.0b2"
+    # main and release branches carry a .dev0 version between releases; only the
+    # release commit sets the exact version (see the release runbook).
+    version = project["tool"]["poetry"]["version"]
+    assert re.fullmatch(r"\d+\.\d+\.\d+((a|b|rc)\d+|\.dev\d+)?", version), version
     assert project["tool"]["poetry"]["dependencies"]["python"] == ">=3.11,<3.15"
     assert project["tool"]["poetry"]["dependencies"]["ray"] == {
         "extras": ["default"],
